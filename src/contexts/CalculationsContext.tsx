@@ -4,7 +4,7 @@ import { Calculation } from '@/types';
 
 interface CalculationsContextType {
   calculations: Calculation[];
-  createCalculation: (calculation: Omit<Calculation, 'id' | 'createdAt'>) => void;
+  createCalculation: (calculation: Omit<Calculation, 'id' | 'createdAt'>) => Calculation;
   getCalculation: (id: string) => Calculation | undefined;
 }
 

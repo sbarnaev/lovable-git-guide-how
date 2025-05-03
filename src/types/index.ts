@@ -1,4 +1,6 @@
 
+import { NumerologyResult } from './numerology';
+
 export interface User {
   id: string;
   email: string;
@@ -16,4 +18,5 @@ export interface Calculation {
   partnerBirthDate?: string;
   targetQuery?: string;
   results: any; // Will be updated with specific calculation results
+  numerologyResults?: NumerologyResult;
 }

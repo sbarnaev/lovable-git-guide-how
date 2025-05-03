@@ -16,6 +16,7 @@ import PartnershipCalculationForm from "./pages/PartnershipCalculationForm";
 import TargetCalculationForm from "./pages/TargetCalculationForm";
 import CalculationResult from "./pages/CalculationResult";
 import HistoryPage from "./pages/HistoryPage";
+import ArchetypesAdminPage from "./pages/ArchetypesAdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
                   <Route path="calculations/:id" element={<CalculationResult />} />
                   
                   <Route path="history" element={<HistoryPage />} />
+                  <Route path="archetypes" element={<ArchetypesAdminPage />} />
                 </Route>
               </Route>
               
