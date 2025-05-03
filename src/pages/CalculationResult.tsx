@@ -916,4 +916,55 @@ const CalculationResult = () => {
 
   if (!calculation) {
     return (
-      <div className="
+      <div className="flex flex-col items-center justify-center h-[80vh]">
+        <div className="text-center text-muted-foreground">
+          <p className="text-lg">Расчет не найден</p>
+          <Button
+            variant="link"
+            className="mt-4"
+            onClick={() => navigate("/calculations")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Вернуться к расчетам
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container py-6">
+      <div className="mb-6">
+        <Button
+          variant="outline"
+          size="sm"
+          className="mb-4"
+          onClick={() => navigate("/calculations")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Назад к расчетам
+        </Button>
+        
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+          <div>
+            <h1 className="text-2xl font-bold">{getCalculationTitle()}</h1>
+            <div className="flex items-center text-muted-foreground mt-1 text-sm">
+              <User size={14} className="mr-1" />
+              <span className="mr-4">{calculation.clientName}</span>
+              <Calendar size={14} className="mr-1" />
+              <span>{formatDate(calculation.birthDate)}</span>
+            </div>
+          </div>
+          <div className="text-sm text-muted-foreground flex items-center">
+            <File size={14} className="mr-1" />
+            <span>{formatDate(calculation.createdAt)}</span>
+          </div>
+        </div>
+      </div>
+      
+      {renderResults()}
+    </div>
+  );
+};
+
+export default CalculationResult;
