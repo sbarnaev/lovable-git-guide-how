@@ -239,6 +239,7 @@ const ArchetypesAdminPage = () => {
     };
 
     try {
+      toast.info("Сохранение архетипа...");
       const success = await addArchetypeDescription(archetypeDescription);
       
       if (success) {
@@ -247,11 +248,11 @@ const ArchetypesAdminPage = () => {
         // Update the descriptions list
         setDescriptions(getAllArchetypeDescriptions());
       } else {
-        toast.error("Не удалось сохранить архетип");
+        toast.error("Не удалось сохранить архетип. Проверьте консоль для деталей.");
       }
     } catch (error) {
       console.error("Error saving archetype:", error);
-      toast.error("Ошибка при сохранении архетипа");
+      toast.error("Ошибка при сохранении архетипа: " + String(error));
     }
   };
 

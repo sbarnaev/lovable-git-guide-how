@@ -1,4 +1,3 @@
-
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,13 +10,20 @@ let archetypeDescriptionsCache: ArchetypeDescription[] = [];
  */
 export async function addArchetypeDescription(description: ArchetypeDescription): Promise<boolean> {
   try {
+    console.log('Сохранение архетипа:', description.code, description.value);
+    
     // Проверяем, есть ли уже такой архетип в базе
-    const { data: existingRecord } = await supabase
+    const { data: existingRecord, error: fetchError } = await supabase
       .from('archetype_descriptions')
       .select('id')
       .eq('code', description.code)
       .eq('value', description.value)
-      .single();
+      .maybeSingle();
+    
+    if (fetchError) {
+      console.error('Ошибка при поиске архетипа:', fetchError);
+      return false;
+    }
     
     // Преобразуем описание архетипа в формат для БД
     const dbRecord = {
@@ -69,19 +75,21 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
       challenges: description.challenges,
     };
 
+    let result;
     if (existingRecord) {
       // Обновляем существующую запись
-      const { error } = await supabase
+      console.log('Обновляем существующий архетип с ID:', existingRecord.id);
+      result = await supabase
         .from('archetype_descriptions')
         .update(dbRecord)
         .eq('id', existingRecord.id);
         
-      if (error) {
-        console.error('Error updating archetype:', error);
-        return false;
+      if (result.error) {
+        console.error('Ошибка при обновлении архетипа:', result.error);
+        throw new Error(`Ошибка при обновлении архетипа: ${result.error.message}`);
       }
       
-      console.log(`Updated archetype: ${description.code}-${description.value}`);
+      console.log(`Архетип обновлен: ${description.code}-${description.value}`);
       
       // Обновляем запись в кеше
       const index = archetypeDescriptionsCache.findIndex(
@@ -97,16 +105,17 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
       return true;
     } else {
       // Создаем новую запись
-      const { error } = await supabase
+      console.log('Создаем новый архетип');
+      result = await supabase
         .from('archetype_descriptions')
         .insert(dbRecord);
         
-      if (error) {
-        console.error('Error adding archetype:', error);
-        return false;
+      if (result.error) {
+        console.error('Ошибка при добавлении архетипа:', result.error);
+        throw new Error(`Ошибка при добавлении архетипа: ${result.error.message}`);
       }
       
-      console.log(`Added new archetype: ${description.code}-${description.value}`);
+      console.log(`Добавлен новый архетип: ${description.code}-${description.value}`);
       
       // Добавляем запись в кеш
       archetypeDescriptionsCache.push(description);
@@ -114,7 +123,7 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
       return true;
     }
   } catch (error) {
-    console.error('Error in addArchetypeDescription:', error);
+    console.error('Ошибка в addArchetypeDescription:', error);
     return false;
   }
 }

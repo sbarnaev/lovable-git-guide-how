@@ -25,7 +25,7 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
     );
   }
 
-  if (!descriptions || descriptions.length === 0) {
+  if (!descriptions || !Array.isArray(descriptions) || descriptions.length === 0) {
     return (
       <div className="p-4 text-center text-muted-foreground">
         Нет доступных архетипов
@@ -37,6 +37,8 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
   const groupedDescriptions: Record<string, ArchetypeDescription[]> = {};
   
   descriptions.forEach(desc => {
+    if (!desc) return; // Игнорируем пустые значения
+    
     if (!groupedDescriptions[desc.code]) {
       groupedDescriptions[desc.code] = [];
     }
@@ -58,6 +60,7 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
             
             <div className="flex flex-wrap gap-2">
               {codeDescriptions
+                .filter(desc => desc && typeof desc === 'object')
                 .sort((a, b) => a.value - b.value)
                 .map(desc => (
                   <Button

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +18,7 @@ interface ArchetypeFormProps {
   selectedValue: number;
   setSelectedValue: React.Dispatch<React.SetStateAction<number>>;
   onSave: () => void;
+  loading?: boolean;
   // General fields
   title: string;
   setTitle: React.Dispatch<React.SetStateAction<string>>;
