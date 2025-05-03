@@ -1,12 +1,16 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArchetypeDescription } from '@/types/numerology';
 import { toast } from 'sonner';
 import { SendIcon } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { 
+  generateDeepSeekContent, 
+  saveChatMessage, 
+  getChatMessages 
+} from '@/services/deepseekService';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,45 +19,76 @@ interface Message {
 
 interface AIChatProps {
   archetypes: ArchetypeDescription[];
+  calculationId: string;
 }
 
-export const AIChat = ({ archetypes }: AIChatProps) => {
+export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: 'assistant', 
-      content: 'Привет! Я твой помощник по нумерологии. Задай мне любой вопрос, и я помогу тебе разобраться в твоем нумерологическом профиле.' 
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+
+  // Load existing chat messages on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const chatHistory = await getChatMessages(calculationId);
+        
+        if (chatHistory && chatHistory.length > 0) {
+          setMessages(chatHistory);
+        } else {
+          // If no chat history, add initial welcome message
+          const welcomeMessage = { 
+            role: 'assistant' as const, 
+            content: 'Привет! Я твой помощник по нумерологии. Задай мне любой вопрос, и я помогу тебе разобраться в твоем нумерологическом профиле.' 
+          };
+          setMessages([welcomeMessage]);
+          // Save the welcome message to the database
+          await saveChatMessage(calculationId, 'assistant', welcomeMessage.content);
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        toast.error('Не удалось загрузить историю чата');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (calculationId) {
+      loadChatHistory();
     }
-  ]);
-  const [loading, setLoading] = useState(false);
+  }, [calculationId]);
+  
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    const chatContainer = document.getElementById('chat-messages-container');
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || submitting) return;
 
     const userMessage = { role: 'user' as const, content: input.trim() };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
-    setLoading(true);
+    setSubmitting(true);
 
     try {
-      // Call DeepSeek directly via Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('deepseek', {
-        body: {
-          contentType: 'chat',
-          archetypes,
-          userMessage: userMessage.content
-        }
-      });
+      // Save user message
+      await saveChatMessage(calculationId, 'user', userMessage.content);
       
-      if (error) {
-        console.error('Error calling DeepSeek function:', error);
-        throw new Error(error.message);
-      }
-
+      // Generate AI response
+      const response = await generateDeepSeekContent('chat', archetypes, userMessage.content);
+      
       const assistantMessage = { 
         role: 'assistant' as const, 
-        content: data?.content || 'Извините, я не смог обработать ваш запрос.' 
+        content: response.content
       };
+      
+      // Save assistant message
+      await saveChatMessage(calculationId, 'assistant', assistantMessage.content);
       
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -61,15 +96,16 @@ export const AIChat = ({ archetypes }: AIChatProps) => {
       toast.error('Не удалось получить ответ от ассистента');
       
       // Add error message to the chat
-      setMessages((prev) => [
-        ...prev, 
-        { 
-          role: 'assistant', 
-          content: 'Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.' 
-        }
-      ]);
+      const errorMessage = { 
+        role: 'assistant' as const, 
+        content: 'Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.' 
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      
+      // Save error message
+      await saveChatMessage(calculationId, 'assistant', errorMessage.content);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -79,10 +115,28 @@ export const AIChat = ({ archetypes }: AIChatProps) => {
       handleSend();
     }
   };
+  
+  const formatMessage = (content: string) => {
+    return content.split('\n').map((line, i) => (
+      line ? <p key={i} className="mb-1">{line}</p> : <br key={i} />
+    ));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+        <span>Загрузка чата...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-grow overflow-auto mb-4 space-y-4 max-h-[400px]">
+      <div 
+        id="chat-messages-container"
+        className="flex-grow overflow-auto mb-4 space-y-4 max-h-[400px] min-h-[300px]"
+      >
         {messages.map((message, i) => (
           <div
             key={i}
@@ -93,10 +147,10 @@ export const AIChat = ({ archetypes }: AIChatProps) => {
                 : "mr-auto bg-muted"
             )}
           >
-            {message.content}
+            {formatMessage(message.content)}
           </div>
         ))}
-        {loading && (
+        {submitting && (
           <div className="mr-auto bg-muted rounded-lg p-3">
             <div className="flex space-x-2">
               <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -113,11 +167,11 @@ export const AIChat = ({ archetypes }: AIChatProps) => {
           onKeyDown={handleKeyPress}
           placeholder="Задайте вопрос..."
           className="resize-none"
-          disabled={loading}
+          disabled={submitting}
         />
         <Button 
           onClick={handleSend} 
-          disabled={!input.trim() || loading}
+          disabled={!input.trim() || submitting}
           size="icon"
         >
           <SendIcon className="h-4 w-4" />

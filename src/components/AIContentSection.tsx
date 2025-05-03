@@ -1,70 +1,135 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { generateDeepSeekContent, DeepSeekContentType } from '@/services/deepseekService';
+import { 
+  generateDeepSeekContent, 
+  DeepSeekContentType, 
+  saveGeneratedContent, 
+  getGeneratedContent 
+} from '@/services/deepseekService';
 import { ArchetypeDescription } from '@/types/numerology';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AIContentSectionProps {
   title: string;
   type: DeepSeekContentType;
   archetypes: ArchetypeDescription[];
+  calculationId: string;
 }
 
-export const AIContentSection = ({ title, type, archetypes }: AIContentSectionProps) => {
+export const AIContentSection = ({ title, type, archetypes, calculationId }: AIContentSectionProps) => {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
   const fetchContent = async () => {
     setLoading(true);
     setError(null);
+    
     try {
+      // First try to get saved content
+      const savedContent = await getGeneratedContent(calculationId, type);
+      
+      if (savedContent) {
+        setContent(savedContent.content);
+        setLoading(false);
+        return;
+      }
+      
+      // If no saved content, generate new content
+      setIsGenerating(true);
       const response = await generateDeepSeekContent(type, archetypes);
+      
+      // Save the generated content
+      await saveGeneratedContent(calculationId, type, response.content);
+      
       setContent(response.content);
     } catch (err: any) {
       console.error(`Error fetching ${type} content:`, err);
       setError('Не удалось загрузить контент. Пожалуйста, попробуйте позже.');
     } finally {
       setLoading(false);
+      setIsGenerating(false);
     }
   };
 
   useEffect(() => {
-    if (archetypes.length > 0) {
+    if (calculationId && archetypes.length > 0) {
       fetchContent();
     }
-  }, [archetypes, type]);
+  }, [calculationId, archetypes, type]);
 
   const formatContent = (text: string) => {
     // Split the text by line breaks and map each line
-    return text.split('\n').map((line, index) => (
-      line.trim() ? (
-        <p key={index} className={`mb-2 ${line.match(/^[А-Я0-9]/) ? 'font-medium' : ''}`}>
+    return text.split('\n').map((line, index) => {
+      line = line.trim();
+      
+      // Skip empty lines
+      if (!line) return <br key={index} />;
+      
+      // Check for section headers (lines that end with a colon)
+      if (line.match(/^.+:$/)) {
+        return (
+          <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+            {line}
+          </h3>
+        );
+      }
+      
+      // Check for bullet points
+      if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+        return (
+          <li key={index} className="ml-5 mb-2">
+            {line.substring(1).trim()}
+          </li>
+        );
+      }
+      
+      // Check for numbered points
+      const numberedMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
+      if (numberedMatch) {
+        return (
+          <li key={index} className="ml-5 mb-2 list-decimal">
+            {numberedMatch[2]}
+          </li>
+        );
+      }
+      
+      // Regular paragraph
+      return (
+        <p key={index} className={cn(
+          "mb-3",
+          line.length < 100 && line.match(/^[А-Я0-9]/) ? "font-medium" : ""
+        )}>
           {line}
         </p>
-      ) : <br key={index} />
-    ));
+      );
+    });
+  };
+
+  const handleRefresh = () => {
+    setContent('');
+    fetchContent();
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">{title}</CardTitle>
-        {error && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={fetchContent} 
-            disabled={loading}
-            className="h-8 w-8 p-0"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="sr-only">Обновить</span>
-          </Button>
-        )}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleRefresh} 
+          disabled={loading || isGenerating}
+          className="h-8 w-8 p-0"
+        >
+          <RefreshCw className={cn("h-4 w-4", (loading || isGenerating) ? "animate-spin" : "")} />
+          <span className="sr-only">Обновить</span>
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -75,10 +140,17 @@ export const AIContentSection = ({ title, type, archetypes }: AIContentSectionPr
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-[70%]" />
           </div>
+        ) : isGenerating ? (
+          <div className="text-center py-4">
+            <div className="inline-block animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+            <span>Идет расчет...</span>
+          </div>
         ) : error ? (
           <div className="text-destructive">{error}</div>
         ) : (
-          <div className="text-sm">{formatContent(content)}</div>
+          <div className="text-sm prose prose-slate max-w-none">
+            {formatContent(content)}
+          </div>
         )}
       </CardContent>
     </Card>

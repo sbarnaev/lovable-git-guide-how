@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -73,9 +74,6 @@ const CalculationResult = () => {
       return undefined;
     }
     
-    console.log("Looking for code:", code);
-    console.log("Available archetypes:", archetypes.map(a => a.code));
-    
     const codeMap: Record<string, NumerologyCodeType> = {
       'personality': 'personality',
       'connector': 'connector',
@@ -95,247 +93,327 @@ const CalculationResult = () => {
     
     return (
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{archetype.title}</h3>
-        <p className="text-sm">{archetype.description}</p>
+        <h3 className="text-xl font-semibold">{archetype.title}</h3>
         
-        {archetype.resourceQualities && archetype.resourceQualities.length > 0 && (
-          <div>
-            <h4 className="text-md font-semibold">Ресурсные качества:</h4>
-            <ul className="list-disc pl-5 text-sm">
-              {archetype.resourceQualities.map((quality, index) => (
-                <li key={index}>{quality}</li>
-              ))}
-            </ul>
+        {archetype.description && (
+          <div className="prose prose-slate max-w-none text-sm">
+            <p>{archetype.description}</p>
           </div>
         )}
         
-        {archetype.keyDistortions && archetype.keyDistortions.length > 0 && (
-          <div>
-            <h4 className="text-md font-semibold">Ключевые искажения:</h4>
-            <ul className="list-disc pl-5 text-sm">
-              {archetype.keyDistortions.map((distortion, index) => (
-                <li key={index}>{distortion}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {archetype.recommendations && archetype.recommendations.length > 0 && (
-          <div>
-            <h4 className="text-md font-semibold">Рекомендации:</h4>
-            <ul className="list-disc pl-5 text-sm">
-              {archetype.recommendations.map((recommendation, index) => (
-                <li key={index}>{recommendation}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
+        {/* Personality specific fields */}
         {archetype.code === 'personality' && (
           <>
             {archetype.resourceManifestation && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Ресурсное проявление:</h4>
-                <p className="text-sm">{archetype.resourceManifestation}</p>
+                <p className="text-sm bg-green-50 p-3 rounded-md border border-green-200">{archetype.resourceManifestation}</p>
               </div>
             )}
+            
             {archetype.distortedManifestation && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Искаженное проявление:</h4>
-                <p className="text-sm">{archetype.distortedManifestation}</p>
+                <p className="text-sm bg-red-50 p-3 rounded-md border border-red-200">{archetype.distortedManifestation}</p>
               </div>
             )}
+            
             {archetype.developmentTask && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Задача развития:</h4>
-                <p className="text-sm">{archetype.developmentTask}</p>
+                <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.developmentTask}</p>
               </div>
             )}
           </>
         )}
         
+        {/* Connector specific fields */}
         {archetype.code === 'connector' && (
           <>
             {archetype.keyTask && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Ключевая задача:</h4>
-                <p className="text-sm">{archetype.keyTask}</p>
+                <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.keyTask}</p>
               </div>
             )}
-            {archetype.workingAspects && archetype.workingAspects.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Что работает (в ресурсе):</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.workingAspects.map((aspect, index) => (
-                    <li key={index}>{aspect}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {archetype.nonWorkingAspects && archetype.nonWorkingAspects.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Что не работает (искажения):</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.nonWorkingAspects.map((aspect, index) => (
-                    <li key={index}>{aspect}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            
             {archetype.worldContactBasis && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Контакт с миром должен строиться на:</h4>
-                <p className="text-sm">{archetype.worldContactBasis}</p>
+                <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.worldContactBasis}</p>
               </div>
             )}
           </>
         )}
         
+        {/* Realization specific fields */}
         {archetype.code === 'realization' && (
           <>
             {archetype.formula && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Формула:</h4>
-                <p className="text-sm">{archetype.formula}</p>
+                <p className="text-sm bg-purple-50 p-3 rounded-md border border-purple-200">{archetype.formula}</p>
               </div>
             )}
-            {archetype.potentialRealizationWays && archetype.potentialRealizationWays.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Как реализуется потенциал:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.potentialRealizationWays.map((way, index) => (
-                    <li key={index}>{way}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {archetype.successSources && archetype.successSources.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Источники успеха:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.successSources.map((source, index) => (
-                    <li key={index}>{source}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            
             {archetype.realizationType && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Тип реализации:</h4>
-                <p className="text-sm">{archetype.realizationType}</p>
-              </div>
-            )}
-            {archetype.realizationObstacles && archetype.realizationObstacles.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Искажения (что мешает реализовываться):</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.realizationObstacles.map((obstacle, index) => (
-                    <li key={index}>{obstacle}</li>
-                  ))}
-                </ul>
+                <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.realizationType}</p>
               </div>
             )}
           </>
         )}
         
+        {/* Generator specific fields */}
         {archetype.code === 'generator' && (
           <>
             {archetype.generatorFormula && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Формула:</h4>
-                <p className="text-sm">{archetype.generatorFormula}</p>
+                <p className="text-sm bg-purple-50 p-3 rounded-md border border-purple-200">{archetype.generatorFormula}</p>
               </div>
             )}
-            {archetype.energySources && archetype.energySources.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Что дает энергию:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.energySources.map((source, index) => (
-                    <li key={index}>{source}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {archetype.energyDrains && archetype.energyDrains.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Что забирает энергию:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.energyDrains.map((drain, index) => (
-                    <li key={index}>{drain}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {archetype.flowSigns && archetype.flowSigns.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Признаки, что человек в потоке:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.flowSigns.map((sign, index) => (
-                    <li key={index}>{sign}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {archetype.burnoutSigns && archetype.burnoutSigns.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Признаки, что человек выгорел:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.burnoutSigns.map((sign, index) => (
-                    <li key={index}>{sign}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            
             {archetype.generatorRecommendation && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Рекомендация:</h4>
-                <p className="text-sm">{archetype.generatorRecommendation}</p>
+                <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.generatorRecommendation}</p>
               </div>
             )}
           </>
         )}
         
+        {/* Mission specific fields */}
         {archetype.code === 'mission' && (
           <>
             {archetype.missionEssence && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Суть миссии:</h4>
-                <p className="text-sm">{archetype.missionEssence}</p>
+                <p className="text-sm bg-purple-50 p-3 rounded-md border border-purple-200">{archetype.missionEssence}</p>
               </div>
             )}
-            {archetype.missionRealizationFactors && archetype.missionRealizationFactors.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Что реализует миссию:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.missionRealizationFactors.map((factor, index) => (
-                    <li key={index}>{factor}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {archetype.missionChallenges && (
-              <div>
-                <h4 className="text-md font-semibold">Испытания миссии:</h4>
-                <p className="text-sm">{archetype.missionChallenges}</p>
-              </div>
-            )}
-            {archetype.missionObstacles && archetype.missionObstacles.length > 0 && (
-              <div>
-                <h4 className="text-md font-semibold">Что мешает реализовываться:</h4>
-                <ul className="list-disc pl-5 text-sm">
-                  {archetype.missionObstacles.map((obstacle, index) => (
-                    <li key={index}>{obstacle}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            
             {archetype.mainTransformation && (
-              <div>
+              <div className="space-y-1">
                 <h4 className="text-md font-semibold">Главная трансформация:</h4>
-                <p className="text-sm">{archetype.mainTransformation}</p>
+                <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.mainTransformation}</p>
+              </div>
+            )}
+            
+            {archetype.missionChallenges && (
+              <div className="space-y-1">
+                <h4 className="text-md font-semibold">Испытания миссии:</h4>
+                <p className="text-sm bg-yellow-50 p-3 rounded-md border border-yellow-200">{archetype.missionChallenges}</p>
               </div>
             )}
           </>
+        )}
+        
+        {/* Common fields - split into columns for better layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          {/* Left column - positive aspects */}
+          <div className="space-y-4">
+            {archetype.resourceQualities && archetype.resourceQualities.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Ресурсные качества:</h4>
+                <ul className="space-y-2">
+                  {archetype.resourceQualities.map((quality, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{quality}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.workingAspects && archetype.workingAspects.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Что работает (в ресурсе):</h4>
+                <ul className="space-y-2">
+                  {archetype.workingAspects.map((aspect, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{aspect}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.potentialRealizationWays && archetype.potentialRealizationWays.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Как реализуется потенциал:</h4>
+                <ul className="space-y-2">
+                  {archetype.potentialRealizationWays.map((way, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{way}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.successSources && archetype.successSources.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Источники успеха:</h4>
+                <ul className="space-y-2">
+                  {archetype.successSources.map((source, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{source}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.energySources && archetype.energySources.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Что дает энергию:</h4>
+                <ul className="space-y-2">
+                  {archetype.energySources.map((source, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{source}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.flowSigns && archetype.flowSigns.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Признаки, что человек в потоке:</h4>
+                <ul className="space-y-2">
+                  {archetype.flowSigns.map((sign, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{sign}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.missionRealizationFactors && archetype.missionRealizationFactors.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Что реализует миссию:</h4>
+                <ul className="space-y-2">
+                  {archetype.missionRealizationFactors.map((factor, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                      <span>{factor}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          
+          {/* Right column - challenges and issues */}
+          <div className="space-y-4">
+            {archetype.keyDistortions && archetype.keyDistortions.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Ключевые искажения:</h4>
+                <ul className="space-y-2">
+                  {archetype.keyDistortions.map((distortion, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                      <span>{distortion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.nonWorkingAspects && archetype.nonWorkingAspects.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Что не работает (искажения):</h4>
+                <ul className="space-y-2">
+                  {archetype.nonWorkingAspects.map((aspect, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                      <span>{aspect}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.realizationObstacles && archetype.realizationObstacles.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Искажения (что мешает реализовываться):</h4>
+                <ul className="space-y-2">
+                  {archetype.realizationObstacles.map((obstacle, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                      <span>{obstacle}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.energyDrains && archetype.energyDrains.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Что забирает энергию:</h4>
+                <ul className="space-y-2">
+                  {archetype.energyDrains.map((drain, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                      <span>{drain}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.burnoutSigns && archetype.burnoutSigns.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Признаки, что человек выгорел:</h4>
+                <ul className="space-y-2">
+                  {archetype.burnoutSigns.map((sign, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                      <span>{sign}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {archetype.missionObstacles && archetype.missionObstacles.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold mb-2">Что мешает реализовываться:</h4>
+                <ul className="space-y-2">
+                  {archetype.missionObstacles.map((obstacle, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                      <span>{obstacle}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Recommendations at the bottom */}
+        {archetype.recommendations && archetype.recommendations.length > 0 && (
+          <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h4 className="text-md font-semibold mb-2">Рекомендации:</h4>
+            <ul className="space-y-2">
+              {archetype.recommendations.map((recommendation, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="inline-block h-5 w-5 text-blue-600 mr-2">✓</span>
+                  <span>{recommendation}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     );
@@ -354,6 +432,42 @@ const CalculationResult = () => {
       <div className="text-center p-4">
         <div className="text-muted-foreground">Целевой расчет в разработке.</div>
       </div>
+    );
+  };
+
+  const renderClientInfo = () => {
+    if (!calculation || calculation.type !== 'basic') return null;
+    
+    const basicCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
+    const { firstName, lastName, birthDate } = basicCalculation.inputs;
+    
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Информация о клиенте</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center">
+              <User className="mr-2 h-4 w-4 text-muted-foreground" />
+              <span>
+                {firstName} {lastName}
+              </span>
+            </div>
+            <div className="flex items-center">
+              <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+              <span>
+                {format(new Date(birthDate), 'dd MMMM yyyy', { locale: ru })}
+              </span>
+            </div>
+            <div className="flex items-center">
+              <span className="text-sm text-muted-foreground">
+                Создано: {format(new Date(calculation.createdAt), 'dd.MM.yyyy')}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -387,6 +501,9 @@ const CalculationResult = () => {
     
     return (
       <div className="space-y-6">
+        {/* Client Information */}
+        {renderClientInfo()}
+        
         {/* Profile (renamed from "Нумерологические коды") */}
         <Card>
           <CardHeader>
@@ -419,11 +536,12 @@ const CalculationResult = () => {
         </Card>
         
         {/* Summary */}
-        {archetypes.length > 0 && (
+        {archetypes.length > 0 && id && (
           <AIContentSection 
             title="Саммари" 
             type="summary"
-            archetypes={archetypes} 
+            archetypes={archetypes}
+            calculationId={id}
           />
         )}
         
@@ -475,67 +593,74 @@ const CalculationResult = () => {
           </div>
           
           {/* Content panel based on active section */}
-          {activeSection === 'strengths-weaknesses' && (
+          {activeSection === 'strengths-weaknesses' && id && (
             <Card>
               <CardContent className="pt-6">
                 {archetypes.length > 0 && (
                   <AIContentSection 
                     title=""
                     type="strengths-weaknesses"
-                    archetypes={archetypes} 
+                    archetypes={archetypes}
+                    calculationId={id}
                   />
                 )}
               </CardContent>
             </Card>
           )}
           
-          {activeSection === 'code-conflicts' && (
+          {activeSection === 'code-conflicts' && id && (
             <Card>
               <CardContent className="pt-6">
                 {archetypes.length > 0 && (
                   <AIContentSection 
                     title=""
                     type="code-conflicts"
-                    archetypes={archetypes} 
+                    archetypes={archetypes}
+                    calculationId={id}
                   />
                 )}
               </CardContent>
             </Card>
           )}
           
-          {activeSection === 'potential-problems' && (
+          {activeSection === 'potential-problems' && id && (
             <Card>
               <CardContent className="pt-6">
                 {archetypes.length > 0 && (
                   <AIContentSection 
                     title=""
                     type="potential-problems"
-                    archetypes={archetypes} 
+                    archetypes={archetypes}
+                    calculationId={id}
                   />
                 )}
               </CardContent>
             </Card>
           )}
           
-          {activeSection === 'practices' && (
+          {activeSection === 'practices' && id && (
             <Card>
               <CardContent className="pt-6">
                 {archetypes.length > 0 && (
                   <AIContentSection 
                     title=""
                     type="practices"
-                    archetypes={archetypes} 
+                    archetypes={archetypes}
+                    calculationId={id}
                   />
                 )}
               </CardContent>
             </Card>
           )}
           
-          {activeSection === 'assistant' && (
+          {activeSection === 'assistant' && id && (
             <Card>
               <CardContent className="pt-6">
                 {archetypes.length > 0 && (
-                  <AIChat archetypes={archetypes} />
+                  <AIChat 
+                    archetypes={archetypes}
+                    calculationId={id}
+                  />
                 )}
               </CardContent>
             </Card>
