@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { addArchetypeDescription, getAllArchetypeDescriptions, getArchetypeDescription } from "@/utils/archetypeDescriptions";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { ArchetypeForm } from "@/components/archetypes/ArchetypeForm";
 import { ArchetypesList } from "@/components/archetypes/ArchetypesList";
 
@@ -215,7 +215,7 @@ const ArchetypesAdminPage = () => {
 
     addArchetypeDescription(archetypeDescription);
     
-    toast.success("Описание архетипа сохранено");
+    toast.success(`Архетип ${selectedCode} со значением ${selectedValue} успешно сохранен`);
     
     // Update the descriptions list
     setDescriptions(getAllArchetypeDescriptions());

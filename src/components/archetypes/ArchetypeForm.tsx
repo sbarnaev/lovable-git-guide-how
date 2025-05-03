@@ -10,12 +10,8 @@ import { ConnectorTabContent } from "./ConnectorTabContent";
 import { RealizationTabContent } from "./RealizationTabContent";
 import { GeneratorTabContent } from "./GeneratorTabContent";
 import { MissionTabContent } from "./MissionTabContent";
-import { ArchetypePreview } from "./ArchetypePreview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-
-// Тип для значений вкладок, включая 'general'
-type TabType = NumerologyCodeType | 'general';
 
 interface ArchetypeFormProps {
   selectedCode: NumerologyCodeType;
@@ -92,13 +88,10 @@ interface ArchetypeFormProps {
 }
 
 export const ArchetypeForm = (props: ArchetypeFormProps) => {
-  // Для миссии допустимы значения 1-9 и 11 (мастер-число)
-  const allowedValues = props.selectedCode === 'mission' 
-    ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 11] 
-    : [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    
-  // Активная вкладка с типизацией
-  const [activeTab, setActiveTab] = useState<TabType>(props.selectedCode);
+  const allowedValues = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const missionAllowedValues = [...allowedValues, 11]; // Для миссии добавляем мастер-число 11
+  
+  const [archetypeValue, setArchetypeValue] = useState<number>(props.selectedValue);
   
   const handleSaveClick = () => {
     props.onSave();
@@ -112,22 +105,153 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     generator: "Код Генератора",
     mission: "Код Миссии"
   };
+
+  // Инициализируем отображение соответствующего контента для выбранного кода
+  const getTabContent = () => {
+    switch (props.selectedCode) {
+      case 'personality':
+        return (
+          <PersonalityTabContent
+            resourceManifestation={props.resourceManifestation}
+            setResourceManifestation={props.setResourceManifestation}
+            distortedManifestation={props.distortedManifestation}
+            setDistortedManifestation={props.setDistortedManifestation}
+            developmentTask={props.developmentTask}
+            setDevelopmentTask={props.setDevelopmentTask}
+            resourceQualities={props.resourceQualities}
+            setResourceQualities={props.setResourceQualities}
+            keyDistortions={props.keyDistortions}
+            setKeyDistortions={props.setKeyDistortions}
+          />
+        );
+      case 'connector':
+        return (
+          <ConnectorTabContent
+            keyTask={props.keyTask}
+            setKeyTask={props.setKeyTask}
+            workingAspects={props.workingAspects}
+            setWorkingAspects={props.setWorkingAspects}
+            nonWorkingAspects={props.nonWorkingAspects}
+            setNonWorkingAspects={props.setNonWorkingAspects}
+            worldContactBasis={props.worldContactBasis}
+            setWorldContactBasis={props.setWorldContactBasis}
+          />
+        );
+      case 'realization':
+        return (
+          <RealizationTabContent
+            formula={props.formula}
+            setFormula={props.setFormula}
+            potentialRealizationWays={props.potentialRealizationWays}
+            setPotentialRealizationWays={props.setPotentialRealizationWays}
+            successSources={props.successSources}
+            setSuccessSources={props.setSuccessSources}
+            realizationType={props.realizationType}
+            setRealizationType={props.setRealizationType}
+            realizationObstacles={props.realizationObstacles}
+            setRealizationObstacles={props.setRealizationObstacles}
+            recommendations={props.recommendations}
+            setRecommendations={props.setRecommendations}
+          />
+        );
+      case 'generator':
+        return (
+          <GeneratorTabContent
+            generatorFormula={props.generatorFormula}
+            setGeneratorFormula={props.setGeneratorFormula}
+            energySources={props.energySources}
+            setEnergySources={props.setEnergySources}
+            energyDrains={props.energyDrains}
+            setEnergyDrains={props.setEnergyDrains}
+            flowSigns={props.flowSigns}
+            setFlowSigns={props.setFlowSigns}
+            burnoutSigns={props.burnoutSigns}
+            setBurnoutSigns={props.setBurnoutSigns}
+            generatorRecommendation={props.generatorRecommendation}
+            setGeneratorRecommendation={props.setGeneratorRecommendation}
+          />
+        );
+      case 'mission':
+        return (
+          <MissionTabContent
+            missionEssence={props.missionEssence}
+            setMissionEssence={props.setMissionEssence}
+            missionRealizationFactors={props.missionRealizationFactors}
+            setMissionRealizationFactors={props.setMissionRealizationFactors}
+            missionChallenges={props.missionChallenges}
+            setMissionChallenges={props.setMissionChallenges}
+            missionObstacles={props.missionObstacles}
+            setMissionObstacles={props.setMissionObstacles}
+            mainTransformation={props.mainTransformation}
+            setMainTransformation={props.setMainTransformation}
+          />
+        );
+      default:
+        return (
+          <GeneralTabContent
+            title={props.title}
+            setTitle={props.setTitle}
+            description={props.description}
+            setDescription={props.setDescription}
+            maleImageUrl={props.maleImageUrl}
+            setMaleImageUrl={props.setMaleImageUrl}
+            femaleImageUrl={props.femaleImageUrl}
+            setFemaleImageUrl={props.setFemaleImageUrl}
+          />
+        );
+    }
+  };
   
   return (
     <div className="space-y-6">
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-xl">Выберите тип и значение кода</CardTitle>
+          <CardTitle className="text-xl">Архетип {archetypeValue}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Тип кода</label>
+              <label className="text-sm font-medium">Выберите значение архетипа</label>
+              <Select 
+                value={archetypeValue.toString()} 
+                onValueChange={(value) => {
+                  const numValue = parseInt(value);
+                  setArchetypeValue(numValue);
+                  props.setSelectedValue(numValue);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите значение" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allowedValues.map((value) => (
+                    <SelectItem key={value} value={value.toString()}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                  {/* Добавляем 11 только для миссии */}
+                  {props.selectedCode === 'mission' && (
+                    <SelectItem key={11} value="11">
+                      11 (мастер-число)
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Выберите тип кода</label>
               <Select 
                 value={props.selectedCode} 
                 onValueChange={(value: NumerologyCodeType) => {
                   props.setSelectedCode(value);
-                  setActiveTab(value); // Автоматически переключать на соответствующий таб
+                  
+                  // Если выбрана миссия и значение было 11, оставляем его
+                  // Если выбран другой код и было 11, сбрасываем на 1
+                  if (value !== 'mission' && props.selectedValue === 11) {
+                    props.setSelectedValue(1);
+                    setArchetypeValue(1);
+                  }
                 }}
               >
                 <SelectTrigger>
@@ -142,43 +266,20 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Значение</label>
-              <Select 
-                value={props.selectedValue.toString()} 
-                onValueChange={(value) => props.setSelectedValue(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите значение" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allowedValues.map((value) => (
-                    <SelectItem key={value} value={value.toString()}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           
           <div className="bg-muted p-4 rounded-md">
             <p className="text-sm">
-              <strong>Текущий выбор:</strong> {codeLabels[props.selectedCode]} со значением {props.selectedValue}
+              <strong>Редактирование:</strong> {codeLabels[props.selectedCode]} для архетипа {props.selectedValue}
             </p>
           </div>
         </CardContent>
       </Card>
       
-      <Tabs value={activeTab} onValueChange={(value: TabType) => setActiveTab(value)} className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4 w-full">
+      <Tabs defaultValue="general">
+        <TabsList className="grid grid-cols-6 mb-4 w-full">
           <TabsTrigger value="general">Общее</TabsTrigger>
-          <TabsTrigger value="personality">Личность</TabsTrigger>
-          <TabsTrigger value="connector">Коннектор</TabsTrigger>
-          <TabsTrigger value="realization">Реализация</TabsTrigger>
-          <TabsTrigger value="generator">Генератор</TabsTrigger>
-          <TabsTrigger value="mission">Миссия</TabsTrigger>
+          <TabsTrigger value="codeDetails">Данные кода</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -194,88 +295,10 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
           />
         </TabsContent>
         
-        <TabsContent value="personality">
-          <PersonalityTabContent
-            resourceManifestation={props.resourceManifestation}
-            setResourceManifestation={props.setResourceManifestation}
-            distortedManifestation={props.distortedManifestation}
-            setDistortedManifestation={props.setDistortedManifestation}
-            developmentTask={props.developmentTask}
-            setDevelopmentTask={props.setDevelopmentTask}
-            resourceQualities={props.resourceQualities}
-            setResourceQualities={props.setResourceQualities}
-            keyDistortions={props.keyDistortions}
-            setKeyDistortions={props.setKeyDistortions}
-          />
-        </TabsContent>
-        
-        <TabsContent value="connector">
-          <ConnectorTabContent
-            keyTask={props.keyTask}
-            setKeyTask={props.setKeyTask}
-            workingAspects={props.workingAspects}
-            setWorkingAspects={props.setWorkingAspects}
-            nonWorkingAspects={props.nonWorkingAspects}
-            setNonWorkingAspects={props.setNonWorkingAspects}
-            worldContactBasis={props.worldContactBasis}
-            setWorldContactBasis={props.setWorldContactBasis}
-          />
-        </TabsContent>
-        
-        <TabsContent value="realization">
-          <RealizationTabContent
-            formula={props.formula}
-            setFormula={props.setFormula}
-            potentialRealizationWays={props.potentialRealizationWays}
-            setPotentialRealizationWays={props.setPotentialRealizationWays}
-            successSources={props.successSources}
-            setSuccessSources={props.setSuccessSources}
-            realizationType={props.realizationType}
-            setRealizationType={props.setRealizationType}
-            realizationObstacles={props.realizationObstacles}
-            setRealizationObstacles={props.setRealizationObstacles}
-            recommendations={props.recommendations}
-            setRecommendations={props.setRecommendations}
-          />
-        </TabsContent>
-        
-        <TabsContent value="generator">
-          <GeneratorTabContent
-            generatorFormula={props.generatorFormula}
-            setGeneratorFormula={props.setGeneratorFormula}
-            energySources={props.energySources}
-            setEnergySources={props.setEnergySources}
-            energyDrains={props.energyDrains}
-            setEnergyDrains={props.setEnergyDrains}
-            flowSigns={props.flowSigns}
-            setFlowSigns={props.setFlowSigns}
-            burnoutSigns={props.burnoutSigns}
-            setBurnoutSigns={props.setBurnoutSigns}
-            generatorRecommendation={props.generatorRecommendation}
-            setGeneratorRecommendation={props.setGeneratorRecommendation}
-          />
-        </TabsContent>
-        
-        <TabsContent value="mission">
-          <MissionTabContent
-            missionEssence={props.missionEssence}
-            setMissionEssence={props.setMissionEssence}
-            missionRealizationFactors={props.missionRealizationFactors}
-            setMissionRealizationFactors={props.setMissionRealizationFactors}
-            missionChallenges={props.missionChallenges}
-            setMissionChallenges={props.setMissionChallenges}
-            missionObstacles={props.missionObstacles}
-            setMissionObstacles={props.setMissionObstacles}
-            mainTransformation={props.mainTransformation}
-            setMainTransformation={props.setMainTransformation}
-          />
+        <TabsContent value="codeDetails">
+          {getTabContent()}
         </TabsContent>
       </Tabs>
-      
-      <ArchetypePreview 
-        selectedCode={props.selectedCode} 
-        selectedValue={props.selectedValue}
-      />
       
       <div className="py-4 flex justify-center">
         <Button onClick={handleSaveClick} size="lg" className="px-8">

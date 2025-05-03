@@ -1,3 +1,4 @@
+
 import { useNavigate, useParams } from "react-router-dom";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { Button } from "@/components/ui/button";
@@ -8,14 +9,15 @@ import { ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { ArchetypePreview } from "@/components/archetypes/ArchetypePreview";
 import { BasicCalculation, BasicCalculationResults, Calculation, PartnershipCalculation, TargetCalculation } from "@/types";
+import { getArchetypeDescription } from "@/utils/archetypeDescriptions";
+import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 
 const CalculationResult = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { getCalculation } = useCalculations();
-  const [activeArchetypeTab, setActiveArchetypeTab] = useState("personality");
+  const [activeArchetypeTab, setActiveArchetypeTab] = useState<NumerologyCodeType>("personality");
   
   const calculation = id ? getCalculation(id) : undefined;
   
@@ -55,6 +57,15 @@ const CalculationResult = () => {
     // Приведение типа calculation к BasicCalculation
     const typedCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
     const { numerology, strengths, challenges, recommendations, fullCodes } = typedCalculation.results;
+
+    // Получаем архетипы для каждого кода, если они есть в базе
+    const archetypes: Record<NumerologyCodeType, ArchetypeDescription | undefined> = {
+      personality: fullCodes ? getArchetypeDescription('personality', fullCodes.personalityCode) : undefined,
+      connector: fullCodes ? getArchetypeDescription('connector', fullCodes.connectorCode) : undefined,
+      realization: fullCodes ? getArchetypeDescription('realization', fullCodes.realizationCode) : undefined,
+      generator: fullCodes ? getArchetypeDescription('generator', fullCodes.generatorCode) : undefined,
+      mission: fullCodes ? getArchetypeDescription('mission', fullCodes.missionCode) : undefined
+    };
     
     return (
       <div className="space-y-6">
@@ -166,39 +177,400 @@ const CalculationResult = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">Подробные архетипы</h2>
             
-            <Tabs value={activeArchetypeTab} onValueChange={setActiveArchetypeTab}>
+            <Tabs value={activeArchetypeTab} onValueChange={(value: NumerologyCodeType) => setActiveArchetypeTab(value)}>
               <TabsList className="grid grid-cols-5 mb-4 w-full">
-                <TabsTrigger value="personality">Личность</TabsTrigger>
-                <TabsTrigger value="connector">Коннектор</TabsTrigger>
-                <TabsTrigger value="realization">Реализация</TabsTrigger>
-                <TabsTrigger value="generator">Генератор</TabsTrigger>
-                <TabsTrigger value="mission">Миссия</TabsTrigger>
+                <TabsTrigger value="personality">
+                  Личность {fullCodes.personalityCode}
+                </TabsTrigger>
+                <TabsTrigger value="connector">
+                  Коннектор {fullCodes.connectorCode}
+                </TabsTrigger>
+                <TabsTrigger value="realization">
+                  Реализация {fullCodes.realizationCode}
+                </TabsTrigger>
+                <TabsTrigger value="generator">
+                  Генератор {fullCodes.generatorCode}
+                </TabsTrigger>
+                <TabsTrigger value="mission">
+                  Миссия {fullCodes.missionCode}
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="personality">
-                <ArchetypePreview selectedCode="personality" selectedValue={fullCodes.personalityCode} />
+                {renderArchetypeDetails(archetypes.personality)}
               </TabsContent>
               
               <TabsContent value="connector">
-                <ArchetypePreview selectedCode="connector" selectedValue={fullCodes.connectorCode} />
+                {renderArchetypeDetails(archetypes.connector)}
               </TabsContent>
               
               <TabsContent value="realization">
-                <ArchetypePreview selectedCode="realization" selectedValue={fullCodes.realizationCode} />
+                {renderArchetypeDetails(archetypes.realization)}
               </TabsContent>
               
               <TabsContent value="generator">
-                <ArchetypePreview selectedCode="generator" selectedValue={fullCodes.generatorCode} />
+                {renderArchetypeDetails(archetypes.generator)}
               </TabsContent>
               
               <TabsContent value="mission">
-                <ArchetypePreview selectedCode="mission" selectedValue={fullCodes.missionCode} />
+                {renderArchetypeDetails(archetypes.mission)}
               </TabsContent>
             </Tabs>
           </div>
         )}
       </div>
     );
+  };
+  
+  const renderArchetypeDetails = (archetype: ArchetypeDescription | undefined) => {
+    if (!archetype) {
+      return (
+        <Card>
+          <CardContent className="py-4">
+            <div className="text-center text-muted-foreground">
+              Описание архетипа не найдено
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Отображаем соответствующее содержимое в зависимости от типа кода
+    switch (archetype.code) {
+      case 'personality':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>{archetype.title || `Архетип личности ${archetype.value}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {archetype.description && (
+                <div>
+                  <h3 className="font-medium mb-2">Описание:</h3>
+                  <p>{archetype.description}</p>
+                </div>
+              )}
+              
+              {archetype.resourceManifestation && (
+                <div>
+                  <h3 className="font-medium mb-2">Ресурсное проявление:</h3>
+                  <p>{archetype.resourceManifestation}</p>
+                </div>
+              )}
+              
+              {archetype.distortedManifestation && (
+                <div>
+                  <h3 className="font-medium mb-2">Искаженное проявление:</h3>
+                  <p>{archetype.distortedManifestation}</p>
+                </div>
+              )}
+              
+              {archetype.developmentTask && (
+                <div>
+                  <h3 className="font-medium mb-2">Задача развития:</h3>
+                  <p>{archetype.developmentTask}</p>
+                </div>
+              )}
+              
+              {archetype.resourceQualities && archetype.resourceQualities.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Ключевые качества в ресурсе:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.resourceQualities.map((quality, idx) => (
+                      <li key={idx}>{quality}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.keyDistortions && archetype.keyDistortions.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Ключевые искажения:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.keyDistortions.map((distortion, idx) => (
+                      <li key={idx}>{distortion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+        
+      case 'connector':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>{archetype.title || `Архетип коннектора ${archetype.value}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {archetype.description && (
+                <div>
+                  <h3 className="font-medium mb-2">Описание:</h3>
+                  <p>{archetype.description}</p>
+                </div>
+              )}
+              
+              {archetype.keyTask && (
+                <div>
+                  <h3 className="font-medium mb-2">Ключевая задача:</h3>
+                  <p>{archetype.keyTask}</p>
+                </div>
+              )}
+              
+              {archetype.workingAspects && archetype.workingAspects.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Что работает (в ресурсе):</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.workingAspects.map((aspect, idx) => (
+                      <li key={idx}>{aspect}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.nonWorkingAspects && archetype.nonWorkingAspects.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Что не работает (искажения):</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.nonWorkingAspects.map((aspect, idx) => (
+                      <li key={idx}>{aspect}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.worldContactBasis && (
+                <div>
+                  <h3 className="font-medium mb-2">Контакт с миром должен строиться на:</h3>
+                  <p>{archetype.worldContactBasis}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+        
+      case 'realization':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>{archetype.title || `Архетип реализации ${archetype.value}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {archetype.description && (
+                <div>
+                  <h3 className="font-medium mb-2">Описание:</h3>
+                  <p>{archetype.description}</p>
+                </div>
+              )}
+              
+              {archetype.formula && (
+                <div>
+                  <h3 className="font-medium mb-2">Формула:</h3>
+                  <p>{archetype.formula}</p>
+                </div>
+              )}
+              
+              {archetype.potentialRealizationWays && archetype.potentialRealizationWays.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Как реализуется потенциал:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.potentialRealizationWays.map((way, idx) => (
+                      <li key={idx}>{way}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.successSources && archetype.successSources.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Где находится источник дохода и успеха:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.successSources.map((source, idx) => (
+                      <li key={idx}>{source}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.realizationType && (
+                <div>
+                  <h3 className="font-medium mb-2">Тип реализации:</h3>
+                  <p>{archetype.realizationType}</p>
+                </div>
+              )}
+              
+              {archetype.realizationObstacles && archetype.realizationObstacles.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Искажения (что мешает реализовываться):</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.realizationObstacles.map((obstacle, idx) => (
+                      <li key={idx}>{obstacle}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.recommendations && archetype.recommendations.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Рекомендации:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.recommendations.map((recommendation, idx) => (
+                      <li key={idx}>{recommendation}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+        
+      case 'generator':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>{archetype.title || `Архетип генератора ${archetype.value}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {archetype.description && (
+                <div>
+                  <h3 className="font-medium mb-2">Описание:</h3>
+                  <p>{archetype.description}</p>
+                </div>
+              )}
+              
+              {archetype.generatorFormula && (
+                <div>
+                  <h3 className="font-medium mb-2">Формула:</h3>
+                  <p>{archetype.generatorFormula}</p>
+                </div>
+              )}
+              
+              {archetype.energySources && archetype.energySources.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Что дает энергию:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.energySources.map((source, idx) => (
+                      <li key={idx}>{source}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.energyDrains && archetype.energyDrains.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Что забирает энергию:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.energyDrains.map((drain, idx) => (
+                      <li key={idx}>{drain}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.flowSigns && archetype.flowSigns.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Признаки, что человек в потоке:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.flowSigns.map((sign, idx) => (
+                      <li key={idx}>{sign}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.burnoutSigns && archetype.burnoutSigns.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Признаки, что человек выгорел:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.burnoutSigns.map((sign, idx) => (
+                      <li key={idx}>{sign}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.generatorRecommendation && (
+                <div>
+                  <h3 className="font-medium mb-2">Рекомендация:</h3>
+                  <p>{archetype.generatorRecommendation}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+        
+      case 'mission':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>{archetype.title || `Архетип миссии ${archetype.value}`}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {archetype.description && (
+                <div>
+                  <h3 className="font-medium mb-2">Описание:</h3>
+                  <p>{archetype.description}</p>
+                </div>
+              )}
+              
+              {archetype.missionEssence && (
+                <div>
+                  <h3 className="font-medium mb-2">Суть миссии:</h3>
+                  <p>{archetype.missionEssence}</p>
+                </div>
+              )}
+              
+              {archetype.missionRealizationFactors && archetype.missionRealizationFactors.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Что реализует миссию:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.missionRealizationFactors.map((factor, idx) => (
+                      <li key={idx}>{factor}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.missionChallenges && (
+                <div>
+                  <h3 className="font-medium mb-2">Испытания миссии:</h3>
+                  <p>{archetype.missionChallenges}</p>
+                </div>
+              )}
+              
+              {archetype.missionObstacles && archetype.missionObstacles.length > 0 && (
+                <div>
+                  <h3 className="font-medium mb-2">Что мешает реализовываться:</h3>
+                  <ul className="space-y-1 list-disc pl-5">
+                    {archetype.missionObstacles.map((obstacle, idx) => (
+                      <li key={idx}>{obstacle}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {archetype.mainTransformation && (
+                <div>
+                  <h3 className="font-medium mb-2">Главная трансформация:</h3>
+                  <p>{archetype.mainTransformation}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+        
+      default:
+        return (
+          <Card>
+            <CardContent className="py-4">
+              <div className="text-center text-muted-foreground">
+                Данные для этого типа кода отсутствуют
+              </div>
+            </CardContent>
+          </Card>
+        );
+    }
   };
   
   const renderPartnershipResults = () => {
