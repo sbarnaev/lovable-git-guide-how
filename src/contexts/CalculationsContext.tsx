@@ -2,11 +2,11 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { Calculation, CalculationData, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
 import { getArchetypeDescription } from '@/utils/archetypeDescriptions';
-import { ArchetypeDescription } from '@/types/numerology';
+import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 
 interface CalculationsContextType {
   calculations: Calculation[];
-  createCalculation: (calculation: CalculationData) => Calculation;
+  createCalculation: (calculation: CalculationData) => Promise<Calculation>;
   getCalculation: (id: string) => Calculation | undefined;
 }
 
@@ -18,7 +18,7 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
     return storedCalculations ? JSON.parse(storedCalculations) : [];
   });
 
-  const createCalculation = (calculationData: CalculationData) => {
+  const createCalculation = async (calculationData: CalculationData) => {
     const id = Date.now().toString();
     const createdAt = new Date().toISOString();
     
@@ -53,11 +53,11 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
           const archetypeDescriptions: ArchetypeDescription[] = [];
           
           // Получаем и добавляем каждый архетип
-          const personalityArchetype = getArchetypeDescription('personality', personalityCode);
-          const connectorArchetype = getArchetypeDescription('connector', connectorCode);
-          const realizationArchetype = getArchetypeDescription('realization', realizationCode);
-          const generatorArchetype = getArchetypeDescription('generator', generatorCode);
-          const missionArchetype = getArchetypeDescription('mission', missionCode);
+          const personalityArchetype = await getArchetypeDescription('personality', personalityCode);
+          const connectorArchetype = await getArchetypeDescription('connector', connectorCode);
+          const realizationArchetype = await getArchetypeDescription('realization', realizationCode);
+          const generatorArchetype = await getArchetypeDescription('generator', generatorCode);
+          const missionArchetype = await getArchetypeDescription('mission', missionCode);
           
           if (personalityArchetype) archetypeDescriptions.push(personalityArchetype);
           if (connectorArchetype) archetypeDescriptions.push(connectorArchetype);

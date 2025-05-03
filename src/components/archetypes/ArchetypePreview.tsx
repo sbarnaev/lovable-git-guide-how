@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NumerologyCodeType } from "@/types/numerology";
 import { getArchetypeDescription } from "@/utils/archetypeDescriptions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ArchetypePreviewProps {
   selectedCode: NumerologyCodeType;
@@ -12,12 +13,47 @@ interface ArchetypePreviewProps {
 
 export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePreviewProps) => {
   const [activeTab, setActiveTab] = useState<string>("general");
-  const archetype = getArchetypeDescription(selectedCode, selectedValue);
+  const [archetype, setArchetype] = useState<any>(undefined);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Загружаем архетип при изменении кода или значения
+  useEffect(() => {
+    const loadArchetype = async () => {
+      setLoading(true);
+      try {
+        const result = await getArchetypeDescription(selectedCode, selectedValue);
+        setArchetype(result);
+      } catch (error) {
+        console.error("Error loading archetype:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadArchetype();
+  }, [selectedCode, selectedValue]);
 
   // Автоматически выбирать таб в зависимости от выбранного кода
   useEffect(() => {
     setActiveTab(selectedCode === 'all' ? 'general' : selectedCode);
   }, [selectedCode]);
+
+  if (loading) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle><Skeleton className="h-6 w-48" /></CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!archetype) {
     return (
@@ -127,7 +163,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Ключевые качества в ресурсе:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.resourceQualities?.map((quality, idx) => (
+                  {archetype.resourceQualities?.map((quality: string, idx: number) => (
                     <li key={idx}>{quality}</li>
                   ))}
                 </ul>
@@ -136,7 +172,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Ключевые искажения:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.keyDistortions?.map((distortion, idx) => (
+                  {archetype.keyDistortions?.map((distortion: string, idx: number) => (
                     <li key={idx}>{distortion}</li>
                   ))}
                 </ul>
@@ -154,7 +190,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Что работает (в ресурсе):</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.workingAspects?.map((aspect, idx) => (
+                  {archetype.workingAspects?.map((aspect: string, idx: number) => (
                     <li key={idx}>{aspect}</li>
                   ))}
                 </ul>
@@ -163,7 +199,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Что не работает (искажения):</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.nonWorkingAspects?.map((aspect, idx) => (
+                  {archetype.nonWorkingAspects?.map((aspect: string, idx: number) => (
                     <li key={idx}>{aspect}</li>
                   ))}
                 </ul>
@@ -186,7 +222,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Как реализуется потенциал:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.potentialRealizationWays?.map((way, idx) => (
+                  {archetype.potentialRealizationWays?.map((way: string, idx: number) => (
                     <li key={idx}>{way}</li>
                   ))}
                 </ul>
@@ -195,7 +231,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Где находится источник дохода и успеха:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.successSources?.map((source, idx) => (
+                  {archetype.successSources?.map((source: string, idx: number) => (
                     <li key={idx}>{source}</li>
                   ))}
                 </ul>
@@ -209,7 +245,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Искажения (что мешает реализовываться):</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.realizationObstacles?.map((obstacle, idx) => (
+                  {archetype.realizationObstacles?.map((obstacle: string, idx: number) => (
                     <li key={idx}>{obstacle}</li>
                   ))}
                 </ul>
@@ -218,7 +254,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Рекомендации:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.recommendations?.map((rec, idx) => (
+                  {archetype.recommendations?.map((rec: string, idx: number) => (
                     <li key={idx}>{rec}</li>
                   ))}
                 </ul>
@@ -236,7 +272,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Что дает энергию:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.energySources?.map((source, idx) => (
+                  {archetype.energySources?.map((source: string, idx: number) => (
                     <li key={idx}>{source}</li>
                   ))}
                 </ul>
@@ -245,7 +281,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Что забирает энергию:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.energyDrains?.map((drain, idx) => (
+                  {archetype.energyDrains?.map((drain: string, idx: number) => (
                     <li key={idx}>{drain}</li>
                   ))}
                 </ul>
@@ -254,7 +290,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Признаки, что человек в потоке:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.flowSigns?.map((sign, idx) => (
+                  {archetype.flowSigns?.map((sign: string, idx: number) => (
                     <li key={idx}>{sign}</li>
                   ))}
                 </ul>
@@ -263,7 +299,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Признаки, что человек выгорел:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.burnoutSigns?.map((sign, idx) => (
+                  {archetype.burnoutSigns?.map((sign: string, idx: number) => (
                     <li key={idx}>{sign}</li>
                   ))}
                 </ul>
@@ -286,7 +322,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Что реализует миссию:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.missionRealizationFactors?.map((factor, idx) => (
+                  {archetype.missionRealizationFactors?.map((factor: string, idx: number) => (
                     <li key={idx}>{factor}</li>
                   ))}
                 </ul>
@@ -300,7 +336,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
               <div>
                 <h3 className="font-medium mb-1">Что мешает релизовываться:</h3>
                 <ul className="list-disc list-inside text-sm pl-2">
-                  {archetype.missionObstacles?.map((obstacle, idx) => (
+                  {archetype.missionObstacles?.map((obstacle: string, idx: number) => (
                     <li key={idx}>{obstacle}</li>
                   ))}
                 </ul>

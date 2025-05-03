@@ -9,7 +9,126 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      archetype_descriptions: {
+        Row: {
+          burnout_signs: string[] | null
+          challenges: string[] | null
+          code: string
+          created_at: string | null
+          description: string | null
+          development_task: string | null
+          distorted_manifestation: string | null
+          energy_drains: string[] | null
+          energy_sources: string[] | null
+          female_image_url: string | null
+          flow_signs: string[] | null
+          formula: string | null
+          generator_formula: string | null
+          generator_recommendation: string | null
+          id: string
+          key_distortions: string[] | null
+          key_task: string | null
+          main_transformation: string | null
+          male_image_url: string | null
+          mission_challenges: string | null
+          mission_essence: string | null
+          mission_obstacles: string[] | null
+          mission_realization_factors: string[] | null
+          non_working_aspects: string[] | null
+          potential_realization_ways: string[] | null
+          realization_obstacles: string[] | null
+          realization_type: string | null
+          recommendations: string[] | null
+          resource_manifestation: string | null
+          resource_qualities: string[] | null
+          strengths: string[] | null
+          success_sources: string[] | null
+          title: string
+          updated_at: string | null
+          value: number
+          working_aspects: string[] | null
+          world_contact_basis: string | null
+        }
+        Insert: {
+          burnout_signs?: string[] | null
+          challenges?: string[] | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          development_task?: string | null
+          distorted_manifestation?: string | null
+          energy_drains?: string[] | null
+          energy_sources?: string[] | null
+          female_image_url?: string | null
+          flow_signs?: string[] | null
+          formula?: string | null
+          generator_formula?: string | null
+          generator_recommendation?: string | null
+          id?: string
+          key_distortions?: string[] | null
+          key_task?: string | null
+          main_transformation?: string | null
+          male_image_url?: string | null
+          mission_challenges?: string | null
+          mission_essence?: string | null
+          mission_obstacles?: string[] | null
+          mission_realization_factors?: string[] | null
+          non_working_aspects?: string[] | null
+          potential_realization_ways?: string[] | null
+          realization_obstacles?: string[] | null
+          realization_type?: string | null
+          recommendations?: string[] | null
+          resource_manifestation?: string | null
+          resource_qualities?: string[] | null
+          strengths?: string[] | null
+          success_sources?: string[] | null
+          title: string
+          updated_at?: string | null
+          value: number
+          working_aspects?: string[] | null
+          world_contact_basis?: string | null
+        }
+        Update: {
+          burnout_signs?: string[] | null
+          challenges?: string[] | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          development_task?: string | null
+          distorted_manifestation?: string | null
+          energy_drains?: string[] | null
+          energy_sources?: string[] | null
+          female_image_url?: string | null
+          flow_signs?: string[] | null
+          formula?: string | null
+          generator_formula?: string | null
+          generator_recommendation?: string | null
+          id?: string
+          key_distortions?: string[] | null
+          key_task?: string | null
+          main_transformation?: string | null
+          male_image_url?: string | null
+          mission_challenges?: string | null
+          mission_essence?: string | null
+          mission_obstacles?: string[] | null
+          mission_realization_factors?: string[] | null
+          non_working_aspects?: string[] | null
+          potential_realization_ways?: string[] | null
+          realization_obstacles?: string[] | null
+          realization_type?: string | null
+          recommendations?: string[] | null
+          resource_manifestation?: string | null
+          resource_qualities?: string[] | null
+          strengths?: string[] | null
+          success_sources?: string[] | null
+          title?: string
+          updated_at?: string | null
+          value?: number
+          working_aspects?: string[] | null
+          world_contact_basis?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

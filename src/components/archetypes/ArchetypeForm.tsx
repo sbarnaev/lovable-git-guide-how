@@ -92,9 +92,12 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
   const missionAllowedValues = [...allowedValues, 11]; // Для миссии добавляем мастер-число 11
   
   const [archetypeValue, setArchetypeValue] = useState<number>(props.selectedValue);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   
   const handleSaveClick = () => {
+    setIsSaving(true);
     props.onSave();
+    setIsSaving(false);
     toast.success(`Архетип ${props.selectedCode} со значением ${props.selectedValue} успешно сохранен`);
   };
   
@@ -103,7 +106,8 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     connector: "Код Коннектора",
     realization: "Код Реализации",
     generator: "Код Генератора",
-    mission: "Код Миссии"
+    mission: "Код Миссии",
+    all: "Все коды" // Добавляем для типа 'all'
   };
 
   // Инициализируем отображение соответствующего контента для выбранного кода
@@ -301,8 +305,13 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
       </Tabs>
       
       <div className="py-4 flex justify-center">
-        <Button onClick={handleSaveClick} size="lg" className="px-8">
-          Сохранить архетип
+        <Button 
+          onClick={handleSaveClick} 
+          size="lg" 
+          className="px-8"
+          disabled={isSaving}
+        >
+          {isSaving ? 'Сохранение...' : 'Сохранить архетип'}
         </Button>
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { Button } from "@/components/ui/button";
@@ -8,19 +7,78 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BasicCalculation, BasicCalculationResults, Calculation, PartnershipCalculation, TargetCalculation } from "@/types";
 import { getArchetypeDescription } from "@/utils/archetypeDescriptions";
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CalculationResult = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { getCalculation } = useCalculations();
   const [activeArchetypeTab, setActiveArchetypeTab] = useState<NumerologyCodeType>("personality");
+  const [archetypes, setArchetypes] = useState<Partial<Record<NumerologyCodeType, ArchetypeDescription | undefined>>>({});
+  const [loading, setLoading] = useState<boolean>(true);
   
   const calculation = id ? getCalculation(id) : undefined;
+  
+  // Загружаем описания архетипов из базы данных
+  useEffect(() => {
+    if (calculation && calculation.type === 'basic') {
+      const typedCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
+      const { fullCodes, archetypeDescriptions } = typedCalculation.results;
+      
+      // Если архетипы есть в результатах расчета, используем их
+      if (archetypeDescriptions && archetypeDescriptions.length > 0) {
+        const archetypesMap: Partial<Record<NumerologyCodeType, ArchetypeDescription>> = {};
+        
+        archetypeDescriptions.forEach(desc => {
+          archetypesMap[desc.code as NumerologyCodeType] = desc;
+        });
+        
+        setArchetypes(archetypesMap);
+        setLoading(false);
+        console.log("Using archetypes from calculation results:", archetypeDescriptions);
+      } 
+      // Иначе пытаемся получить из базы данных
+      else if (fullCodes) {
+        const fetchArchetypes = async () => {
+          try {
+            const personalityArchetype = await getArchetypeDescription('personality', fullCodes.personalityCode);
+            const connectorArchetype = await getArchetypeDescription('connector', fullCodes.connectorCode);
+            const realizationArchetype = await getArchetypeDescription('realization', fullCodes.realizationCode);
+            const generatorArchetype = await getArchetypeDescription('generator', fullCodes.generatorCode);
+            const missionArchetype = await getArchetypeDescription('mission', fullCodes.missionCode);
+            
+            const fetchedArchetypes: Partial<Record<NumerologyCodeType, ArchetypeDescription | undefined>> = {
+              personality: personalityArchetype,
+              connector: connectorArchetype,
+              realization: realizationArchetype,
+              generator: generatorArchetype,
+              mission: missionArchetype,
+              all: undefined  // Добавляем поле 'all' для типа
+            };
+            
+            setArchetypes(fetchedArchetypes);
+            console.log("Using archetypes from database:", fetchedArchetypes);
+          } catch (error) {
+            console.error("Error fetching archetypes:", error);
+            toast.error("Ошибка при загрузке архетипов");
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        fetchArchetypes();
+      } else {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+    }
+  }, [calculation]);
   
   if (!calculation) {
     return (
@@ -57,40 +115,12 @@ const CalculationResult = () => {
   const renderBasicResults = () => {
     // Приведение типа calculation к BasicCalculation
     const typedCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
-    const { numerology, strengths, challenges, recommendations, fullCodes, archetypeDescriptions } = typedCalculation.results;
-
-    // Получаем архетипы из результатов расчета или из базы данных
-    let archetypes: Record<NumerologyCodeType, ArchetypeDescription | undefined> = {
-      personality: undefined,
-      connector: undefined,
-      realization: undefined,
-      generator: undefined,
-      mission: undefined
-    };
-
-    // Если архетипы есть в результатах расчета, используем их
-    if (archetypeDescriptions && archetypeDescriptions.length > 0) {
-      archetypeDescriptions.forEach(desc => {
-        archetypes[desc.code] = desc;
-      });
-      console.log("Using archetypes from calculation results:", archetypeDescriptions);
-    } 
-    // Иначе пытаемся получить из базы данных
-    else if (fullCodes) {
-      archetypes = {
-        personality: getArchetypeDescription('personality', fullCodes.personalityCode),
-        connector: getArchetypeDescription('connector', fullCodes.connectorCode),
-        realization: getArchetypeDescription('realization', fullCodes.realizationCode),
-        generator: getArchetypeDescription('generator', fullCodes.generatorCode),
-        mission: getArchetypeDescription('mission', fullCodes.missionCode)
-      };
-      console.log("Using archetypes from database:", archetypes);
-    }
+    const { numerology, strengths, challenges, recommendations, fullCodes } = typedCalculation.results;
     
     // Проверяем наличие архетипов для отображения
-    const hasArchetypes = Object.values(archetypes).some(a => a !== undefined);
+    const hasArchetypes = fullCodes && Object.values(archetypes).some(a => a !== undefined);
     
-    if (fullCodes && !hasArchetypes) {
+    if (fullCodes && !hasArchetypes && !loading) {
       toast.warning("Описания архетипов не найдены. Пожалуйста, добавьте их в разделе управления архетипами.");
     }
     
@@ -204,45 +234,58 @@ const CalculationResult = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">Подробные архетипы</h2>
             
-            <Tabs value={activeArchetypeTab} onValueChange={(value: NumerologyCodeType) => setActiveArchetypeTab(value)}>
-              <TabsList className="grid grid-cols-5 mb-4 w-full">
-                <TabsTrigger value="personality" disabled={!archetypes.personality}>
-                  Личность {fullCodes.personalityCode}
-                </TabsTrigger>
-                <TabsTrigger value="connector" disabled={!archetypes.connector}>
-                  Коннектор {fullCodes.connectorCode}
-                </TabsTrigger>
-                <TabsTrigger value="realization" disabled={!archetypes.realization}>
-                  Реализация {fullCodes.realizationCode}
-                </TabsTrigger>
-                <TabsTrigger value="generator" disabled={!archetypes.generator}>
-                  Генератор {fullCodes.generatorCode}
-                </TabsTrigger>
-                <TabsTrigger value="mission" disabled={!archetypes.mission}>
-                  Миссия {fullCodes.missionCode}
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="personality">
-                {renderArchetypeDetails(archetypes.personality)}
-              </TabsContent>
-              
-              <TabsContent value="connector">
-                {renderArchetypeDetails(archetypes.connector)}
-              </TabsContent>
-              
-              <TabsContent value="realization">
-                {renderArchetypeDetails(archetypes.realization)}
-              </TabsContent>
-              
-              <TabsContent value="generator">
-                {renderArchetypeDetails(archetypes.generator)}
-              </TabsContent>
-              
-              <TabsContent value="mission">
-                {renderArchetypeDetails(archetypes.mission)}
-              </TabsContent>
-            </Tabs>
+            {loading ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Tabs value={activeArchetypeTab} onValueChange={(value) => setActiveArchetypeTab(value as NumerologyCodeType)}>
+                <TabsList className="grid grid-cols-5 mb-4 w-full">
+                  <TabsTrigger value="personality" disabled={!archetypes.personality}>
+                    Личность {fullCodes.personalityCode}
+                  </TabsTrigger>
+                  <TabsTrigger value="connector" disabled={!archetypes.connector}>
+                    Коннектор {fullCodes.connectorCode}
+                  </TabsTrigger>
+                  <TabsTrigger value="realization" disabled={!archetypes.realization}>
+                    Реализация {fullCodes.realizationCode}
+                  </TabsTrigger>
+                  <TabsTrigger value="generator" disabled={!archetypes.generator}>
+                    Генератор {fullCodes.generatorCode}
+                  </TabsTrigger>
+                  <TabsTrigger value="mission" disabled={!archetypes.mission}>
+                    Миссия {fullCodes.missionCode}
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="personality">
+                  {renderArchetypeDetails(archetypes.personality)}
+                </TabsContent>
+                
+                <TabsContent value="connector">
+                  {renderArchetypeDetails(archetypes.connector)}
+                </TabsContent>
+                
+                <TabsContent value="realization">
+                  {renderArchetypeDetails(archetypes.realization)}
+                </TabsContent>
+                
+                <TabsContent value="generator">
+                  {renderArchetypeDetails(archetypes.generator)}
+                </TabsContent>
+                
+                <TabsContent value="mission">
+                  {renderArchetypeDetails(archetypes.mission)}
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         )}
       </div>
@@ -629,7 +672,7 @@ const CalculationResult = () => {
                 </div>
                 <div className="space-y-1">
                   <div className="text-2xl font-bold text-numerica">{compatibility.physical}%</div>
-                  <div className="text-sm text-muted-foreground">Физическая</div>
+                  <div className="text-sm text-muted-foreground">Физ��ческая</div>
                 </div>
               </div>
             </div>
