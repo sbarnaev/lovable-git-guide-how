@@ -359,18 +359,8 @@ export async function getArchetypeDescriptions(codes: { type: NumerologyCodeType
 /**
  * Получает все описания архетипов
  */
-export async function getAllArchetypeDescriptions(): Promise<ArchetypeDescription[]> {
-  try {
-    // Загружаем архетипы из базы данных, если кеш пуст
-    if (archetypeDescriptionsCache.length === 0) {
-      await loadArchetypesFromDb();
-    }
-    
-    return [...archetypeDescriptionsCache];
-  } catch (error) {
-    console.error('Error in getAllArchetypeDescriptions:', error);
-    return [];
-  }
+export function getAllArchetypeDescriptions(): ArchetypeDescription[] {
+  return [...archetypeDescriptionsCache];
 }
 
 /**

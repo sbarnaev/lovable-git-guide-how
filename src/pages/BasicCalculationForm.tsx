@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { calculateAllCodes } from "@/utils/numerologyCalculator";
 import { getArchetypeDescriptions } from "@/utils/archetypeDescriptions";
 import { ArchetypePreview } from "@/components/archetypes/ArchetypePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArchetypeDescription } from "@/types/numerology";
 
 const BasicCalculationForm = () => {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ const BasicCalculationForm = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!clientName || !birthDate) {
@@ -56,7 +56,9 @@ const BasicCalculationForm = () => {
     
     try {
       const codes = calculateAllCodes(birthDate);
-      const archetypeDescriptions = getArchetypeDescriptions([
+      
+      // Fetch archetype descriptions
+      const archetypeDescriptions = await getArchetypeDescriptions([
         { type: 'personality', value: codes.personalityCode },
         { type: 'connector', value: codes.connectorCode },
         { type: 'realization', value: codes.realizationCode },
@@ -65,20 +67,26 @@ const BasicCalculationForm = () => {
       ]);
       
       // Извлекаем ключевые качества и искажения для результатов
-      const strengths = archetypeDescriptions
-        .flatMap(desc => desc.resourceQualities || [])
-        .slice(0, 5);
+      let strengths: string[] = [];
+      let challenges: string[] = [];
+      let recommendations: string[] = [];
       
-      const challenges = archetypeDescriptions
-        .flatMap(desc => desc.keyDistortions || [])
-        .slice(0, 3);
-      
-      const recommendations = archetypeDescriptions
-        .flatMap(desc => desc.recommendations || [])
-        .slice(0, 5);
+      if (archetypeDescriptions.length > 0) {
+        strengths = archetypeDescriptions
+          .flatMap(desc => desc.resourceQualities || [])
+          .slice(0, 5);
+        
+        challenges = archetypeDescriptions
+          .flatMap(desc => desc.keyDistortions || [])
+          .slice(0, 3);
+        
+        recommendations = archetypeDescriptions
+          .flatMap(desc => desc.recommendations || [])
+          .slice(0, 5);
+      }
       
       // Создаем расчет с полученными данными
-      const calculation = createCalculation({
+      const calculation = await createCalculation({
         type: 'basic',
         clientName,
         birthDate,
@@ -92,7 +100,7 @@ const BasicCalculationForm = () => {
           challenges: challenges.length > 0 ? challenges : ["Нетерпеливость", "Перфекционизм"],
           recommendations: recommendations.length > 0 ? recommendations : ["Развивать эмпатию", "Практиковать осознанность", "Работать над коммуникацией"],
           fullCodes: codes,
-          archetypeDescriptions: archetypeDescriptions
+          archetypeDescriptions
         },
       });
       

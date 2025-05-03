@@ -11,6 +11,7 @@ const ArchetypesAdminPage = () => {
   const [descriptions, setDescriptions] = useState<ArchetypeDescription[]>([]);
   const [selectedCode, setSelectedCode] = useState<NumerologyCodeType>('personality');
   const [selectedValue, setSelectedValue] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(true);
   
   // General fields
   const [title, setTitle] = useState("");
@@ -56,60 +57,84 @@ const ArchetypesAdminPage = () => {
 
   // Load all descriptions
   useEffect(() => {
-    const allDescriptions = getAllArchetypeDescriptions();
-    setDescriptions(allDescriptions);
+    const loadDescriptions = async () => {
+      setLoading(true);
+      try {
+        const allDescriptions = getAllArchetypeDescriptions();
+        setDescriptions(allDescriptions);
+      } catch (error) {
+        console.error("Error loading descriptions:", error);
+        toast.error("Не удалось загрузить архетипы");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadDescriptions();
   }, []);
 
   // Load specific description when code or value changes
   useEffect(() => {
-    const desc = getArchetypeDescription(selectedCode, selectedValue);
+    const loadArchetype = async () => {
+      setLoading(true);
+      try {
+        const desc = await getArchetypeDescription(selectedCode, selectedValue);
+        
+        if (desc) {
+          // General
+          setTitle(desc.title || "");
+          setDescription(desc.description || "");
+          setMaleImageUrl(desc.maleImageUrl || "");
+          setFemaleImageUrl(desc.femaleImageUrl || "");
+          
+          // Personality Code
+          setResourceManifestation(desc.resourceManifestation || "");
+          setDistortedManifestation(desc.distortedManifestation || "");
+          setDevelopmentTask(desc.developmentTask || "");
+          setResourceQualities(desc.resourceQualities?.join('\n') || "");
+          setKeyDistortions(desc.keyDistortions?.join('\n') || "");
+          
+          // Connector Code
+          setKeyTask(desc.keyTask || "");
+          setWorkingAspects(desc.workingAspects?.join('\n') || "");
+          setNonWorkingAspects(desc.nonWorkingAspects?.join('\n') || "");
+          setWorldContactBasis(desc.worldContactBasis || "");
+          
+          // Realization Code
+          setFormula(desc.formula || "");
+          setPotentialRealizationWays(desc.potentialRealizationWays?.join('\n') || "");
+          setSuccessSources(desc.successSources?.join('\n') || "");
+          setRealizationType(desc.realizationType || "");
+          setRealizationObstacles(desc.realizationObstacles?.join('\n') || "");
+          setRecommendations(desc.recommendations?.join('\n') || "");
+          
+          // Generator Code
+          setGeneratorFormula(desc.generatorFormula || "");
+          setEnergySources(desc.energySources?.join('\n') || "");
+          setEnergyDrains(desc.energyDrains?.join('\n') || "");
+          setFlowSigns(desc.flowSigns?.join('\n') || "");
+          setBurnoutSigns(desc.burnoutSigns?.join('\n') || "");
+          setGeneratorRecommendation(desc.generatorRecommendation || "");
+          
+          // Mission Code
+          setMissionEssence(desc.missionEssence || "");
+          setMissionRealizationFactors(desc.missionRealizationFactors?.join('\n') || "");
+          setMissionChallenges(desc.missionChallenges || "");
+          setMissionObstacles(desc.missionObstacles?.join('\n') || "");
+          setMainTransformation(desc.mainTransformation || "");
+        } else {
+          // Clear all fields if no description is found
+          clearAllFields();
+        }
+      } catch (error) {
+        console.error("Error loading archetype:", error);
+        clearAllFields();
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    if (desc) {
-      // General
-      setTitle(desc.title || "");
-      setDescription(desc.description || "");
-      setMaleImageUrl(desc.maleImageUrl || "");
-      setFemaleImageUrl(desc.femaleImageUrl || "");
-      
-      // Personality Code
-      setResourceManifestation(desc.resourceManifestation || "");
-      setDistortedManifestation(desc.distortedManifestation || "");
-      setDevelopmentTask(desc.developmentTask || "");
-      setResourceQualities(desc.resourceQualities?.join('\n') || "");
-      setKeyDistortions(desc.keyDistortions?.join('\n') || "");
-      
-      // Connector Code
-      setKeyTask(desc.keyTask || "");
-      setWorkingAspects(desc.workingAspects?.join('\n') || "");
-      setNonWorkingAspects(desc.nonWorkingAspects?.join('\n') || "");
-      setWorldContactBasis(desc.worldContactBasis || "");
-      
-      // Realization Code
-      setFormula(desc.formula || "");
-      setPotentialRealizationWays(desc.potentialRealizationWays?.join('\n') || "");
-      setSuccessSources(desc.successSources?.join('\n') || "");
-      setRealizationType(desc.realizationType || "");
-      setRealizationObstacles(desc.realizationObstacles?.join('\n') || "");
-      setRecommendations(desc.recommendations?.join('\n') || "");
-      
-      // Generator Code
-      setGeneratorFormula(desc.generatorFormula || "");
-      setEnergySources(desc.energySources?.join('\n') || "");
-      setEnergyDrains(desc.energyDrains?.join('\n') || "");
-      setFlowSigns(desc.flowSigns?.join('\n') || "");
-      setBurnoutSigns(desc.burnoutSigns?.join('\n') || "");
-      setGeneratorRecommendation(desc.generatorRecommendation || "");
-      
-      // Mission Code
-      setMissionEssence(desc.missionEssence || "");
-      setMissionRealizationFactors(desc.missionRealizationFactors?.join('\n') || "");
-      setMissionChallenges(desc.missionChallenges || "");
-      setMissionObstacles(desc.missionObstacles?.join('\n') || "");
-      setMainTransformation(desc.mainTransformation || "");
-    } else {
-      // Clear all fields if no description is found
-      clearAllFields();
-    }
+    loadArchetype();
   }, [selectedCode, selectedValue]);
   
   const clearAllFields = () => {
@@ -156,7 +181,7 @@ const ArchetypesAdminPage = () => {
     setMainTransformation("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const parseTextToArray = (text: string) => {
       return text
         .split('\n')
@@ -213,12 +238,21 @@ const ArchetypesAdminPage = () => {
       challenges: parseTextToArray(keyDistortions),
     };
 
-    addArchetypeDescription(archetypeDescription);
-    
-    toast.success(`Архетип ${selectedCode} со значением ${selectedValue} успешно сохранен`);
-    
-    // Update the descriptions list
-    setDescriptions(getAllArchetypeDescriptions());
+    try {
+      const success = await addArchetypeDescription(archetypeDescription);
+      
+      if (success) {
+        toast.success(`Архетип ${selectedCode} со значением ${selectedValue} успешно сохранен`);
+        
+        // Update the descriptions list
+        setDescriptions(getAllArchetypeDescriptions());
+      } else {
+        toast.error("Не удалось сохранить архетип");
+      }
+    } catch (error) {
+      console.error("Error saving archetype:", error);
+      toast.error("Ошибка при сохранении архетипа");
+    }
   };
 
   const handleArchetypeSelect = (code: NumerologyCodeType, value: number) => {
@@ -242,6 +276,7 @@ const ArchetypesAdminPage = () => {
           </CardHeader>
           <CardContent>
             <ArchetypeForm
+              loading={loading}
               selectedCode={selectedCode}
               setSelectedCode={setSelectedCode}
               selectedValue={selectedValue}
@@ -325,6 +360,7 @@ const ArchetypesAdminPage = () => {
             <ArchetypesList 
               descriptions={descriptions} 
               onSelect={handleArchetypeSelect}
+              loading={loading}
             />
           </CardContent>
         </Card>

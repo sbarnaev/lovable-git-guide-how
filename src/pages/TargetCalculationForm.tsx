@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ const TargetCalculationForm = () => {
   const [targetQuery, setTargetQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!clientName || !birthDate || !targetQuery) {
@@ -51,7 +50,7 @@ const TargetCalculationForm = () => {
       timeframe: "3-6 месяцев"
     };
     
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const calculationData: TargetCalculation = {
           type: 'target',
@@ -61,7 +60,7 @@ const TargetCalculationForm = () => {
           results,
         };
         
-        const calculation = createCalculation(calculationData);
+        const calculation = await createCalculation(calculationData);
         
         toast({
           title: "Успешно",

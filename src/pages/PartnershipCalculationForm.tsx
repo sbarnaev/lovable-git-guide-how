@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,7 @@ const PartnershipCalculationForm = () => {
   const [partnerBirthDate, setPartnerBirthDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!clientName || !birthDate || !partnerName || !partnerBirthDate) {
@@ -49,7 +48,7 @@ const PartnershipCalculationForm = () => {
       recommendations: ["Развивать совместные интересы", "Уделять внимание активному слушанию", "Прояснять ожидания"]
     };
     
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         const calculationData: PartnershipCalculation = {
           type: 'partnership',
@@ -60,7 +59,7 @@ const PartnershipCalculationForm = () => {
           results,
         };
         
-        const calculation = createCalculation(calculationData);
+        const calculation = await createCalculation(calculationData);
         
         toast({
           title: "Успешно",

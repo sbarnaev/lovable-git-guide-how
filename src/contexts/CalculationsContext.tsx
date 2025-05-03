@@ -18,7 +18,7 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
     return storedCalculations ? JSON.parse(storedCalculations) : [];
   });
 
-  const createCalculation = async (calculationData: CalculationData) => {
+  const createCalculation = async (calculationData: CalculationData): Promise<Calculation> => {
     const id = Date.now().toString();
     const createdAt = new Date().toISOString();
     
@@ -52,21 +52,26 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
           // Получаем описания для каждого кода
           const archetypeDescriptions: ArchetypeDescription[] = [];
           
-          // Получаем и добавляем каждый архетип
-          const personalityArchetype = await getArchetypeDescription('personality', personalityCode);
-          const connectorArchetype = await getArchetypeDescription('connector', connectorCode);
-          const realizationArchetype = await getArchetypeDescription('realization', realizationCode);
-          const generatorArchetype = await getArchetypeDescription('generator', generatorCode);
-          const missionArchetype = await getArchetypeDescription('mission', missionCode);
-          
-          if (personalityArchetype) archetypeDescriptions.push(personalityArchetype);
-          if (connectorArchetype) archetypeDescriptions.push(connectorArchetype);
-          if (realizationArchetype) archetypeDescriptions.push(realizationArchetype);
-          if (generatorArchetype) archetypeDescriptions.push(generatorArchetype);
-          if (missionArchetype) archetypeDescriptions.push(missionArchetype);
-          
-          // Добавляем описания архетипов к результатам
-          basicData.results.archetypeDescriptions = archetypeDescriptions;
+          try {
+            // Получаем и добавляем каждый архетип
+            const descriptions = await Promise.all([
+              getArchetypeDescription('personality', personalityCode),
+              getArchetypeDescription('connector', connectorCode),
+              getArchetypeDescription('realization', realizationCode),
+              getArchetypeDescription('generator', generatorCode),
+              getArchetypeDescription('mission', missionCode)
+            ]);
+            
+            // Фильтруем undefined значения
+            descriptions.forEach(desc => {
+              if (desc) archetypeDescriptions.push(desc);
+            });
+            
+            // Добавляем описания архетипов к результатам
+            basicData.results.archetypeDescriptions = archetypeDescriptions;
+          } catch (error) {
+            console.error('Error fetching archetype descriptions:', error);
+          }
         }
         
         newCalculation = {
