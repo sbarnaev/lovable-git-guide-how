@@ -17,9 +17,11 @@ export function addArchetypeDescription(description: ArchetypeDescription) {
   if (existingIndex >= 0) {
     // Replace existing description
     archetypeDescriptionsDB[existingIndex] = description;
+    console.log(`Updated archetype: ${description.code}-${description.value}`);
   } else {
     // Add new description
     archetypeDescriptionsDB.push(description);
+    console.log(`Added new archetype: ${description.code}-${description.value}`);
   }
   
   // Save to localStorage for persistence
@@ -37,7 +39,14 @@ export function addMultipleArchetypeDescriptions(descriptions: ArchetypeDescript
  * Получает описание архетипа по коду и значению
  */
 export function getArchetypeDescription(code: NumerologyCodeType, value: number): ArchetypeDescription | undefined {
-  return archetypeDescriptionsDB.find(desc => desc.code === code && desc.value === value);
+  const result = archetypeDescriptionsDB.find(desc => desc.code === code && desc.value === value);
+  
+  // Debug logging to help diagnose issues
+  if (!result) {
+    console.log(`Archetype not found: ${code}-${value}`);
+  }
+  
+  return result;
 }
 
 /**
@@ -61,6 +70,7 @@ export function getAllArchetypeDescriptions(): ArchetypeDescription[] {
  */
 function saveDescriptionsToStorage() {
   localStorage.setItem('numerica_archetype_descriptions', JSON.stringify(archetypeDescriptionsDB));
+  console.log(`Saved ${archetypeDescriptionsDB.length} archetypes to storage`);
 }
 
 /**
@@ -70,12 +80,32 @@ export function loadDescriptionsFromStorage() {
   const storedDescriptions = localStorage.getItem('numerica_archetype_descriptions');
   
   if (storedDescriptions) {
-    const descriptions = JSON.parse(storedDescriptions);
-    
-    // Clear current database and add loaded descriptions
-    archetypeDescriptionsDB.length = 0;
-    descriptions.forEach((desc: ArchetypeDescription) => archetypeDescriptionsDB.push(desc));
+    try {
+      const descriptions = JSON.parse(storedDescriptions);
+      
+      // Clear current database and add loaded descriptions
+      archetypeDescriptionsDB.length = 0;
+      descriptions.forEach((desc: ArchetypeDescription) => archetypeDescriptionsDB.push(desc));
+      
+      console.log(`Loaded ${archetypeDescriptionsDB.length} archetypes from storage`);
+    } catch (error) {
+      console.error('Error loading archetype descriptions from storage:', error);
+    }
+  } else {
+    console.log('No stored archetype descriptions found');
   }
+}
+
+/**
+ * Получает все значения для конкретного типа кода
+ */
+export function getValuesForCodeType(codeType: NumerologyCodeType): number[] {
+  const values = archetypeDescriptionsDB
+    .filter(desc => desc.code === codeType)
+    .map(desc => desc.value);
+  
+  // Возвращаем уникальные значения, отсортированные по возрастанию
+  return Array.from(new Set(values)).sort((a, b) => a - b);
 }
 
 // Initialize by loading saved descriptions

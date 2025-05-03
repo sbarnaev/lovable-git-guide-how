@@ -31,6 +31,36 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
     );
   }
 
+  // Определяем доступные вкладки в зависимости от типа кода
+  const getTabs = () => {
+    const tabs = [
+      { value: "general", label: "Общее" }
+    ];
+    
+    // Добавляем вкладки в зависимости от типа кода
+    if (selectedCode === 'personality' || selectedCode === 'all') {
+      tabs.push({ value: "personality", label: "Личность" });
+    }
+    
+    if (selectedCode === 'connector' || selectedCode === 'all') {
+      tabs.push({ value: "connector", label: "Коннектор" });
+    }
+    
+    if (selectedCode === 'realization' || selectedCode === 'all') {
+      tabs.push({ value: "realization", label: "Реализация" });
+    }
+    
+    if (selectedCode === 'generator' || selectedCode === 'all') {
+      tabs.push({ value: "generator", label: "Генератор" });
+    }
+    
+    if (selectedCode === 'mission' || selectedCode === 'all') {
+      tabs.push({ value: "mission", label: "Миссия" });
+    }
+    
+    return tabs;
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -38,12 +68,12 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4 grid grid-cols-5">
-            <TabsTrigger value="general">Общее</TabsTrigger>
-            <TabsTrigger value="personality">Личность</TabsTrigger>
-            <TabsTrigger value="connector">Коннектор</TabsTrigger>
-            <TabsTrigger value="realization">Реализация</TabsTrigger>
-            <TabsTrigger value="generator">Генератор</TabsTrigger>
+          <TabsList className="mb-4 grid grid-cols-6">
+            {getTabs().map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
           <TabsContent value="general">
