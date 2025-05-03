@@ -14,6 +14,9 @@ import { ArchetypePreview } from "./ArchetypePreview";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
+// Тип для значений вкладок, включая 'general'
+type TabType = NumerologyCodeType | 'general';
+
 interface ArchetypeFormProps {
   selectedCode: NumerologyCodeType;
   setSelectedCode: React.Dispatch<React.SetStateAction<NumerologyCodeType>>;
@@ -89,13 +92,12 @@ interface ArchetypeFormProps {
 }
 
 export const ArchetypeForm = (props: ArchetypeFormProps) => {
+  // Для миссии допустимы значения 1-9 и 11 (мастер-число)
   const allowedValues = props.selectedCode === 'mission' 
     ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 11] 
     : [1, 2, 3, 4, 5, 6, 7, 8, 9];
     
-  // Определяем тип activeTab как union type табов
-  type TabType = NumerologyCodeType | 'general';
-  // Изменяем логику для выбора таба - по умолчанию устанавливаем выбранный код
+  // Активная вкладка с типизацией
   const [activeTab, setActiveTab] = useState<TabType>(props.selectedCode);
   
   const handleSaveClick = () => {

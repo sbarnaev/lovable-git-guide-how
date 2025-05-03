@@ -87,9 +87,8 @@ export type CalculationData =
   | PartnershipCalculation
   | TargetCalculation;
 
-// Исправлено: тип Calculation теперь объединение с CalculationData, а не наследование
-export type Calculation = CalculationData & {
-  id: string;
-  createdAt: string;
-};
-
+// Исправлено: тип Calculation теперь корректное объединение типов
+export type Calculation = 
+  | (BasicCalculation & { id: string; createdAt: string })
+  | (PartnershipCalculation & { id: string; createdAt: string })
+  | (TargetCalculation & { id: string; createdAt: string });

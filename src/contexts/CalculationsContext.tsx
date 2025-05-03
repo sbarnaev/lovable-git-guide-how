@@ -1,10 +1,10 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Calculation } from '@/types';
+import { Calculation, CalculationData, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
 
 interface CalculationsContextType {
   calculations: Calculation[];
-  createCalculation: (calculation: Omit<Calculation, 'id' | 'createdAt'>) => Calculation;
+  createCalculation: (calculation: Omit<CalculationData, 'id' | 'createdAt'>) => Calculation;
   getCalculation: (id: string) => Calculation | undefined;
 }
 
@@ -16,12 +16,36 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
     return storedCalculations ? JSON.parse(storedCalculations) : [];
   });
 
-  const createCalculation = (calculationData: Omit<Calculation, 'id' | 'createdAt'>) => {
-    const newCalculation: Calculation = {
-      ...calculationData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
+  const createCalculation = (calculationData: Omit<CalculationData, 'id' | 'createdAt'>) => {
+    const id = Date.now().toString();
+    const createdAt = new Date().toISOString();
+    
+    // Создаем новое вычисление на основе типа входных данных
+    let newCalculation: Calculation;
+    
+    switch (calculationData.type) {
+      case 'partnership':
+        newCalculation = {
+          ...(calculationData as PartnershipCalculation),
+          id,
+          createdAt
+        };
+        break;
+      case 'target':
+        newCalculation = {
+          ...(calculationData as TargetCalculation),
+          id,
+          createdAt
+        };
+        break;
+      case 'basic':
+      default:
+        newCalculation = {
+          ...(calculationData as BasicCalculation),
+          id,
+          createdAt
+        };
+    }
 
     const updatedCalculations = [...calculations, newCalculation];
     setCalculations(updatedCalculations);

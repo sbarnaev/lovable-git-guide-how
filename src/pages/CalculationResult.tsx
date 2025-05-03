@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { ArchetypePreview } from "@/components/archetypes/ArchetypePreview";
-import { BasicCalculationResults } from "@/types";
+import { BasicCalculation, BasicCalculationResults, Calculation, PartnershipCalculation, TargetCalculation } from "@/types";
 
 const CalculationResult = () => {
   const navigate = useNavigate();
@@ -52,8 +52,9 @@ const CalculationResult = () => {
   };
   
   const renderBasicResults = () => {
-    const results = calculation.results as BasicCalculationResults;
-    const { numerology, strengths, challenges, recommendations, fullCodes } = results;
+    // Приведение типа calculation к BasicCalculation
+    const typedCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
+    const { numerology, strengths, challenges, recommendations, fullCodes } = typedCalculation.results;
     
     return (
       <div className="space-y-6">
@@ -201,7 +202,9 @@ const CalculationResult = () => {
   };
   
   const renderPartnershipResults = () => {
-    const { compatibility, strengths, challenges, recommendations } = calculation.results;
+    // Приведение типа calculation к PartnershipCalculation
+    const typedCalculation = calculation as (PartnershipCalculation & { id: string; createdAt: string });
+    const { compatibility, strengths, challenges, recommendations } = typedCalculation.results;
     
     return (
       <div className="space-y-6">
@@ -288,7 +291,9 @@ const CalculationResult = () => {
   };
   
   const renderTargetResults = () => {
-    const { analysis, recommendations, timeframe } = calculation.results;
+    // Приведение типа calculation к TargetCalculation
+    const typedCalculation = calculation as (TargetCalculation & { id: string; createdAt: string });
+    const { analysis, recommendations, timeframe } = typedCalculation.results;
     
     return (
       <div className="space-y-6">
@@ -414,7 +419,7 @@ const CalculationResult = () => {
                     <User className="h-4 w-4" />
                     <span>Партнер:</span>
                   </div>
-                  <div>{calculation.partnerName}</div>
+                  <div>{(calculation as PartnershipCalculation).partnerName}</div>
                 </div>
                 
                 <div className="space-y-1">
@@ -422,7 +427,7 @@ const CalculationResult = () => {
                     <Calendar className="h-4 w-4" />
                     <span>Дата рождения партнера:</span>
                   </div>
-                  <div>{formatDate(calculation.partnerBirthDate || '')}</div>
+                  <div>{formatDate((calculation as PartnershipCalculation).partnerBirthDate || '')}</div>
                 </div>
               </>
             )}
@@ -430,7 +435,7 @@ const CalculationResult = () => {
             {calculation.type === 'target' && (
               <div className="col-span-full space-y-1">
                 <div className="text-sm font-medium">Запрос:</div>
-                <div className="text-sm p-3 bg-muted rounded-md">{calculation.targetQuery}</div>
+                <div className="text-sm p-3 bg-muted rounded-md">{(calculation as TargetCalculation).targetQuery}</div>
               </div>
             )}
             
