@@ -93,8 +93,10 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 11] 
     : [1, 2, 3, 4, 5, 6, 7, 8, 9];
     
+  // Определяем тип activeTab как union type табов
+  type TabType = NumerologyCodeType | 'general';
   // Изменяем логику для выбора таба - по умолчанию устанавливаем выбранный код
-  const [activeTab, setActiveTab] = useState(props.selectedCode);
+  const [activeTab, setActiveTab] = useState<TabType>(props.selectedCode);
   
   const handleSaveClick = () => {
     props.onSave();
@@ -121,8 +123,8 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
               <label className="text-sm font-medium">Тип кода</label>
               <Select 
                 value={props.selectedCode} 
-                onValueChange={(value) => {
-                  props.setSelectedCode(value as NumerologyCodeType);
+                onValueChange={(value: NumerologyCodeType) => {
+                  props.setSelectedCode(value);
                   setActiveTab(value); // Автоматически переключать на соответствующий таб
                 }}
               >
@@ -167,7 +169,7 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
         </CardContent>
       </Card>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value: TabType) => setActiveTab(value)} className="w-full">
         <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4 w-full">
           <TabsTrigger value="general">Общее</TabsTrigger>
           <TabsTrigger value="personality">Личность</TabsTrigger>

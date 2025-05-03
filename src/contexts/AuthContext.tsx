@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
 
@@ -18,13 +17,15 @@ const MOCK_USERS: User[] = [
     id: '1',
     email: 'admin@numerica.com',
     name: 'Администратор',
-    role: 'admin'
+    role: 'admin',
+    createdAt: new Date().toISOString() // Добавлено обязательное поле createdAt
   },
   {
     id: '2',
     email: 'consultant@numerica.com',
     name: 'Консультант',
-    role: 'consultant'
+    role: 'consultant', // Изменено на допустимое значение (добавлено в тип User)
+    createdAt: new Date().toISOString() // Добавлено обязательное поле createdAt
   }
 ];
 

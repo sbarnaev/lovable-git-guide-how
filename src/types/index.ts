@@ -5,7 +5,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
-  role?: 'user' | 'admin';
+  role?: 'user' | 'admin' | 'consultant';
   avatarUrl?: string;
   createdAt: string;
 }
@@ -87,7 +87,9 @@ export type CalculationData =
   | PartnershipCalculation
   | TargetCalculation;
 
-export interface Calculation extends CalculationData {
+// Исправлено: тип Calculation теперь объединение с CalculationData, а не наследование
+export type Calculation = CalculationData & {
   id: string;
   createdAt: string;
-}
+};
+
