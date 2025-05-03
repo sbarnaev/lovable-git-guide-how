@@ -1,13 +1,12 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { ArrowLeft, Calendar, ChevronDown, ChevronUp, File, User } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { BasicCalculation, Calculation } from "@/types";
+import { useState } from "react";
+import { BasicCalculation } from "@/types";
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { AIContentSection } from "@/components/AIContentSection";
 import { AIChat } from "@/components/AIChat";
@@ -462,276 +461,204 @@ const CalculationResult = () => {
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Консультация</h2>
           
-          {/* Strengths and Weaknesses */}
-          <Collapsible 
-            open={activeSection === 'strengths-weaknesses'}
-            onOpenChange={() => toggleSection('strengths-weaknesses')}
-          >
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Сильные и слабые стороны</CardTitle>
-                  {activeSection === 'strengths-weaknesses' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {archetypes.length > 0 && activeSection === 'strengths-weaknesses' && (
-                    <AIContentSection 
-                      title=""
-                      type="strengths-weaknesses"
-                      archetypes={archetypes} 
-                    />
-                  )}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          {/* Кнопки в одну линию */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={activeSection === 'strengths-weaknesses' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('strengths-weaknesses')}
+              className="flex-1"
+            >
+              Сильные и слабые стороны
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'code-conflicts' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('code-conflicts')}
+              className="flex-1"
+            >
+              Конфликты кодов
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'potential-problems' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('potential-problems')}
+              className="flex-1"
+            >
+              Потенциальные проблемы
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'practices' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('practices')}
+              className="flex-1"
+            >
+              Практики
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'assistant' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('assistant')}
+              className="flex-1"
+            >
+              Помощник
+            </Button>
+          </div>
           
-          {/* Code Conflicts */}
-          <Collapsible 
-            open={activeSection === 'code-conflicts'}
-            onOpenChange={() => toggleSection('code-conflicts')}
-          >
+          {/* Контент секций */}
+          {activeSection === 'strengths-weaknesses' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Конфликты кодов</CardTitle>
-                  {activeSection === 'code-conflicts' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {archetypes.length > 0 && activeSection === 'code-conflicts' && (
-                    <AIContentSection 
-                      title=""
-                      type="code-conflicts"
-                      archetypes={archetypes} 
-                    />
-                  )}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="strengths-weaknesses"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
           
-          {/* Potential Problems */}
-          <Collapsible 
-            open={activeSection === 'potential-problems'}
-            onOpenChange={() => toggleSection('potential-problems')}
-          >
+          {activeSection === 'code-conflicts' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Потенциальные проблемы</CardTitle>
-                  {activeSection === 'potential-problems' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {archetypes.length > 0 && activeSection === 'potential-problems' && (
-                    <AIContentSection 
-                      title=""
-                      type="potential-problems"
-                      archetypes={archetypes} 
-                    />
-                  )}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="code-conflicts"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
           
-          {/* Practices */}
-          <Collapsible 
-            open={activeSection === 'practices'}
-            onOpenChange={() => toggleSection('practices')}
-          >
+          {activeSection === 'potential-problems' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Практики</CardTitle>
-                  {activeSection === 'practices' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {archetypes.length > 0 && activeSection === 'practices' && (
-                    <AIContentSection 
-                      title=""
-                      type="practices"
-                      archetypes={archetypes} 
-                    />
-                  )}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="potential-problems"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
           
-          {/* AI Assistant */}
-          <Collapsible 
-            open={activeSection === 'assistant'}
-            onOpenChange={() => toggleSection('assistant')}
-          >
+          {activeSection === 'practices' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Помощник</CardTitle>
-                  {activeSection === 'assistant' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {archetypes.length > 0 && activeSection === 'assistant' && (
-                    <AIChat archetypes={archetypes} />
-                  )}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="practices"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
+          
+          {activeSection === 'assistant' && (
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIChat archetypes={archetypes} />
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Textbook Section */}
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Учебник</h2>
           
-          {/* Personality Code */}
-          <Collapsible 
-            open={activeSection === 'personality'}
-            onOpenChange={() => toggleSection('personality')}
-          >
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Код Личности {fullCodes.personalityCode}</CardTitle>
-                  {activeSection === 'personality' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {renderArchetypeDetails(findArchetype('personality'))}
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+          {/* Кнопки в одну линию */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={activeSection === 'personality' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('personality')}
+              className="flex-1"
+            >
+              Код Личности {fullCodes.personalityCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'connector' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('connector')}
+              className="flex-1"
+            >
+              Код Коннектора {fullCodes.connectorCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'realization' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('realization')}
+              className="flex-1"
+            >
+              Код Реализации {fullCodes.realizationCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'generator' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('generator')}
+              className="flex-1"
+            >
+              Код Генератора {fullCodes.generatorCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'mission' ? "secondary" : "outline"} 
+              onClick={() => toggleSection('mission')}
+              className="flex-1"
+            >
+              Код Миссии {fullCodes.missionCode}
+            </Button>
+          </div>
           
-          {/* Connector Code */}
-          <Collapsible 
-            open={activeSection === 'connector'}
-            onOpenChange={() => toggleSection('connector')}
-          >
+          {/* Контент секций */}
+          {activeSection === 'personality' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Код Коннектора {fullCodes.connectorCode}</CardTitle>
-                  {activeSection === 'connector' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {renderArchetypeDetails(findArchetype('connector'))}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {renderArchetypeDetails(findArchetype('personality'))}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
           
-          {/* Realization Code */}
-          <Collapsible 
-            open={activeSection === 'realization'}
-            onOpenChange={() => toggleSection('realization')}
-          >
+          {activeSection === 'connector' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Код Реализации {fullCodes.realizationCode}</CardTitle>
-                  {activeSection === 'realization' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {renderArchetypeDetails(findArchetype('realization'))}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {renderArchetypeDetails(findArchetype('connector'))}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
           
-          {/* Generator Code */}
-          <Collapsible 
-            open={activeSection === 'generator'}
-            onOpenChange={() => toggleSection('generator')}
-          >
+          {activeSection === 'realization' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Код Генератора {fullCodes.generatorCode}</CardTitle>
-                  {activeSection === 'generator' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {renderArchetypeDetails(findArchetype('generator'))}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {renderArchetypeDetails(findArchetype('realization'))}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
           
-          {/* Mission Code */}
-          <Collapsible 
-            open={activeSection === 'mission'}
-            onOpenChange={() => toggleSection('mission')}
-          >
+          {activeSection === 'generator' && (
             <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="flex flex-row items-center justify-between cursor-pointer hover:bg-muted/50">
-                  <CardTitle className="text-lg">Код Миссии {fullCodes.missionCode}</CardTitle>
-                  {activeSection === 'mission' ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent>
-                  {renderArchetypeDetails(findArchetype('mission'))}
-                </CardContent>
-              </CollapsibleContent>
+              <CardContent className="pt-6">
+                {renderArchetypeDetails(findArchetype('generator'))}
+              </CardContent>
             </Card>
-          </Collapsible>
+          )}
+          
+          {activeSection === 'mission' && (
+            <Card>
+              <CardContent className="pt-6">
+                {renderArchetypeDetails(findArchetype('mission'))}
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Notes Section */}

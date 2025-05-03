@@ -12,12 +12,5 @@ const DEEPSEEK_API_KEY = "sk-c41441aa0398496691ab4276756da8cb";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Set DeepSeek API key as a secret for the edge function
-(async () => {
-  try {
-    await supabase.functions.setSecret('deepseek', 'DEEPSEEK_API_KEY', DEEPSEEK_API_KEY);
-    console.log('DeepSeek API key set as a secret successfully');
-  } catch (error) {
-    console.error('Failed to set DeepSeek API key as a secret:', error);
-  }
-})();
+// Экспортируем DeepSeek API key для использования в компонентах
+export const getDeepSeekApiKey = () => DEEPSEEK_API_KEY;

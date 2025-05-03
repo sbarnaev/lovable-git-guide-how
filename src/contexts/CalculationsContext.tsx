@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Calculation, CalculationData, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
 import { getArchetypeDescription } from '@/utils/archetypeDescriptions';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
@@ -30,6 +30,28 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
     const storedCalculations = localStorage.getItem('numerica_calculations');
     return storedCalculations ? JSON.parse(storedCalculations) : [];
   });
+
+  // При инициализации загружаем заметки из БД
+  useEffect(() => {
+    const loadNotes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('calculation_notes')
+          .select('*');
+
+        if (error) {
+          console.error('Ошибка загрузки заметок:', error);
+          return;
+        }
+
+        console.log('Заметки загружены из БД:', data);
+      } catch (error) {
+        console.error('Ошибка при загрузке заметок:', error);
+      }
+    };
+
+    loadNotes();
+  }, []);
 
   const createCalculation = async (calculationData: CalculationData): Promise<Calculation> => {
     const id = Date.now().toString();
@@ -92,6 +114,25 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
           id,
           createdAt
         };
+    }
+
+    // Создание записи о расчете в Supabase (упрощенное хранение метаданных)
+    try {
+      const { error } = await supabase
+        .from('calculation_notes')
+        .insert([{ 
+          calculation_id: id, 
+          content: `Расчет создан: ${new Date().toLocaleString()}\nТип: ${calculationData.type}\nКлиент: ${calculationData.clientName}`
+        }]);
+      
+      if (error) {
+        console.error('Ошибка сохранения расчета в БД:', error);
+        // Продолжаем работу даже при ошибке сохранения в БД
+      } else {
+        console.log('Расчет успешно сохранен в БД');
+      }
+    } catch (error) {
+      console.error('Ошибка при сохранении расчета:', error);
     }
 
     const updatedCalculations = [...calculations, newCalculation];

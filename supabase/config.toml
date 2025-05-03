@@ -46,6 +46,7 @@ port = 54324
 [functions]
 [functions.deepseek]
 verify_jwt = false
+env_DEEPSEEK_API_KEY = "sk-c41441aa0398496691ab4276756da8cb"
 
 [inbucket]
 enabled = true
