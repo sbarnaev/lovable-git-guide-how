@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,10 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { PartnershipCalculation } from "@/types";
 
 const PartnershipCalculationForm = () => {
   const navigate = useNavigate();
-  const { createCalculation } = useCalculations();
+  const { addCalculation } = useCalculations();
   const { toast } = useToast();
   
   const [clientName, setClientName] = useState("");
@@ -48,10 +48,10 @@ const PartnershipCalculationForm = () => {
       recommendations: ["Развивать совместные интересы", "Уделять внимание активному слушанию", "Прояснять ожидания"]
     };
     
-    setTimeout(async () => {
+    setTimeout(() => {
       try {
-        const calculationData: PartnershipCalculation = {
-          type: 'partnership',
+        const calculationData = {
+          type: 'partnership' as const,
           clientName,
           birthDate,
           partnerName,
@@ -59,14 +59,17 @@ const PartnershipCalculationForm = () => {
           results,
         };
         
-        const calculation = await createCalculation(calculationData);
+        addCalculation(calculationData);
         
         toast({
           title: "Успешно",
           description: "Расчет успешно создан",
         });
         
-        navigate(`/calculations/${calculation.id}`);
+        // Navigate after a short delay to allow state update
+        setTimeout(() => {
+          navigate("/calculations");
+        }, 500);
       } catch (error) {
         toast({
           title: "Ошибка",

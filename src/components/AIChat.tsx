@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { generateDeepSeekContent } from '@/services/deepseekService';
 import { ArchetypeDescription } from '@/types/numerology';
 import { toast } from 'sonner';
 import { SendIcon } from 'lucide-react';

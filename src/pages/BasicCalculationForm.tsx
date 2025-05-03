@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/CalculationsContext";
@@ -11,11 +13,10 @@ import { calculateAllCodes } from "@/utils/numerologyCalculator";
 import { getArchetypeDescriptions } from "@/utils/archetypeDescriptions";
 import { ArchetypePreview } from "@/components/archetypes/ArchetypePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArchetypeDescription } from "@/types/numerology";
 
 const BasicCalculationForm = () => {
   const navigate = useNavigate();
-  const { createCalculation } = useCalculations();
+  const { addCalculation } = useCalculations();
   
   const [clientName, setClientName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -86,8 +87,8 @@ const BasicCalculationForm = () => {
       }
       
       // Создаем расчет с полученными данными
-      const calculation = await createCalculation({
-        type: 'basic',
+      const calculationData = {
+        type: 'basic' as const,
         clientName,
         birthDate,
         results: {
@@ -102,10 +103,15 @@ const BasicCalculationForm = () => {
           fullCodes: codes,
           archetypeDescriptions
         },
-      });
+      };
       
+      addCalculation(calculationData);
       toast.success("Расчет успешно создан");
-      navigate(`/calculations/${calculation.id}`);
+      
+      // Wait a bit for the calculation to be added to state
+      setTimeout(() => {
+        navigate("/calculations");
+      }, 500);
     } catch (error) {
       toast.error("Не удалось создать расчет");
       console.error("Ошибка при создании расчета:", error);

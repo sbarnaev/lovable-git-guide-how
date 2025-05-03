@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+
+import { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { BasicCalculation, Calculation, PartnershipCalculation, TargetCalculation } from '@/types';
 import { toast } from 'sonner';
@@ -63,7 +64,7 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
 
   const addCalculation = (calculation: BasicCalculation | PartnershipCalculation | TargetCalculation) => {
     const newCalculation = { ...calculation, id: uuidv4(), createdAt: new Date().toISOString() };
-    setCalculations((prevCalculations) => [...prevCalculations, newCalculation]);
+    setCalculations((prevCalculations) => [...prevCalculations, newCalculation as Calculation]);
   };
 
   const getCalculation = (id: string): Calculation | undefined => {
@@ -111,7 +112,7 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   const saveNote = async (calculationId: string, content: string) => {
     try {
       const { data, error } = await supabase
-        .from('notes')
+        .from('calculation_notes')
         .insert([{ calculation_id: calculationId, content }])
         .select()
         .single();
@@ -129,7 +130,7 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   const getNote = async (calculationId: string) => {
     try {
       const { data, error } = await supabase
-        .from('notes')
+        .from('calculation_notes')
         .select('*')
         .eq('calculation_id', calculationId)
         .single();
@@ -153,7 +154,7 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   const updateNote = async (noteId: string, content: string) => {
     try {
       const { data, error } = await supabase
-        .from('notes')
+        .from('calculation_notes')
         .update({ content })
         .eq('id', noteId)
         .select()
