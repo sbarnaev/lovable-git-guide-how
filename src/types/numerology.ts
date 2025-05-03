@@ -4,7 +4,8 @@ export type NumerologyCodeType =
   | 'connector'    // Код коннектора
   | 'realization'  // Код реализации
   | 'generator'    // Код генератора
-  | 'mission';     // Код миссии
+  | 'mission'      // Код миссии
+  | 'all';         // Все коды
 
 export interface NumerologyCode {
   type: NumerologyCodeType;

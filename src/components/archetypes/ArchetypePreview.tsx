@@ -16,7 +16,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
 
   // Автоматически выбирать таб в зависимости от выбранного кода
   useEffect(() => {
-    setActiveTab(selectedCode);
+    setActiveTab(selectedCode === 'all' ? 'general' : selectedCode);
   }, [selectedCode]);
 
   if (!archetype) {

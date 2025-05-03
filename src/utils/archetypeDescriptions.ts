@@ -39,6 +39,16 @@ export function addMultipleArchetypeDescriptions(descriptions: ArchetypeDescript
  * Получает описание архетипа по коду и значению
  */
 export function getArchetypeDescription(code: NumerologyCodeType, value: number): ArchetypeDescription | undefined {
+  // Если код 'all', то попробуем найти любое описание с данным значением
+  if (code === 'all') {
+    const result = archetypeDescriptionsDB.find(desc => desc.value === value);
+    if (result) return result;
+    
+    console.log(`Archetype not found for value: ${value}`);
+    return undefined;
+  }
+  
+  // Обычный поиск по коду и значению
   const result = archetypeDescriptionsDB.find(desc => desc.code === code && desc.value === value);
   
   // Debug logging to help diagnose issues
