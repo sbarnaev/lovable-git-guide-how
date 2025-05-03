@@ -3,11 +3,24 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { Calculation, CalculationData, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
 import { getArchetypeDescription } from '@/utils/archetypeDescriptions';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface CalculationNote {
+  id: string;
+  calculation_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface CalculationsContextType {
   calculations: Calculation[];
   createCalculation: (calculation: CalculationData) => Promise<Calculation>;
   getCalculation: (id: string) => Calculation | undefined;
+  saveNote: (calculation_id: string, content: string) => Promise<CalculationNote | null>;
+  getNote: (calculation_id: string) => Promise<CalculationNote | null>;
+  updateNote: (id: string, content: string) => Promise<CalculationNote | null>;
 }
 
 const CalculationsContext = createContext<CalculationsContextType | undefined>(undefined);
@@ -22,7 +35,7 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
     const id = Date.now().toString();
     const createdAt = new Date().toISOString();
     
-    // Создаем новое вычисление на основе типа входных данных
+    // Creating a new calculation based on the type of input data
     let newCalculation: Calculation;
     
     switch (calculationData.type) {
@@ -42,18 +55,18 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
         break;
       case 'basic':
       default:
-        // Для базового расчета добавляем описания архетипов
+        // For basic calculation, add archetype descriptions
         const basicData = calculationData as BasicCalculation;
         
-        // Если есть полные коды, получаем описания архетипов для них
+        // If there are full codes, get archetype descriptions for them
         if (basicData.results.fullCodes) {
           const { personalityCode, connectorCode, realizationCode, generatorCode, missionCode } = basicData.results.fullCodes;
           
-          // Получаем описания для каждого кода
+          // Get descriptions for each code
           const archetypeDescriptions: ArchetypeDescription[] = [];
           
           try {
-            // Получаем и добавляем каждый архетип
+            // Get and add each archetype
             const descriptions = await Promise.all([
               getArchetypeDescription('personality', personalityCode),
               getArchetypeDescription('connector', connectorCode),
@@ -62,12 +75,12 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
               getArchetypeDescription('mission', missionCode)
             ]);
             
-            // Фильтруем undefined значения
+            // Filter undefined values
             descriptions.forEach(desc => {
               if (desc) archetypeDescriptions.push(desc);
             });
             
-            // Добавляем описания архетипов к результатам
+            // Add archetype descriptions to results
             basicData.results.archetypeDescriptions = archetypeDescriptions;
           } catch (error) {
             console.error('Error fetching archetype descriptions:', error);
@@ -93,13 +106,79 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
   const getCalculation = (id: string) => {
     return calculations.find(calc => calc.id === id);
   };
+  
+  const saveNote = async (calculation_id: string, content: string): Promise<CalculationNote | null> => {
+    try {
+      const { data: existingNote, error: fetchError } = await supabase
+        .from('calculation_notes')
+        .select('*')
+        .eq('calculation_id', calculation_id)
+        .maybeSingle();
+        
+      if (fetchError) throw fetchError;
+      
+      if (existingNote) {
+        return await updateNote(existingNote.id, content);
+      }
+      
+      const { data, error } = await supabase
+        .from('calculation_notes')
+        .insert([{ calculation_id, content }])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error('Ошибка при сохранении заметки');
+      return null;
+    }
+  };
+  
+  const getNote = async (calculation_id: string): Promise<CalculationNote | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('calculation_notes')
+        .select('*')
+        .eq('calculation_id', calculation_id)
+        .maybeSingle();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error getting note:', error);
+      return null;
+    }
+  };
+  
+  const updateNote = async (id: string, content: string): Promise<CalculationNote | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('calculation_notes')
+        .update({ content, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast.error('Ошибка при обновлении заметки');
+      return null;
+    }
+  };
 
   return (
     <CalculationsContext.Provider
       value={{
         calculations,
         createCalculation,
-        getCalculation
+        getCalculation,
+        saveNote,
+        getNote,
+        updateNote
       }}
     >
       {children}
