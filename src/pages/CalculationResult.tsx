@@ -113,6 +113,22 @@ const CalculationResult = () => {
     );
   };
 
+  const renderPartnershipResults = () => {
+    return (
+      <div className="text-center p-4">
+        <div className="text-muted-foreground">Расчет партнерства в разработке.</div>
+      </div>
+    );
+  };
+
+  const renderTargetResults = () => {
+    return (
+      <div className="text-center p-4">
+        <div className="text-muted-foreground">Целевой расчет в разработке.</div>
+      </div>
+    );
+  };
+
   const renderBasicResults = () => {
     const archetypes = getArchetypes();
     

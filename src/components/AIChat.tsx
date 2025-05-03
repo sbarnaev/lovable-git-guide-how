@@ -7,6 +7,7 @@ import { ArchetypeDescription } from '@/types/numerology';
 import { toast } from 'sonner';
 import { SendIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface Message {
   role: 'user' | 'assistant';
