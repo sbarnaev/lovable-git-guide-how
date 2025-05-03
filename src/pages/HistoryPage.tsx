@@ -9,6 +9,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Calendar, User, Filter, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Calculation, PartnershipCalculation, TargetCalculation } from "@/types";
 
 const HistoryPage = () => {
   const navigate = useNavigate();
@@ -16,11 +17,15 @@ const HistoryPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   
   const filteredCalculations = calculations
-    .filter(calc => 
-      calc.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (calc.partnerName && calc.partnerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (calc.targetQuery && calc.targetQuery.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+    .filter(calc => {
+      const nameMatch = calc.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+      const partnerMatch = calc.type === 'partnership' && 
+        (calc as PartnershipCalculation).partnerName.toLowerCase().includes(searchTerm.toLowerCase());
+      const queryMatch = calc.type === 'target' && 
+        (calc as TargetCalculation).targetQuery.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      return nameMatch || partnerMatch || queryMatch;
+    })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   
   const getTypeLabel = (type: string) => {

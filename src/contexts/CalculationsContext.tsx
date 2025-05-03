@@ -4,7 +4,7 @@ import { Calculation, CalculationData, BasicCalculation, PartnershipCalculation,
 
 interface CalculationsContextType {
   calculations: Calculation[];
-  createCalculation: (calculation: Omit<CalculationData, 'id' | 'createdAt'>) => Calculation;
+  createCalculation: (calculation: CalculationData) => Calculation;
   getCalculation: (id: string) => Calculation | undefined;
 }
 
@@ -16,7 +16,7 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
     return storedCalculations ? JSON.parse(storedCalculations) : [];
   });
 
-  const createCalculation = (calculationData: Omit<CalculationData, 'id' | 'createdAt'>) => {
+  const createCalculation = (calculationData: CalculationData) => {
     const id = Date.now().toString();
     const createdAt = new Date().toISOString();
     

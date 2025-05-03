@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { PartnershipCalculation } from "@/types";
 
 const PartnershipCalculationForm = () => {
   const navigate = useNavigate();
@@ -50,14 +51,16 @@ const PartnershipCalculationForm = () => {
     
     setTimeout(() => {
       try {
-        const calculation = createCalculation({
+        const calculationData: PartnershipCalculation = {
           type: 'partnership',
           clientName,
           birthDate,
           partnerName,
           partnerBirthDate,
           results,
-        });
+        };
+        
+        const calculation = createCalculation(calculationData);
         
         toast({
           title: "Успешно",

@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { useToast } from "@/hooks/use-toast";
+import { TargetCalculation } from "@/types";
 
 const TargetCalculationForm = () => {
   const navigate = useNavigate();
@@ -52,13 +53,15 @@ const TargetCalculationForm = () => {
     
     setTimeout(() => {
       try {
-        const calculation = createCalculation({
+        const calculationData: TargetCalculation = {
           type: 'target',
           clientName,
           birthDate,
           targetQuery,
           results,
-        });
+        };
+        
+        const calculation = createCalculation(calculationData);
         
         toast({
           title: "Успешно",

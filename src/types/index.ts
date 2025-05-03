@@ -58,6 +58,7 @@ export type CalculationResults =
   | PartnershipCalculationResults
   | TargetCalculationResults;
 
+// Базовые интерфейсы для каждого типа расчета
 export interface BasicCalculation {
   type: 'basic';
   clientName: string;
@@ -82,12 +83,13 @@ export interface TargetCalculation {
   results: TargetCalculationResults;
 }
 
+// CalculationData теперь объединённый тип всех трех базовых интерфейсов
 export type CalculationData = 
   | BasicCalculation
   | PartnershipCalculation
   | TargetCalculation;
 
-// Исправлено: тип Calculation теперь корректное объединение типов
+// Calculation теперь объединённый тип всех трех расширенных интерфейсов
 export type Calculation = 
   | (BasicCalculation & { id: string; createdAt: string })
   | (PartnershipCalculation & { id: string; createdAt: string })
