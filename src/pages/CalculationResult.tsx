@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, ChevronDown, ChevronUp, User } from 'lucide-react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { useCalculations } from '@/contexts/CalculationsContext';
-import { BasicCalculation, Calculation, NumerologyCodeType } from '@/types';
-import { toast } from 'sonner';
+import { BasicCalculation, Calculation } from '@/types';
+import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
 import { AIChat } from '@/components/AIChat';
 import { NoteEditor } from '@/components/NoteEditor';
-import { ArchetypeDescription } from '@/types/numerology';
-import { getArchetypeDescription } from '@/utils/archetypeDescriptions';
-import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const CalculationResult = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,21 +38,12 @@ const CalculationResult = () => {
         if (fetchedCalculation) {
           setCalculation(fetchedCalculation);
           
-          // If it's a basic calculation, fetch archetype descriptions
-          if (fetchedCalculation.type === 'basic' && fetchedCalculation.results.fullCodes) {
-            const { personalityCode, connectorCode, realizationCode, generatorCode, missionCode } = fetchedCalculation.results.fullCodes;
-            
-            const descriptions = await Promise.all([
-              getArchetypeDescription('personality', personalityCode),
-              getArchetypeDescription('connector', connectorCode),
-              getArchetypeDescription('realization', realizationCode),
-              getArchetypeDescription('generator', generatorCode),
-              getArchetypeDescription('mission', missionCode)
-            ]);
-            
-            // Filter undefined values
-            const filteredDescriptions = descriptions.filter((desc): desc is ArchetypeDescription => desc !== undefined);
-            setArchetypes(filteredDescriptions);
+          // If it's a basic calculation with archetypeDescriptions, use those
+          if (fetchedCalculation.type === 'basic') {
+            const basicCalc = fetchedCalculation as (BasicCalculation & { id: string; createdAt: string });
+            if (basicCalc.results.archetypeDescriptions) {
+              setArchetypes(basicCalc.results.archetypeDescriptions);
+            }
           }
         } else {
           setError('Calculation not found.');
@@ -68,7 +60,7 @@ const CalculationResult = () => {
   }, [id, getCalculation]);
   
   const getArchetypes = (): ArchetypeDescription[] => {
-    if (!calculation || calculation.type !== 'basic' || !calculation.results.fullCodes) {
+    if (!calculation || calculation.type !== 'basic') {
       return [];
     }
     
@@ -121,205 +113,182 @@ const CalculationResult = () => {
     );
   };
 
-// Just updating the renderBasicResults function to change the layout of buttons
-const renderBasicResults = () => {
-  const archetypes = getArchetypes();
-  
-  // Check if this is a basic calculation
-  if (!calculation || calculation.type !== 'basic') {
-    return <div>Неподдерживаемый тип расчета</div>;
-  }
-  
-  const typedCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
-  const { fullCodes } = typedCalculation.results;
-  
-  if (!fullCodes) {
-    return <div>Нумерологические коды не найдены</div>;
-  }
-  
-  const toggleSection = (section: string) => {
-    if (activeSection === section) {
-      setActiveSection(null);
-    } else {
-      setActiveSection(section);
+  const renderBasicResults = () => {
+    const archetypes = getArchetypes();
+    
+    // Check if this is a basic calculation
+    if (!calculation || calculation.type !== 'basic') {
+      return <div>Неподдерживаемый тип расчета</div>;
     }
-  };
-  
-  // Find archetype by code
-  const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
-    return archetypes.find(arch => arch.code === code);
-  };
-  
-  return (
-    <div className="space-y-6">
-      {/* Profile (renamed from "Нумерологические коды") */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Профиль</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-numerica">{fullCodes.personalityCode}</div>
-              <div className="text-sm text-muted-foreground">Код Личности</div>
+    
+    const typedCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
+    const { fullCodes } = typedCalculation.results;
+    
+    if (!fullCodes) {
+      return <div>Нумерологические коды не найдены</div>;
+    }
+    
+    const toggleSection = (section: string) => {
+      if (activeSection === section) {
+        setActiveSection(null);
+      } else {
+        setActiveSection(section);
+      }
+    };
+    
+    // Find archetype by code
+    const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
+      return archetypes.find(arch => arch.code === code);
+    };
+    
+    return (
+      <div className="space-y-6">
+        {/* Profile (renamed from "Нумерологические коды") */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Профиль</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
+              <div className="space-y-1">
+                <div className="text-2xl font-bold text-numerica">{fullCodes.personalityCode}</div>
+                <div className="text-sm text-muted-foreground">Код Личности</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-bold text-numerica">{fullCodes.connectorCode}</div>
+                <div className="text-sm text-muted-foreground">Код Коннектора</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-bold text-numerica">{fullCodes.realizationCode}</div>
+                <div className="text-sm text-muted-foreground">Код Реализации</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-bold text-numerica">{fullCodes.generatorCode}</div>
+                <div className="text-sm text-muted-foreground">Код Генератора</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-2xl font-bold text-numerica">{fullCodes.missionCode}</div>
+                <div className="text-sm text-muted-foreground">Код Миссии</div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-numerica">{fullCodes.connectorCode}</div>
-              <div className="text-sm text-muted-foreground">Код Коннектора</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-numerica">{fullCodes.realizationCode}</div>
-              <div className="text-sm text-muted-foreground">Код Реализации</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-numerica">{fullCodes.generatorCode}</div>
-              <div className="text-sm text-muted-foreground">Код Генератора</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-numerica">{fullCodes.missionCode}</div>
-              <div className="text-sm text-muted-foreground">Код Миссии</div>
-            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Summary */}
+        {archetypes.length > 0 && (
+          <AIContentSection 
+            title="Саммари" 
+            type="summary"
+            archetypes={archetypes} 
+          />
+        )}
+        
+        {/* Consultation Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Консультация</h2>
+          
+          {/* Buttons in a horizontal row */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={activeSection === 'strengths-weaknesses' ? 'default' : 'outline'}
+              onClick={() => toggleSection('strengths-weaknesses')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Сильные и слабые стороны
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'code-conflicts' ? 'default' : 'outline'}
+              onClick={() => toggleSection('code-conflicts')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Конфликты кодов
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'potential-problems' ? 'default' : 'outline'}
+              onClick={() => toggleSection('potential-problems')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Потенциальные проблемы
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'practices' ? 'default' : 'outline'}
+              onClick={() => toggleSection('practices')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Практики
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'assistant' ? 'default' : 'outline'}
+              onClick={() => toggleSection('assistant')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Помощник
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* Summary */}
-      {archetypes.length > 0 && (
-        <AIContentSection 
-          title="Саммари" 
-          type="summary"
-          archetypes={archetypes} 
-        />
-      )}
-      
-      {/* Consultation Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold">Консультация</h2>
-        
-        {/* Buttons in a horizontal row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'strengths-weaknesses' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('strengths-weaknesses')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Сильные и слабые стороны</CardTitle>
-            </CardHeader>
-          </Card>
           
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'code-conflicts' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('code-conflicts')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Конфликты кодов</CardTitle>
-            </CardHeader>
-          </Card>
+          {/* Content panel based on active section */}
+          {activeSection === 'strengths-weaknesses' && (
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="strengths-weaknesses"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
           
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'potential-problems' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('potential-problems')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Потенциальные проблемы</CardTitle>
-            </CardHeader>
-          </Card>
+          {activeSection === 'code-conflicts' && (
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="code-conflicts"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
           
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'practices' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('practices')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Практики</CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
-        
-        {/* Content panel based on active section */}
-        {activeSection === 'strengths-weaknesses' && (
-          <Card>
-            <CardContent className="pt-6">
-              {archetypes.length > 0 && (
-                <AIContentSection 
-                  title=""
-                  type="strengths-weaknesses"
-                  archetypes={archetypes} 
-                />
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {activeSection === 'code-conflicts' && (
-          <Card>
-            <CardContent className="pt-6">
-              {archetypes.length > 0 && (
-                <AIContentSection 
-                  title=""
-                  type="code-conflicts"
-                  archetypes={archetypes} 
-                />
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {activeSection === 'potential-problems' && (
-          <Card>
-            <CardContent className="pt-6">
-              {archetypes.length > 0 && (
-                <AIContentSection 
-                  title=""
-                  type="potential-problems"
-                  archetypes={archetypes} 
-                />
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {activeSection === 'practices' && (
-          <Card>
-            <CardContent className="pt-6">
-              {archetypes.length > 0 && (
-                <AIContentSection 
-                  title=""
-                  type="practices"
-                  archetypes={archetypes} 
-                />
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* AI Assistant - moved to a button in the row */}
-        <div className="mt-4">
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'assistant' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('assistant')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-center">Помощник</CardTitle>
-            </CardHeader>
-          </Card>
+          {activeSection === 'potential-problems' && (
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="potential-problems"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
+          
+          {activeSection === 'practices' && (
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && (
+                  <AIContentSection 
+                    title=""
+                    type="practices"
+                    archetypes={archetypes} 
+                  />
+                )}
+              </CardContent>
+            </Card>
+          )}
           
           {activeSection === 'assistant' && (
-            <Card className="mt-4">
+            <Card>
               <CardContent className="pt-6">
                 {archetypes.length > 0 && (
                   <AIChat archetypes={archetypes} />
@@ -328,101 +297,80 @@ const renderBasicResults = () => {
             </Card>
           )}
         </div>
-      </div>
-      
-      {/* Textbook Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold">Учебник</h2>
         
-        {/* Buttons in a horizontal row */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'personality' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('personality')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Код Личности {fullCodes.personalityCode}</CardTitle>
-            </CardHeader>
-          </Card>
+        {/* Textbook Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Учебник</h2>
           
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'connector' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('connector')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Код Коннектора {fullCodes.connectorCode}</CardTitle>
-            </CardHeader>
-          </Card>
+          {/* Buttons in a horizontal row */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={activeSection === 'personality' ? 'default' : 'outline'}
+              onClick={() => toggleSection('personality')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Код Личности {fullCodes.personalityCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'connector' ? 'default' : 'outline'}
+              onClick={() => toggleSection('connector')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Код Коннектора {fullCodes.connectorCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'realization' ? 'default' : 'outline'}
+              onClick={() => toggleSection('realization')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Код Реализации {fullCodes.realizationCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'generator' ? 'default' : 'outline'}
+              onClick={() => toggleSection('generator')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Код Генератора {fullCodes.generatorCode}
+            </Button>
+            
+            <Button 
+              variant={activeSection === 'mission' ? 'default' : 'outline'}
+              onClick={() => toggleSection('mission')}
+              className="flex-grow md:flex-grow-0"
+            >
+              Код Миссии {fullCodes.missionCode}
+            </Button>
+          </div>
           
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'realization' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('realization')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Код Реализации {fullCodes.realizationCode}</CardTitle>
-            </CardHeader>
-          </Card>
-          
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'generator' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('generator')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Код Генератора {fullCodes.generatorCode}</CardTitle>
-            </CardHeader>
-          </Card>
-          
-          <Card 
-            className={cn(
-              "cursor-pointer hover:bg-muted/50 transition-colors",
-              activeSection === 'mission' ? "border-numerica" : ""
-            )}
-            onClick={() => toggleSection('mission')}
-          >
-            <CardHeader className="p-4">
-              <CardTitle className="text-sm text-center">Код Миссии {fullCodes.missionCode}</CardTitle>
-            </CardHeader>
-          </Card>
+          {/* Content panel based on active section */}
+          {(activeSection === 'personality' || activeSection === 'connector' || 
+            activeSection === 'realization' || activeSection === 'generator' || 
+            activeSection === 'mission') && (
+            <Card>
+              <CardContent className="pt-6">
+                {renderArchetypeDetails(findArchetype(activeSection as NumerologyCodeType))}
+              </CardContent>
+            </Card>
+          )}
         </div>
         
-        {/* Content panel based on active section */}
-        {(activeSection === 'personality' || activeSection === 'connector' || 
-          activeSection === 'realization' || activeSection === 'generator' || 
-          activeSection === 'mission') && (
-          <Card>
-            <CardContent className="pt-6">
-              {renderArchetypeDetails(findArchetype(activeSection as NumerologyCodeType))}
-            </CardContent>
-          </Card>
+        {/* Notes Section */}
+        {id && (
+          <div className="space-y-4">
+            <NoteEditor calculationId={id} />
+          </div>
         )}
       </div>
-      
-      {/* Notes Section */}
-      {id && (
-        <div className="space-y-4">
-          <NoteEditor calculationId={id} />
-        </div>
-      )}
-    </div>
-  );
-};
+    );
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+        <div className="animate-spin h-8 w-8 border-4 border-numerica border-t-transparent rounded-full mr-3"></div>
         Загрузка расчета...
       </div>
     );
@@ -462,6 +410,10 @@ const renderBasicResults = () => {
       
       {calculation.type === 'basic' ? (
         renderBasicResults()
+      ) : calculation.type === 'partnership' ? (
+        renderPartnershipResults()
+      ) : calculation.type === 'target' ? (
+        renderTargetResults()
       ) : (
         <div>Неподдерживаемый тип расчета</div>
       )}

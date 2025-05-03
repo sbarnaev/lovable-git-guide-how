@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Calculation, CalculationData, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
 import { getArchetypeDescription } from '@/utils/archetypeDescriptions';
-import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
+import { ArchetypeDescription } from '@/types/numerology';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ interface StoredCalculation {
   id: string;
   data: Calculation;
   created_at: string;
+  updated_at?: string;
 }
 
 interface CalculationsContextType {
@@ -58,7 +59,7 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
 
         if (storedCalculations) {
           // Преобразуем данные из БД в нужный формат
-          const calcs = storedCalculations.map((item: StoredCalculation) => item.data) as Calculation[];
+          const calcs = storedCalculations.map((item: StoredCalculation) => item.data as Calculation);
           setCalculations(calcs);
           console.log('Расчеты загружены из БД:', calcs.length);
         }

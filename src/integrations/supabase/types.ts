@@ -153,6 +153,27 @@ export type Database = {
         }
         Relationships: []
       }
+      calculations: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
