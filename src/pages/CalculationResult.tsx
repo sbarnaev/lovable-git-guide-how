@@ -1,4 +1,3 @@
-
 import { useNavigate, useParams } from "react-router-dom";
 import { useCalculations } from "@/contexts/CalculationsContext";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,16 @@ import { ArrowLeft, Calendar, File, User } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
+import { ArchetypePreview } from "@/components/archetypes/ArchetypePreview";
+import { BasicCalculationResults } from "@/types";
 
 const CalculationResult = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { getCalculation } = useCalculations();
+  const [activeArchetypeTab, setActiveArchetypeTab] = useState("personality");
   
   const calculation = id ? getCalculation(id) : undefined;
   
@@ -48,7 +52,8 @@ const CalculationResult = () => {
   };
   
   const renderBasicResults = () => {
-    const { numerology, strengths, challenges, recommendations } = calculation.results;
+    const results = calculation.results as BasicCalculationResults;
+    const { numerology, strengths, challenges, recommendations, fullCodes } = results;
     
     return (
       <div className="space-y-6">
@@ -73,6 +78,38 @@ const CalculationResult = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {fullCodes && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Нумерологические коды</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-numerica">{fullCodes.personalityCode}</div>
+                  <div className="text-sm text-muted-foreground">Код Личности</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-numerica">{fullCodes.connectorCode}</div>
+                  <div className="text-sm text-muted-foreground">Код Коннектора</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-numerica">{fullCodes.realizationCode}</div>
+                  <div className="text-sm text-muted-foreground">Код Реализации</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-numerica">{fullCodes.generatorCode}</div>
+                  <div className="text-sm text-muted-foreground">Код Генератора</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-2xl font-bold text-numerica">{fullCodes.missionCode}</div>
+                  <div className="text-sm text-muted-foreground">Код Миссии</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
@@ -123,6 +160,42 @@ const CalculationResult = () => {
             </ul>
           </CardContent>
         </Card>
+        
+        {fullCodes && (
+          <div>
+            <h2 className="text-xl font-bold mb-4">Подробные архетипы</h2>
+            
+            <Tabs value={activeArchetypeTab} onValueChange={setActiveArchetypeTab}>
+              <TabsList className="grid grid-cols-5 mb-4 w-full">
+                <TabsTrigger value="personality">Личность</TabsTrigger>
+                <TabsTrigger value="connector">Коннектор</TabsTrigger>
+                <TabsTrigger value="realization">Реализация</TabsTrigger>
+                <TabsTrigger value="generator">Генератор</TabsTrigger>
+                <TabsTrigger value="mission">Миссия</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="personality">
+                <ArchetypePreview selectedCode="personality" selectedValue={fullCodes.personalityCode} />
+              </TabsContent>
+              
+              <TabsContent value="connector">
+                <ArchetypePreview selectedCode="connector" selectedValue={fullCodes.connectorCode} />
+              </TabsContent>
+              
+              <TabsContent value="realization">
+                <ArchetypePreview selectedCode="realization" selectedValue={fullCodes.realizationCode} />
+              </TabsContent>
+              
+              <TabsContent value="generator">
+                <ArchetypePreview selectedCode="generator" selectedValue={fullCodes.generatorCode} />
+              </TabsContent>
+              
+              <TabsContent value="mission">
+                <ArchetypePreview selectedCode="mission" selectedValue={fullCodes.missionCode} />
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </div>
     );
   };

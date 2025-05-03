@@ -10,7 +10,9 @@ import { ConnectorTabContent } from "./ConnectorTabContent";
 import { RealizationTabContent } from "./RealizationTabContent";
 import { GeneratorTabContent } from "./GeneratorTabContent";
 import { MissionTabContent } from "./MissionTabContent";
-import { toast } from "@/components/ui/sonner";
+import { ArchetypePreview } from "./ArchetypePreview";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface ArchetypeFormProps {
   selectedCode: NumerologyCodeType;
@@ -87,56 +89,86 @@ interface ArchetypeFormProps {
 }
 
 export const ArchetypeForm = (props: ArchetypeFormProps) => {
-  const [activeTab, setActiveTab] = useState("general");
-  
   const allowedValues = props.selectedCode === 'mission' 
     ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 11] 
     : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    
+  // Изменяем логику для выбора таба - по умолчанию устанавливаем выбранный код
+  const [activeTab, setActiveTab] = useState(props.selectedCode);
+  
+  const handleSaveClick = () => {
+    props.onSave();
+    toast.success(`Архетип ${props.selectedCode} со значением ${props.selectedValue} успешно сохранен`);
+  };
+  
+  const codeLabels: Record<NumerologyCodeType, string> = {
+    personality: "Код Личности",
+    connector: "Код Коннектора",
+    realization: "Код Реализации",
+    generator: "Код Генератора",
+    mission: "Код Миссии"
+  };
   
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Код</label>
-          <Select 
-            value={props.selectedCode} 
-            onValueChange={(value) => props.setSelectedCode(value as NumerologyCodeType)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите код" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="personality">Код Личности</SelectItem>
-              <SelectItem value="connector">Код Коннектора</SelectItem>
-              <SelectItem value="realization">Код Реализации</SelectItem>
-              <SelectItem value="generator">Код Генератора</SelectItem>
-              <SelectItem value="mission">Код Миссии</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Значение</label>
-          <Select 
-            value={props.selectedValue.toString()} 
-            onValueChange={(value) => props.setSelectedValue(parseInt(value))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите значение" />
-            </SelectTrigger>
-            <SelectContent>
-              {allowedValues.map((value) => (
-                <SelectItem key={value} value={value.toString()}>
-                  {value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-xl">Выберите тип и значение кода</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Тип кода</label>
+              <Select 
+                value={props.selectedCode} 
+                onValueChange={(value) => {
+                  props.setSelectedCode(value as NumerologyCodeType);
+                  setActiveTab(value); // Автоматически переключать на соответствующий таб
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите код" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personality">Код Личности</SelectItem>
+                  <SelectItem value="connector">Код Коннектора</SelectItem>
+                  <SelectItem value="realization">Код Реализации</SelectItem>
+                  <SelectItem value="generator">Код Генератора</SelectItem>
+                  <SelectItem value="mission">Код Миссии</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Значение</label>
+              <Select 
+                value={props.selectedValue.toString()} 
+                onValueChange={(value) => props.setSelectedValue(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите значение" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allowedValues.map((value) => (
+                    <SelectItem key={value} value={value.toString()}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="bg-muted p-4 rounded-md">
+            <p className="text-sm">
+              <strong>Текущий выбор:</strong> {codeLabels[props.selectedCode]} со значением {props.selectedValue}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
+        <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4 w-full">
           <TabsTrigger value="general">Общее</TabsTrigger>
           <TabsTrigger value="personality">Личность</TabsTrigger>
           <TabsTrigger value="connector">Коннектор</TabsTrigger>
@@ -236,8 +268,15 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
         </TabsContent>
       </Tabs>
       
-      <div className="pt-4">
-        <Button onClick={props.onSave}>Сохранить</Button>
+      <ArchetypePreview 
+        selectedCode={props.selectedCode} 
+        selectedValue={props.selectedValue}
+      />
+      
+      <div className="py-4 flex justify-center">
+        <Button onClick={handleSaveClick} size="lg" className="px-8">
+          Сохранить архетип
+        </Button>
       </div>
     </div>
   );
