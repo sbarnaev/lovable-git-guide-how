@@ -14,6 +14,12 @@ interface CalculationNote {
   updated_at: string;
 }
 
+interface StoredCalculation {
+  id: string;
+  data: Calculation;
+  created_at: string;
+}
+
 interface CalculationsContextType {
   calculations: Calculation[];
   createCalculation: (calculation: CalculationData) => Promise<Calculation>;
@@ -26,31 +32,44 @@ interface CalculationsContextType {
 const CalculationsContext = createContext<CalculationsContextType | undefined>(undefined);
 
 export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
-  const [calculations, setCalculations] = useState<Calculation[]>(() => {
-    const storedCalculations = localStorage.getItem('numerica_calculations');
-    return storedCalculations ? JSON.parse(storedCalculations) : [];
-  });
+  const [calculations, setCalculations] = useState<Calculation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // При инициализации загружаем заметки из БД
+  // При инициализации загружаем расчеты из БД
   useEffect(() => {
-    const loadNotes = async () => {
+    const loadCalculations = async () => {
       try {
-        const { data, error } = await supabase
-          .from('calculation_notes')
-          .select('*');
+        setIsLoading(true);
+        
+        // Загрузим все сохраненные расчеты из Supabase
+        const { data: storedCalculations, error } = await supabase
+          .from('calculations')
+          .select('*')
+          .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Ошибка загрузки заметок:', error);
+          console.error('Ошибка загрузки расчетов:', error);
+          // Если есть ошибка с загрузкой из БД, пытаемся загрузить из localStorage как запасной вариант
+          const storedCalcsInLocalStorage = localStorage.getItem('numerica_calculations');
+          const localCalcs = storedCalcsInLocalStorage ? JSON.parse(storedCalcsInLocalStorage) : [];
+          setCalculations(localCalcs);
           return;
         }
 
-        console.log('Заметки загружены из БД:', data);
+        if (storedCalculations) {
+          // Преобразуем данные из БД в нужный формат
+          const calcs = storedCalculations.map((item: StoredCalculation) => item.data) as Calculation[];
+          setCalculations(calcs);
+          console.log('Расчеты загружены из БД:', calcs.length);
+        }
       } catch (error) {
-        console.error('Ошибка при загрузке заметок:', error);
+        console.error('Ошибка при загрузке расчетов:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadNotes();
+    loadCalculations();
   }, []);
 
   const createCalculation = async (calculationData: CalculationData): Promise<Calculation> => {
@@ -116,28 +135,36 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
         };
     }
 
-    // Создание записи о расчете в Supabase (упрощенное хранение метаданных)
+    // Сохраняем расчет в Supabase
     try {
       const { error } = await supabase
-        .from('calculation_notes')
+        .from('calculations')
         .insert([{ 
-          calculation_id: id, 
-          content: `Расчет создан: ${new Date().toLocaleString()}\nТип: ${calculationData.type}\nКлиент: ${calculationData.clientName}`
+          id, 
+          data: newCalculation,
+          created_at: createdAt
         }]);
       
       if (error) {
         console.error('Ошибка сохранения расчета в БД:', error);
-        // Продолжаем работу даже при ошибке сохранения в БД
+        throw error;
       } else {
         console.log('Расчет успешно сохранен в БД');
       }
     } catch (error) {
       console.error('Ошибка при сохранении расчета:', error);
+      // В случае ошибки с БД, сохраняем в localStorage
+      try {
+        const updatedCalculations = [...calculations, newCalculation];
+        setCalculations(updatedCalculations);
+        localStorage.setItem('numerica_calculations', JSON.stringify(updatedCalculations));
+      } catch (localStorageError) {
+        console.error('Не удалось сохранить в localStorage:', localStorageError);
+      }
     }
 
-    const updatedCalculations = [...calculations, newCalculation];
-    setCalculations(updatedCalculations);
-    localStorage.setItem('numerica_calculations', JSON.stringify(updatedCalculations));
+    // Обновляем список расчетов в состоянии
+    setCalculations(prevCalculations => [...prevCalculations, newCalculation]);
     
     console.log('Created calculation:', newCalculation);
     
@@ -210,6 +237,25 @@ export const CalculationsProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
+
+  if (isLoading) {
+    // Можно было бы добавить компонент загрузки, но т.к. контекст используется при инициализации,
+    // лучше просто вернуть значения по умолчанию
+    return (
+      <CalculationsContext.Provider
+        value={{
+          calculations: [],
+          createCalculation,
+          getCalculation,
+          saveNote,
+          getNote,
+          updateNote
+        }}
+      >
+        {children}
+      </CalculationsContext.Provider>
+    );
+  }
 
   return (
     <CalculationsContext.Provider

@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export type DeepSeekContentType = 'summary' | 'strengths-weaknesses' | 'code-conflicts' | 'potential-problems' | 'practices';
+export type DeepSeekContentType = 'summary' | 'strengths-weaknesses' | 'code-conflicts' | 'potential-problems' | 'practices' | 'chat';
 
 const getPromptForType = (type: DeepSeekContentType): string => {
   switch (type) {
@@ -15,6 +15,8 @@ const getPromptForType = (type: DeepSeekContentType): string => {
       return 'Опиши потенциальные проблемы и сложности, с которыми может столкнуться человек с такими архетипами. Это могут быть как внутренние конфликты, так и сложности во взаимодействии с миром.';
     case 'practices':
       return 'Предложи 4-5 практических упражнений или рекомендаций, которые помогут человеку с такими архетипами развить свои сильные стороны и проработать слабости.';
+    case 'chat':
+      return 'Ты — ассистент по нумерологии. Отвечай на вопросы пользователя, основываясь на предоставленной информации об архетипах. Давай конкретные, информативные и полезные ответы, основанные на архетипах пользователя.';
     default:
       return 'Создай саммари о человеке с такими архетипами.';
   }
@@ -73,9 +75,10 @@ const formatArchetypesForPrompt = (archetypes: any[]): string => {
   }).join('\n\n');
 };
 
-export const generateDeepSeekContent = async (type: DeepSeekContentType, archetypes: any[]) => {
+export const generateDeepSeekContent = async (type: DeepSeekContentType, archetypes: any[], customPrompt?: string) => {
   try {
-    const prompt = getPromptForType(type);
+    const promptBase = getPromptForType(type);
+    const prompt = customPrompt || promptBase;
     const archetypesInfo = formatArchetypesForPrompt(archetypes);
 
     const { data, error } = await supabase.functions.invoke('deepseek', {

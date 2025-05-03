@@ -36,9 +36,7 @@ export const AIChat = ({ archetypes }: AIChatProps) => {
     setLoading(true);
 
     try {
-      const customPrompt = `Пользователь задал вопрос: "${input.trim()}". ${input.trim().endsWith('?') ? '' : 'Если это утверждение, переформулируй его в вопрос.'}`;
-      
-      const response = await generateDeepSeekContent('chat', archetypes, customPrompt);
+      const response = await generateDeepSeekContent('chat', archetypes);
       const assistantMessage = { role: 'assistant' as const, content: response.content };
       
       setMessages((prev) => [...prev, assistantMessage]);
