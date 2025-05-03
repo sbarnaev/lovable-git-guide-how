@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				numerica: {
+					DEFAULT: '#6941C6',
+					50: '#EBE5FA',
+					100: '#D7CBF5',
+					200: '#A586EB',
+					300: '#8C66E5',
+					400: '#7D53DF',
+					500: '#6941C6',
+					600: '#5E3BB2',
+					700: '#4C2E8F',
+					800: '#3A226C',
+					900: '#291849',
+					950: '#1D1236'
 				}
 			},
 			borderRadius: {
@@ -84,11 +99,24 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				fadeIn: {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
+				},
+				slideUp: {
+					'0%': { transform: 'translateY(10px)', opacity: '0' },
+					'100%': { transform: 'translateY(0)', opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				fadeIn: 'fadeIn 0.5s ease-out forwards',
+				slideUp: 'slideUp 0.5s ease-out forwards'
+			},
+			fontFamily: {
+				sans: ['SF Pro Display', 'system-ui', 'sans-serif'],
 			}
 		}
 	},
