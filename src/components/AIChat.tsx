@@ -46,12 +46,13 @@ export const AIChat = ({ archetypes }: AIChatProps) => {
       });
       
       if (error) {
+        console.error('Error calling DeepSeek function:', error);
         throw new Error(error.message);
       }
 
       const assistantMessage = { 
         role: 'assistant' as const, 
-        content: data.content || 'Извините, я не смог обработать ваш запрос.' 
+        content: data?.content || 'Извините, я не смог обработать ваш запрос.' 
       };
       
       setMessages((prev) => [...prev, assistantMessage]);

@@ -67,6 +67,27 @@ const CalculationResult = () => {
     return archetypes;
   };
   
+  const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
+    if (!archetypes || archetypes.length === 0) {
+      console.log("Archetypes array is empty or undefined");
+      return undefined;
+    }
+    
+    console.log("Looking for code:", code);
+    console.log("Available archetypes:", archetypes.map(a => a.code));
+    
+    const codeMap: Record<string, NumerologyCodeType> = {
+      'personality': 'personality',
+      'connector': 'connector',
+      'realization': 'realization',
+      'generator': 'generator',
+      'mission': 'mission'
+    };
+    
+    const searchCode = codeMap[code] || code;
+    return archetypes.find(arch => arch.code === searchCode);
+  };
+  
   const renderArchetypeDetails = (archetype: ArchetypeDescription | undefined) => {
     if (!archetype) {
       return <div className="text-muted-foreground">Информация отсутствует.</div>;
@@ -108,6 +129,213 @@ const CalculationResult = () => {
               ))}
             </ul>
           </div>
+        )}
+
+        {archetype.code === 'personality' && (
+          <>
+            {archetype.resourceManifestation && (
+              <div>
+                <h4 className="text-md font-semibold">Ресурсное проявление:</h4>
+                <p className="text-sm">{archetype.resourceManifestation}</p>
+              </div>
+            )}
+            {archetype.distortedManifestation && (
+              <div>
+                <h4 className="text-md font-semibold">Искаженное проявление:</h4>
+                <p className="text-sm">{archetype.distortedManifestation}</p>
+              </div>
+            )}
+            {archetype.developmentTask && (
+              <div>
+                <h4 className="text-md font-semibold">Задача развития:</h4>
+                <p className="text-sm">{archetype.developmentTask}</p>
+              </div>
+            )}
+          </>
+        )}
+        
+        {archetype.code === 'connector' && (
+          <>
+            {archetype.keyTask && (
+              <div>
+                <h4 className="text-md font-semibold">Ключевая задача:</h4>
+                <p className="text-sm">{archetype.keyTask}</p>
+              </div>
+            )}
+            {archetype.workingAspects && archetype.workingAspects.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Что работает (в ресурсе):</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.workingAspects.map((aspect, index) => (
+                    <li key={index}>{aspect}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.nonWorkingAspects && archetype.nonWorkingAspects.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Что не работает (искажения):</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.nonWorkingAspects.map((aspect, index) => (
+                    <li key={index}>{aspect}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.worldContactBasis && (
+              <div>
+                <h4 className="text-md font-semibold">Контакт с миром должен строиться на:</h4>
+                <p className="text-sm">{archetype.worldContactBasis}</p>
+              </div>
+            )}
+          </>
+        )}
+        
+        {archetype.code === 'realization' && (
+          <>
+            {archetype.formula && (
+              <div>
+                <h4 className="text-md font-semibold">Формула:</h4>
+                <p className="text-sm">{archetype.formula}</p>
+              </div>
+            )}
+            {archetype.potentialRealizationWays && archetype.potentialRealizationWays.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Как реализуется потенциал:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.potentialRealizationWays.map((way, index) => (
+                    <li key={index}>{way}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.successSources && archetype.successSources.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Источники успеха:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.successSources.map((source, index) => (
+                    <li key={index}>{source}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.realizationType && (
+              <div>
+                <h4 className="text-md font-semibold">Тип реализации:</h4>
+                <p className="text-sm">{archetype.realizationType}</p>
+              </div>
+            )}
+            {archetype.realizationObstacles && archetype.realizationObstacles.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Искажения (что мешает реализовываться):</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.realizationObstacles.map((obstacle, index) => (
+                    <li key={index}>{obstacle}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+        
+        {archetype.code === 'generator' && (
+          <>
+            {archetype.generatorFormula && (
+              <div>
+                <h4 className="text-md font-semibold">Формула:</h4>
+                <p className="text-sm">{archetype.generatorFormula}</p>
+              </div>
+            )}
+            {archetype.energySources && archetype.energySources.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Что дает энергию:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.energySources.map((source, index) => (
+                    <li key={index}>{source}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.energyDrains && archetype.energyDrains.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Что забирает энергию:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.energyDrains.map((drain, index) => (
+                    <li key={index}>{drain}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.flowSigns && archetype.flowSigns.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Признаки, что человек в потоке:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.flowSigns.map((sign, index) => (
+                    <li key={index}>{sign}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.burnoutSigns && archetype.burnoutSigns.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Признаки, что человек выгорел:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.burnoutSigns.map((sign, index) => (
+                    <li key={index}>{sign}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.generatorRecommendation && (
+              <div>
+                <h4 className="text-md font-semibold">Рекомендация:</h4>
+                <p className="text-sm">{archetype.generatorRecommendation}</p>
+              </div>
+            )}
+          </>
+        )}
+        
+        {archetype.code === 'mission' && (
+          <>
+            {archetype.missionEssence && (
+              <div>
+                <h4 className="text-md font-semibold">Суть миссии:</h4>
+                <p className="text-sm">{archetype.missionEssence}</p>
+              </div>
+            )}
+            {archetype.missionRealizationFactors && archetype.missionRealizationFactors.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Что реализует миссию:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.missionRealizationFactors.map((factor, index) => (
+                    <li key={index}>{factor}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.missionChallenges && (
+              <div>
+                <h4 className="text-md font-semibold">Испытания миссии:</h4>
+                <p className="text-sm">{archetype.missionChallenges}</p>
+              </div>
+            )}
+            {archetype.missionObstacles && archetype.missionObstacles.length > 0 && (
+              <div>
+                <h4 className="text-md font-semibold">Что мешает реализовываться:</h4>
+                <ul className="list-disc pl-5 text-sm">
+                  {archetype.missionObstacles.map((obstacle, index) => (
+                    <li key={index}>{obstacle}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {archetype.mainTransformation && (
+              <div>
+                <h4 className="text-md font-semibold">Главная трансформация:</h4>
+                <p className="text-sm">{archetype.mainTransformation}</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     );

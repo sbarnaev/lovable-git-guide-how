@@ -5,12 +5,11 @@ import type { Database } from './types';
 
 const SUPABASE_URL = "https://vahtrfkpnffcjuvhuwgm.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhaHRyZmtwbmZmY2p1dmh1d2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyOTU5MzYsImV4cCI6MjA2MTg3MTkzNn0.PcLCPv4xlRPimcUjqv2SI977VaY0cc-ez5efYxCvLcE";
-const DEEPSEEK_API_KEY = "sk-c41441aa0398496691ab4276756da8cb";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// Экспортируем DeepSeek API key для использования в компонентах
-export const getDeepSeekApiKey = () => DEEPSEEK_API_KEY;
+// DeepSeek API key используется в edge функции через переменную окружения
+export const DEEPSEEK_API_KEY = "sk-c41441aa0398496691ab4276756da8cb";

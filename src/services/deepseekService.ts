@@ -36,8 +36,13 @@ export const generateDeepSeekContent = async (
       throw new Error(`Failed to generate content: ${error.message}`);
     }
 
+    if (!data || !data.content) {
+      console.error('Invalid response from DeepSeek function:', data);
+      throw new Error('Received invalid response from AI service');
+    }
+
     return {
-      content: data.content || 'Контент не сгенерирован. Попробуйте позже.'
+      content: data.content
     };
   } catch (error) {
     console.error('DeepSeek service error:', error);

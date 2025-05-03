@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generateDeepSeekContent, DeepSeekContentType } from '@/services/deepseekService';
 import { ArchetypeDescription } from '@/types/numerology';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface AIContentSectionProps {
   title: string;
@@ -16,21 +18,21 @@ export const AIContentSection = ({ title, type, archetypes }: AIContentSectionPr
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchContent = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await generateDeepSeekContent(type, archetypes);
-        setContent(response.content);
-      } catch (err) {
-        console.error(`Error fetching ${type} content:`, err);
-        setError('Не удалось загрузить контент. Пожалуйста, попробуйте позже.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchContent = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await generateDeepSeekContent(type, archetypes);
+      setContent(response.content);
+    } catch (err: any) {
+      console.error(`Error fetching ${type} content:`, err);
+      setError('Не удалось загрузить контент. Пожалуйста, попробуйте позже.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (archetypes.length > 0) {
       fetchContent();
     }
@@ -49,8 +51,20 @@ export const AIContentSection = ({ title, type, archetypes }: AIContentSectionPr
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">{title}</CardTitle>
+        {error && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={fetchContent} 
+            disabled={loading}
+            className="h-8 w-8 p-0"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="sr-only">Обновить</span>
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {loading ? (

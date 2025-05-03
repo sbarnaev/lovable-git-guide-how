@@ -1,7 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") || "";
+// Используем API ключ из переменных окружения или из клиента
+const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY") || "sk-c41441aa0398496691ab4276756da8cb";
 const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
 
 // Set up CORS headers
