@@ -11,6 +11,7 @@ import { GeneratorTabContent } from "./GeneratorTabContent";
 import { MissionTabContent } from "./MissionTabContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface ArchetypeFormProps {
   selectedCode: NumerologyCodeType;
@@ -94,11 +95,15 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
   const [archetypeValue, setArchetypeValue] = useState<number>(props.selectedValue);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   
-  const handleSaveClick = () => {
-    setIsSaving(true);
-    props.onSave();
-    setIsSaving(false);
-    toast.success(`Архетип ${props.selectedCode} со значением ${props.selectedValue} успешно сохранен`);
+  const handleSaveClick = async () => {
+    try {
+      setIsSaving(true);
+      await props.onSave();
+    } catch (error) {
+      toast.error(`Ошибка: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const codeLabels: Record<NumerologyCodeType, string> = {
@@ -280,40 +285,54 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
         </CardContent>
       </Card>
       
-      <Tabs defaultValue="general">
-        <TabsList className="grid grid-cols-6 mb-4 w-full">
-          <TabsTrigger value="general">Общее</TabsTrigger>
-          <TabsTrigger value="codeDetails">Данные кода</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="general">
-          <GeneralTabContent
-            title={props.title}
-            setTitle={props.setTitle}
-            description={props.description}
-            setDescription={props.setDescription}
-            maleImageUrl={props.maleImageUrl}
-            setMaleImageUrl={props.setMaleImageUrl}
-            femaleImageUrl={props.femaleImageUrl}
-            setFemaleImageUrl={props.setFemaleImageUrl}
-          />
-        </TabsContent>
-        
-        <TabsContent value="codeDetails">
-          {getTabContent()}
-        </TabsContent>
-      </Tabs>
-      
-      <div className="py-4 flex justify-center">
-        <Button 
-          onClick={handleSaveClick} 
-          size="lg" 
-          className="px-8"
-          disabled={isSaving}
-        >
-          {isSaving ? 'Сохранение...' : 'Сохранить архетип'}
-        </Button>
-      </div>
+      {props.loading ? (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Загрузка данных...</span>
+        </div>
+      ) : (
+        <>
+          <Tabs defaultValue="general">
+            <TabsList className="grid grid-cols-6 mb-4 w-full">
+              <TabsTrigger value="general">Общее</TabsTrigger>
+              <TabsTrigger value="codeDetails">Данные кода</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="general">
+              <GeneralTabContent
+                title={props.title}
+                setTitle={props.setTitle}
+                description={props.description}
+                setDescription={props.setDescription}
+                maleImageUrl={props.maleImageUrl}
+                setMaleImageUrl={props.setMaleImageUrl}
+                femaleImageUrl={props.femaleImageUrl}
+                setFemaleImageUrl={props.setFemaleImageUrl}
+              />
+            </TabsContent>
+            
+            <TabsContent value="codeDetails">
+              {getTabContent()}
+            </TabsContent>
+          </Tabs>
+          
+          <div className="py-4 flex justify-center">
+            <Button 
+              onClick={handleSaveClick} 
+              size="lg" 
+              className="px-8"
+              disabled={isSaving || props.loading}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Сохранение...
+                </>
+              ) : 'Сохранить архетип'}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

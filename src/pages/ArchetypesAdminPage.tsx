@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
-import { addArchetypeDescription, getAllArchetypeDescriptions, getArchetypeDescription } from "@/utils/archetypeDescriptions";
+import { addArchetypeDescription, getAllArchetypeDescriptions, getArchetypeDescription, loadArchetypesFromDb } from "@/utils/archetypeDescriptions";
 import { toast } from "sonner";
 import { ArchetypeForm } from "@/components/archetypes/ArchetypeForm";
 import { ArchetypesList } from "@/components/archetypes/ArchetypesList";
@@ -12,6 +11,7 @@ const ArchetypesAdminPage = () => {
   const [selectedCode, setSelectedCode] = useState<NumerologyCodeType>('personality');
   const [selectedValue, setSelectedValue] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   
   // General fields
   const [title, setTitle] = useState("");
@@ -60,6 +60,7 @@ const ArchetypesAdminPage = () => {
     const loadDescriptions = async () => {
       setLoading(true);
       try {
+        await loadArchetypesFromDb(true);
         const allDescriptions = getAllArchetypeDescriptions();
         setDescriptions(allDescriptions);
       } catch (error) {
@@ -129,6 +130,7 @@ const ArchetypesAdminPage = () => {
       } catch (error) {
         console.error("Error loading archetype:", error);
         clearAllFields();
+        toast.error(`Ошибка загрузки архетипа: ${error instanceof Error ? error.message : String(error)}`);
       } finally {
         setLoading(false);
       }
@@ -182,77 +184,77 @@ const ArchetypesAdminPage = () => {
   };
 
   const handleSave = async () => {
-    const parseTextToArray = (text: string) => {
-      return text
-        .split('\n')
-        .map(str => str.trim())
-        .filter(str => str !== "");
-    };
-
-    const archetypeDescription: ArchetypeDescription = {
-      code: selectedCode,
-      value: selectedValue,
-      title,
-      description,
-      maleImageUrl,
-      femaleImageUrl,
-      
-      // Personality Code
-      resourceManifestation,
-      distortedManifestation,
-      developmentTask,
-      resourceQualities: parseTextToArray(resourceQualities),
-      keyDistortions: parseTextToArray(keyDistortions),
-      
-      // Connector Code
-      keyTask,
-      workingAspects: parseTextToArray(workingAspects),
-      nonWorkingAspects: parseTextToArray(nonWorkingAspects),
-      worldContactBasis,
-      
-      // Realization Code
-      formula,
-      potentialRealizationWays: parseTextToArray(potentialRealizationWays),
-      successSources: parseTextToArray(successSources),
-      realizationType,
-      realizationObstacles: parseTextToArray(realizationObstacles),
-      recommendations: parseTextToArray(recommendations),
-      
-      // Generator Code
-      generatorFormula,
-      energySources: parseTextToArray(energySources),
-      energyDrains: parseTextToArray(energyDrains),
-      flowSigns: parseTextToArray(flowSigns),
-      burnoutSigns: parseTextToArray(burnoutSigns),
-      generatorRecommendation,
-      
-      // Mission Code
-      missionEssence,
-      missionRealizationFactors: parseTextToArray(missionRealizationFactors),
-      missionChallenges,
-      missionObstacles: parseTextToArray(missionObstacles),
-      mainTransformation,
-      
-      // Backward compatibility
-      strengths: parseTextToArray(resourceQualities),
-      challenges: parseTextToArray(keyDistortions),
-    };
-
     try {
-      toast.info("Сохранение архетипа...");
+      setIsSaving(true);
+      
+      const parseTextToArray = (text: string) => {
+        return text
+          .split('\n')
+          .map(str => str.trim())
+          .filter(str => str !== "");
+      };
+
+      const archetypeDescription: ArchetypeDescription = {
+        code: selectedCode,
+        value: selectedValue,
+        title: title || `Архетип ${selectedValue}`,  // Ensure title is not empty
+        description,
+        maleImageUrl,
+        femaleImageUrl,
+        
+        // Personality Code
+        resourceManifestation,
+        distortedManifestation,
+        developmentTask,
+        resourceQualities: parseTextToArray(resourceQualities),
+        keyDistortions: parseTextToArray(keyDistortions),
+        
+        // Connector Code
+        keyTask,
+        workingAspects: parseTextToArray(workingAspects),
+        nonWorkingAspects: parseTextToArray(nonWorkingAspects),
+        worldContactBasis,
+        
+        // Realization Code
+        formula,
+        potentialRealizationWays: parseTextToArray(potentialRealizationWays),
+        successSources: parseTextToArray(successSources),
+        realizationType,
+        realizationObstacles: parseTextToArray(realizationObstacles),
+        recommendations: parseTextToArray(recommendations),
+        
+        // Generator Code
+        generatorFormula,
+        energySources: parseTextToArray(energySources),
+        energyDrains: parseTextToArray(energyDrains),
+        flowSigns: parseTextToArray(flowSigns),
+        burnoutSigns: parseTextToArray(burnoutSigns),
+        generatorRecommendation,
+        
+        // Mission Code
+        missionEssence,
+        missionRealizationFactors: parseTextToArray(missionRealizationFactors),
+        missionChallenges,
+        missionObstacles: parseTextToArray(missionObstacles),
+        mainTransformation,
+        
+        // Backward compatibility
+        strengths: parseTextToArray(resourceQualities),
+        challenges: parseTextToArray(keyDistortions),
+      };
+
       const success = await addArchetypeDescription(archetypeDescription);
       
       if (success) {
-        toast.success(`Архетип ${selectedCode} со значением ${selectedValue} успешно сохранен`);
-        
-        // Update the descriptions list
-        setDescriptions(getAllArchetypeDescriptions());
-      } else {
-        toast.error("Не удалось сохранить архетип. Проверьте консоль для деталей.");
+        // Reload descriptions to update the UI
+        const updatedDescriptions = getAllArchetypeDescriptions();
+        setDescriptions(updatedDescriptions);
       }
     } catch (error) {
       console.error("Error saving archetype:", error);
-      toast.error("Ошибка при сохранении архетипа: " + String(error));
+      toast.error("Ошибка при сохранении архетипа: " + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setIsSaving(false);
     }
   };
 

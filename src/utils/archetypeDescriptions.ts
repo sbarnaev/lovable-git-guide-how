@@ -22,6 +22,7 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
     
     if (fetchError) {
       console.error('Ошибка при поиске архетипа:', fetchError);
+      toast.error(`Ошибка при поиске архетипа: ${fetchError.message}`);
       return false;
     }
     
@@ -29,50 +30,50 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
     const dbRecord = {
       code: description.code,
       value: description.value,
-      title: description.title,
-      description: description.description,
-      male_image_url: description.maleImageUrl,
-      female_image_url: description.femaleImageUrl,
+      title: description.title || `Архетип ${description.value}`,
+      description: description.description || null,
+      male_image_url: description.maleImageUrl || null,
+      female_image_url: description.femaleImageUrl || null,
       
       // Код личности
-      resource_manifestation: description.resourceManifestation,
-      distorted_manifestation: description.distortedManifestation,
-      development_task: description.developmentTask,
-      resource_qualities: description.resourceQualities,
-      key_distortions: description.keyDistortions,
+      resource_manifestation: description.resourceManifestation || null,
+      distorted_manifestation: description.distortedManifestation || null,
+      development_task: description.developmentTask || null,
+      resource_qualities: description.resourceQualities || null,
+      key_distortions: description.keyDistortions || null,
       
       // Код коннектора
-      key_task: description.keyTask,
-      working_aspects: description.workingAspects,
-      non_working_aspects: description.nonWorkingAspects,
-      world_contact_basis: description.worldContactBasis,
+      key_task: description.keyTask || null,
+      working_aspects: description.workingAspects || null,
+      non_working_aspects: description.nonWorkingAspects || null,
+      world_contact_basis: description.worldContactBasis || null,
       
       // Код реализации
-      formula: description.formula,
-      potential_realization_ways: description.potentialRealizationWays,
-      success_sources: description.successSources,
-      realization_type: description.realizationType,
-      realization_obstacles: description.realizationObstacles,
-      recommendations: description.recommendations,
+      formula: description.formula || null,
+      potential_realization_ways: description.potentialRealizationWays || null,
+      success_sources: description.successSources || null,
+      realization_type: description.realizationType || null,
+      realization_obstacles: description.realizationObstacles || null,
+      recommendations: description.recommendations || null,
       
       // Код генератора
-      generator_formula: description.generatorFormula,
-      energy_sources: description.energySources,
-      energy_drains: description.energyDrains,
-      flow_signs: description.flowSigns,
-      burnout_signs: description.burnoutSigns,
-      generator_recommendation: description.generatorRecommendation,
+      generator_formula: description.generatorFormula || null,
+      energy_sources: description.energySources || null,
+      energy_drains: description.energyDrains || null,
+      flow_signs: description.flowSigns || null,
+      burnout_signs: description.burnoutSigns || null,
+      generator_recommendation: description.generatorRecommendation || null,
       
       // Код миссии
-      mission_essence: description.missionEssence,
-      mission_realization_factors: description.missionRealizationFactors,
-      mission_challenges: description.missionChallenges,
-      mission_obstacles: description.missionObstacles,
-      main_transformation: description.mainTransformation,
+      mission_essence: description.missionEssence || null,
+      mission_realization_factors: description.missionRealizationFactors || null,
+      mission_challenges: description.missionChallenges || null,
+      mission_obstacles: description.missionObstacles || null,
+      main_transformation: description.mainTransformation || null,
       
       // Для обратной совместимости
-      strengths: description.strengths,
-      challenges: description.challenges,
+      strengths: description.strengths || null,
+      challenges: description.challenges || null,
     };
 
     let result;
@@ -86,10 +87,12 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
         
       if (result.error) {
         console.error('Ошибка при обновлении архетипа:', result.error);
+        toast.error(`Ошибка при обновлении архетипа: ${result.error.message}`);
         throw new Error(`Ошибка при обновлении архетипа: ${result.error.message}`);
       }
       
       console.log(`Архетип обновлен: ${description.code}-${description.value}`);
+      toast.success(`Архетип ${description.code}-${description.value} обновлен`);
       
       // Обновляем запись в кеше
       const index = archetypeDescriptionsCache.findIndex(
@@ -112,10 +115,12 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
         
       if (result.error) {
         console.error('Ошибка при добавлении архетипа:', result.error);
+        toast.error(`Ошибка при добавлении архетипа: ${result.error.message}`);
         throw new Error(`Ошибка при добавлении архетипа: ${result.error.message}`);
       }
       
       console.log(`Добавлен новый архетип: ${description.code}-${description.value}`);
+      toast.success(`Добавлен новый архетип: ${description.code}-${description.value}`);
       
       // Добавляем запись в кеш
       archetypeDescriptionsCache.push(description);
@@ -124,6 +129,7 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
     }
   } catch (error) {
     console.error('Ошибка в addArchetypeDescription:', error);
+    toast.error(`Ошибка при сохранении архетипа: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -164,6 +170,7 @@ export async function loadArchetypesFromDb(forceRefresh = false): Promise<boolea
       
     if (error) {
       console.error('Error loading archetypes from DB:', error);
+      toast.error(`Ошибка загрузки архетипов: ${error.message}`);
       
       // Проверяем наличие данных в localStorage для обратной совместимости
       loadDescriptionsFromStorage();
@@ -247,6 +254,7 @@ export async function loadArchetypesFromDb(forceRefresh = false): Promise<boolea
     }
   } catch (error) {
     console.error('Error in loadArchetypesFromDb:', error);
+    toast.error(`Ошибка загрузки архетипов: ${error instanceof Error ? error.message : String(error)}`);
     
     // Проверяем наличие данных в localStorage для обратной совместимости
     loadDescriptionsFromStorage();
@@ -305,18 +313,20 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
       maleImageUrl: data.male_image_url || undefined,
       femaleImageUrl: data.female_image_url || undefined,
       
-      // ... остальные поля аналогично предыдущему преобразованию
+      // Код личности
       resourceManifestation: data.resource_manifestation || undefined,
       distortedManifestation: data.distorted_manifestation || undefined,
       developmentTask: data.development_task || undefined,
       resourceQualities: data.resource_qualities || undefined,
       keyDistortions: data.key_distortions || undefined,
       
+      // Код коннектора
       keyTask: data.key_task || undefined,
       workingAspects: data.working_aspects || undefined,
       nonWorkingAspects: data.non_working_aspects || undefined,
       worldContactBasis: data.world_contact_basis || undefined,
       
+      // Код реализации
       formula: data.formula || undefined,
       potentialRealizationWays: data.potential_realization_ways || undefined,
       successSources: data.success_sources || undefined,
@@ -324,6 +334,7 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
       realizationObstacles: data.realization_obstacles || undefined,
       recommendations: data.recommendations || undefined,
       
+      // Код генератора
       generatorFormula: data.generator_formula || undefined,
       energySources: data.energy_sources || undefined,
       energyDrains: data.energy_drains || undefined,
@@ -331,12 +342,14 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
       burnoutSigns: data.burnout_signs || undefined,
       generatorRecommendation: data.generator_recommendation || undefined,
       
+      // Код миссии
       missionEssence: data.mission_essence || undefined,
       missionRealizationFactors: data.mission_realization_factors || undefined,
       missionChallenges: data.mission_challenges || undefined,
       missionObstacles: data.mission_obstacles || undefined,
       mainTransformation: data.main_transformation || undefined,
       
+      // Для обратной совместимости
       strengths: data.strengths || undefined,
       challenges: data.challenges || undefined,
     };
@@ -358,7 +371,7 @@ export async function getArchetypeDescriptions(codes: { type: NumerologyCodeType
   try {
     const promises = codes.map(code => getArchetypeDescription(code.type, code.value));
     const descriptions = await Promise.all(promises);
-    return descriptions.filter(desc => desc !== undefined) as ArchetypeDescription[];
+    return descriptions.filter((desc): desc is ArchetypeDescription => desc !== undefined);
   } catch (error) {
     console.error('Error in getArchetypeDescriptions:', error);
     return [];
@@ -373,7 +386,7 @@ export function getAllArchetypeDescriptions(): ArchetypeDescription[] {
 }
 
 /**
- * Сохраняет описания архетипов в локальное хранилище (для обратной совместимости)
+ * Сохраняет описания архетипов в локальное хранилище (для обратной с��вместимости)
  */
 function saveDescriptionsToStorage() {
   localStorage.setItem('numerica_archetype_descriptions', JSON.stringify(archetypeDescriptionsCache));
