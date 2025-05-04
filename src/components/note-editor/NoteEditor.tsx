@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCalculations } from '@/contexts/CalculationsContext';
@@ -21,6 +21,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const { saveNote, getNote, updateNote } = useCalculations();
   const editorRef = useRef<HTMLDivElement>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
+  const saveTimeoutRef = useRef<number | null>(null);
   
   useEffect(() => {
     const fetchNote = async () => {
@@ -73,7 +74,8 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   };
 
-  const handleSave = async () => {
+  // Auto-save handler with debounce
+  const autoSaveContent = useCallback(async () => {
     if (!editorRef.current) return;
     
     let htmlContent = editorRef.current.innerHTML;
@@ -89,7 +91,10 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       
       if (result) {
         setNoteId(result.id);
-        toast.success('Заметка сохранена');
+        toast.success('Заметка сохранена', { 
+          position: 'bottom-right',
+          duration: 2000
+        });
       }
     } catch (error) {
       console.error('Error saving note:', error);
@@ -97,12 +102,57 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     } finally {
       setLoading(false);
     }
-  };
-  
+  }, [calculationId, noteId, saveNote, updateNote]);
+
+  // Debounced auto-save
+  const debouncedAutoSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      window.clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = window.setTimeout(() => {
+      autoSaveContent();
+    }, 1500);
+  }, [autoSaveContent]);
+
   const updateContentFromEditor = () => {
     if (editorRef.current) {
       setContent(editorRef.current.innerHTML);
       extractBlocksFromContent(editorRef.current.innerHTML);
+      debouncedAutoSave();
+    }
+  };
+
+  // Handle specific contenteditable events for heading formatting
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Only apply heading formatting to selected text, not all content
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // Get the current selection
+      const selection = window.getSelection();
+      if (!selection || !editorRef.current) return;
+      
+      // Check if the cursor is inside a heading element
+      const range = selection.getRangeAt(0);
+      let currentNode = range.startContainer;
+      let insideHeading = false;
+      
+      // Find if we're inside a heading tag
+      while (currentNode !== editorRef.current) {
+        if (currentNode instanceof HTMLElement && 
+            /^h[1-6]$/i.test(currentNode.tagName)) {
+          insideHeading = true;
+          break;
+        }
+        if (!currentNode.parentNode) break;
+        currentNode = currentNode.parentNode;
+      }
+      
+      // If we're inside a heading, we need to insert a paragraph after the heading
+      if (insideHeading) {
+        e.preventDefault();
+        document.execCommand('insertHTML', false, '<br><p></p>');
+        updateContentFromEditor();
+      }
     }
   };
 
@@ -175,6 +225,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           )}
           contentEditable={!loading}
           onInput={updateContentFromEditor}
+          onKeyDown={handleKeyDown}
           dangerouslySetInnerHTML={{ __html: content }}
           spellCheck={true}
           dir="ltr"
@@ -182,7 +233,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
         
         <div className="flex justify-end">
           <Button 
-            onClick={handleSave} 
+            onClick={autoSaveContent} 
             disabled={loading}
             className="flex items-center gap-2"
           >
@@ -194,4 +245,3 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     </Card>
   );
 };
-
