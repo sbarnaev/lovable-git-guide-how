@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,7 @@ import TargetCalculationForm from "./pages/TargetCalculationForm";
 import CalculationResult from "./pages/CalculationResult";
 import HistoryPage from "./pages/HistoryPage";
 import ArchetypesAdminPage from "./pages/ArchetypesAdminPage";
+import ArchetypeImagesPage from "./pages/ArchetypeImagesPage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
@@ -45,6 +47,7 @@ const App = () => (
                   
                   <Route path="history" element={<HistoryPage />} />
                   <Route path="archetypes" element={<ArchetypesAdminPage />} />
+                  <Route path="archetype-images" element={<ArchetypeImagesPage />} />
                 </Route>
               </Route>
               
