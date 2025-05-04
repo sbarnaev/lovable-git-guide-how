@@ -1,13 +1,12 @@
-
 import React, { useEffect } from 'react';
 import { PartnershipCalculation } from '@/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { PartnershipClientInfo } from './PartnershipClientInfo';
-import { PartnershipProfileCodes } from './PartnershipProfileCodes';
 import { PartnershipAtlas } from './PartnershipAtlas';
-import { PartnershipCompatibility } from './PartnershipCompatibility';
 import { ArchetypeDescription } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
+import { PartnershipConsultationSection } from './PartnershipConsultationSection';
+import { PartnershipTextbookSection } from './PartnershipTextbookSection';
 
 interface PartnershipViewProps {
   calculation: (PartnershipCalculation & { id: string; createdAt: string });
@@ -97,15 +96,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
       {/* Client Information */}
       <PartnershipClientInfo calculation={calculation} />
       
-      {/* Comparison Profile Codes */}
-      <PartnershipProfileCodes 
-        clientProfile={clientProfile}
-        partnerProfile={partnerProfile}
-        clientName={calculation.clientName}
-        partnerName={calculation.partnerName}
-      />
-      
-      {/* Individual Profile Codes */}
+      {/* Individual Profile Codes - keep this section but remove the comparison section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* First person profile */}
         <Card>
@@ -186,9 +177,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         </Card>
       </div>
       
-      {/* Compatibility Section */}
-      <PartnershipCompatibility calculation={calculation} />
-      
       {/* Profile Atlas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PartnershipAtlas 
@@ -203,7 +191,25 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         />
       </div>
       
-      {/* AI Sections */}
+      {/* Textbook Section - New */}
+      <PartnershipTextbookSection 
+        clientProfile={clientProfile}
+        partnerProfile={partnerProfile}
+        clientArchetypes={clientArchetypes}
+        partnerArchetypes={partnerArchetypes}
+        clientName={calculation.clientName}
+        partnerName={calculation.partnerName}
+      />
+      
+      {/* Consultation Section - New */}
+      {calculation.id && combinedArchetypes.length > 0 && (
+        <PartnershipConsultationSection 
+          calculationId={calculation.id}
+          combinedArchetypes={combinedArchetypes}
+        />
+      )}
+      
+      {/* AI Sections - kept */}
       {calculation.id && combinedArchetypes.length > 0 && (
         <>
           <AIContentSection 
