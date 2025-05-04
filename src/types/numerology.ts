@@ -5,6 +5,7 @@ export type NumerologyCodeType =
   | 'realization'  // Код реализации
   | 'generator'    // Код генератора
   | 'mission'      // Код миссии
+  | 'target'       // Целевой расчет
   | 'all';         // Все коды
 
 export interface NumerologyCode {

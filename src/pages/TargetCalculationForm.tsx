@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/calculations";
 import { useToast } from "@/hooks/use-toast";
 import { generateDeepSeekContent, saveGeneratedContent } from "@/services/deepseekService";
+import { NumerologyCodeType } from "@/types/numerology";
 
 const TargetCalculationForm = () => {
   const navigate = useNavigate();
@@ -68,7 +68,7 @@ const TargetCalculationForm = () => {
       // Now we have a calculation ID, we can generate and store AI content
       // Add value property to satisfy ArchetypeDescription interface
       const targetArchetypes = [{ 
-        code: "target", 
+        code: 'target' as NumerologyCodeType, 
         title: "Целевой расчет",
         description: `Запрос клиента: ${targetQuery}`,
         value: 0 // Adding the required value property

@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useCalculations } from '@/contexts/calculations';
 import { BasicCalculation, Calculation, TargetCalculation } from '@/types';
-import { ArchetypeDescription } from '@/types/numerology';
+import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
 import { NoteEditor } from '@/components/note-editor';
 import { ClientInfo } from '@/components/calculation-result/ClientInfo';
@@ -50,11 +49,11 @@ const CalculationResult = () => {
           if (fetchedCalculation.type === 'target') {
             const targetCalc = fetchedCalculation as (TargetCalculation & { id: string; createdAt: string });
             const simplifiedArchetypes = [{ 
-              code: "target", 
+              code: 'target' as NumerologyCodeType, 
               title: "Целевой расчет",
               description: `Запрос клиента: ${targetCalc.targetQuery}`,
-              value: 0  // Adding the required value property
-            }] as ArchetypeDescription[];
+              value: 0
+            }];
             
             setArchetypes(simplifiedArchetypes);
           }
