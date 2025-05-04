@@ -21,7 +21,6 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const { saveNote, getNote, updateNote } = useCalculations();
   const editorRef = useRef<HTMLDivElement>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
-  const saveTimeoutRef = useRef<number | null>(null);
   
   // Function to force correct text direction
   const ensureProperTextDirection = useCallback(() => {
@@ -76,7 +75,9 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
     
     // Initialize editor with proper direction
-    ensureProperTextDirection();
+    setTimeout(() => {
+      ensureProperTextDirection();
+    }, 100);
     
     // Add MutationObserver to enforce text direction on any DOM changes
     if (editorRef.current) {
@@ -116,7 +117,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   };
 
-  // Auto-save handler with debounce
+  // Auto-save function (no debounce, save immediately)
   const autoSaveContent = useCallback(async () => {
     if (!editorRef.current) return;
     
@@ -146,16 +147,11 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   }, [calculationId, noteId, saveNote, updateNote]);
 
-  // Immediate auto-save - no debounce
+  // Immediate auto-save
   const updateContentFromEditor = () => {
     if (editorRef.current) {
       setContent(editorRef.current.innerHTML);
       extractBlocksFromContent(editorRef.current.innerHTML);
-      
-      // Clear any pending timeout
-      if (saveTimeoutRef.current) {
-        window.clearTimeout(saveTimeoutRef.current);
-      }
       
       // Save immediately
       autoSaveContent();
@@ -288,6 +284,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
             textAlign: 'left',
             unicodeBidi: 'normal',
           }}
+          suppressContentEditableWarning={true}
         />
         
         <div className="flex justify-end">
