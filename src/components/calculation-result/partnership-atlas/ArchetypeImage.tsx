@@ -5,7 +5,7 @@ interface ArchetypeImageProps {
   imageUrl: string;
   alt: string;
   className?: string;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export const ArchetypeImage: React.FC<ArchetypeImageProps> = ({ 

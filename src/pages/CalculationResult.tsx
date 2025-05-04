@@ -1,141 +1,39 @@
-import { useState, useEffect, useMemo } from 'react';
+
+import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useCalculations } from '@/contexts/calculations';
-import { BasicCalculation, Calculation, PartnershipCalculation, TargetCalculation } from '@/types';
-import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
-import { AIContentSection } from '@/components/AIContentSection';
-import { NoteEditor } from '@/components/note-editor';
-import { ClientInfo } from '@/components/calculation-result/ClientInfo';
-import { ProfileCodes } from '@/components/calculation-result/ProfileCodes';
-import { ProfileAtlas } from '@/components/calculation-result/ProfileAtlas';
-import { ConsultationSection } from '@/components/calculation-result/ConsultationSection';
-import { TextbookSection } from '@/components/calculation-result/TextbookSection';
+import { BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
+import { useCalculationData } from '@/hooks/useCalculationData';
+import { LoadingState } from '@/components/calculation-result/LoadingState';
+import { ErrorState } from '@/components/calculation-result/ErrorState';
+import { BasicView } from '@/components/calculation-result/BasicView';
 import { PartnershipView } from '@/components/calculation-result/PartnershipView';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { calculateAllCodes } from '@/utils/numerologyCalculator';
-
-// Note: This is a temporary flag to disable notes
-const NOTES_DISABLED = true;
+import { TargetView } from '@/components/calculation-result/TargetView';
 
 const CalculationResult = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getCalculation } = useCalculations();
-  const [calculation, setCalculation] = useState<Calculation | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [archetypes, setArchetypes] = useState<ArchetypeDescription[]>([]);
-  const [clientArchetypes, setClientArchetypes] = useState<ArchetypeDescription[]>([]);
-  const [partnerArchetypes, setPartnerArchetypes] = useState<ArchetypeDescription[]>([]);
   
-  // Fetch calculation data only once on component mount or when id changes
-  useEffect(() => {
-    const fetchCalculation = async () => {
-      if (!id) {
-        setError('Calculation ID is missing.');
-        setLoading(false);
-        return;
-      }
-      
-      setLoading(true);
-      try {
-        const fetchedCalculation = getCalculation(id);
-        console.log("Fetched calculation:", fetchedCalculation);
-        
-        if (fetchedCalculation) {
-          setCalculation(fetchedCalculation);
-          
-          // If it's a basic calculation with archetypeDescriptions, use those
-          if (fetchedCalculation.type === 'basic') {
-            const basicCalc = fetchedCalculation as (BasicCalculation & { id: string; createdAt: string });
-            if (basicCalc.results.archetypeDescriptions) {
-              setArchetypes(basicCalc.results.archetypeDescriptions);
-            }
-          }
-          
-          // For target calculations, we create a simplified archetype for AI content
-          if (fetchedCalculation.type === 'target') {
-            const targetCalc = fetchedCalculation as (TargetCalculation & { id: string; createdAt: string });
-            const simplifiedArchetypes = [{ 
-              code: 'target' as NumerologyCodeType, 
-              title: "Целевой расчет",
-              description: `Запрос клиента: ${targetCalc.targetQuery}`,
-              value: 0
-            }];
-            
-            setArchetypes(simplifiedArchetypes);
-          }
-
-          // For partnership calculation, set both client and partner archetypes
-          if (fetchedCalculation.type === 'partnership') {
-            const partnershipCalc = fetchedCalculation as (PartnershipCalculation & { id: string; createdAt: string });
-            console.log("Partnership calculation:", partnershipCalc);
-            
-            // Ensure we have the required profile data
-            if (partnershipCalc.results) {
-              // Make sure clientProfile and partnerProfile have fullCodes
-              if (partnershipCalc.results.clientProfile && !partnershipCalc.results.clientProfile.fullCodes) {
-                // Calculate codes if missing
-                const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
-                if (partnershipCalc.results.clientProfile) {
-                  partnershipCalc.results.clientProfile.fullCodes = clientCodes;
-                }
-              }
-              
-              if (partnershipCalc.results.partnerProfile && !partnershipCalc.results.partnerProfile.fullCodes) {
-                // Calculate codes if missing
-                const partnerCodes = calculateAllCodes(partnershipCalc.partnerBirthDate);
-                if (partnershipCalc.results.partnerProfile) {
-                  partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
-                }
-              }
-            }
-            
-            if (partnershipCalc.results.clientArchetypes) {
-              setClientArchetypes(partnershipCalc.results.clientArchetypes);
-            }
-            
-            if (partnershipCalc.results.partnerArchetypes) {
-              setPartnerArchetypes(partnershipCalc.results.partnerArchetypes);
-            }
-            
-            // Combine both sets of archetypes for AI analysis
-            const combined = [
-              ...(partnershipCalc.results.clientArchetypes || []),
-              ...(partnershipCalc.results.partnerArchetypes || [])
-            ];
-            
-            if (combined.length > 0) {
-              setArchetypes(combined);
-            }
-          }
-        } else {
-          setError('Calculation not found.');
-        }
-      } catch (err) {
-        console.error('Error fetching calculation:', err);
-        setError('Failed to load calculation.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchCalculation();
-  }, [id, getCalculation]);
+  // Use our custom hook to load calculation data
+  const { 
+    calculation, 
+    loading, 
+    error, 
+    archetypes, 
+    clientArchetypes, 
+    partnerArchetypes 
+  } = useCalculationData(id);
   
-  // Determine if we're showing a basic calculation
+  // Determine calculation types
   const isBasicCalculation = useMemo(() => {
     return calculation?.type === 'basic';
   }, [calculation]);
   
-  // Determine if we're showing a target calculation
   const isTargetCalculation = useMemo(() => {
     return calculation?.type === 'target';
   }, [calculation]);
 
-  // Determine if we're showing a partnership calculation
   const isPartnershipCalculation = useMemo(() => {
     return calculation?.type === 'partnership';
   }, [calculation]);
@@ -161,197 +59,13 @@ const CalculationResult = () => {
     }
     return undefined;
   }, [calculation, isTargetCalculation]);
-  
-  // Memoize the content of these functions to prevent unnecessary re-renders
-  const renderPartnershipResults = useMemo(() => {
-    if (!id || !partnershipCalculation) return null;
-    
-    return (
-      <PartnershipView 
-        calculation={partnershipCalculation} 
-        clientArchetypes={clientArchetypes} 
-        partnerArchetypes={partnerArchetypes} 
-      />
-    );
-  }, [id, partnershipCalculation, clientArchetypes, partnerArchetypes]);
-
-  const renderTargetResults = useMemo(() => {
-    if (!id || !targetCalculation) return null;
-    
-    const targetCalc = targetCalculation as (TargetCalculation & { id: string; createdAt: string });
-    
-    return (
-      <div className="space-y-6">
-        {/* Client Information */}
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="text-lg">Информация о клиенте</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-medium text-sm">ФИО клиента</h3>
-                <p>{targetCalc.clientName}</p>
-              </div>
-              <div>
-                <h3 className="font-medium text-sm">Дата рождения</h3>
-                <p>{new Date(targetCalc.birthDate).toLocaleDateString('ru-RU')}</p>
-              </div>
-              <div className="col-span-1 md:col-span-2">
-                <h3 className="font-medium text-sm">Запрос</h3>
-                <p>{targetCalc.targetQuery}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* AI Summary */}
-        {archetypes.length > 0 && (
-          <AIContentSection 
-            title="Саммари" 
-            type="summary"
-            archetypes={archetypes}
-            calculationId={id}
-          />
-        )}
-        
-        {/* Target Analysis */}
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="text-lg">Анализ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {targetCalc.results && targetCalc.results.analysis ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Основные факторы:</h3>
-                  <ul className="list-disc pl-5 mt-1 space-y-1">
-                    {targetCalc.results.analysis.mainFactors?.map((factor, index) => (
-                      <li key={index}>{factor}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium">Текущая фаза:</h3>
-                  <p className="mt-1">{targetCalc.results.analysis.currentPhase}</p>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium">Потенциальные результаты:</h3>
-                  <ul className="list-disc pl-5 mt-1 space-y-1">
-                    {targetCalc.results.analysis.potentialOutcomes?.map((outcome, index) => (
-                      <li key={index}>{outcome}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center p-4 text-muted-foreground">
-                Данные анализа отсутствуют.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Recommendations */}
-        {archetypes.length > 0 && (
-          <AIContentSection 
-            title="Детальные рекомендации" 
-            type="practices"
-            archetypes={archetypes}
-            calculationId={id}
-          />
-        )}
-        
-        {/* Potential Problems */}
-        {archetypes.length > 0 && (
-          <AIContentSection 
-            title="Потенциальные проблемы и решения" 
-            type="potential-problems"
-            archetypes={archetypes}
-            calculationId={id}
-          />
-        )}
-        
-        {/* Notes - conditionally disabled */}
-        {!NOTES_DISABLED && id && (
-          <div className="space-y-4">
-            <NoteEditor calculationId={id} />
-          </div>
-        )}
-      </div>
-    );
-  }, [id, targetCalculation, archetypes]);
-
-  const renderBasicResults = useMemo(() => {
-    // Only render if we have both calculation and ID
-    if (!basicCalculation || !id) {
-      return null;
-    }
-    
-    return (
-      <div className="space-y-6">
-        {/* Client Information */}
-        <ClientInfo calculation={basicCalculation} />
-        
-        {/* Profile Codes */}
-        <ProfileCodes calculation={basicCalculation} />
-        
-        {/* Profile Atlas - NEW SECTION */}
-        {archetypes.length > 0 && (
-          <ProfileAtlas 
-            calculation={basicCalculation}
-            archetypes={archetypes}
-          />
-        )}
-        
-        {/* Summary - Only show when we have archetypes and an ID */}
-        {archetypes.length > 0 && id && (
-          <AIContentSection 
-            title="Саммари" 
-            type="summary"
-            archetypes={archetypes}
-            calculationId={id}
-          />
-        )}
-        
-        {/* Consultation Section */}
-        {archetypes.length > 0 && id && (
-          <ConsultationSection 
-            archetypes={archetypes} 
-            calculationId={id} 
-          />
-        )}
-        
-        {/* Textbook Section */}
-        <TextbookSection calculation={basicCalculation} archetypes={archetypes} />
-        
-        {/* Notes Section - conditionally disabled */}
-        {!NOTES_DISABLED && id && (
-          <div className="space-y-4">
-            <NoteEditor calculationId={id} />
-          </div>
-        )}
-      </div>
-    );
-  }, [basicCalculation, id, archetypes]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin h-8 w-8 border-4 border-numerica border-t-transparent rounded-full mr-3"></div>
-        Загрузка расчета...
-      </div>
-    );
+    return <LoadingState />;
   }
   
   if (error) {
-    return (
-      <div className="flex items-center justify-center h-full text-destructive">
-        Ошибка: {error}
-      </div>
-    );
+    return <ErrorState error={error} />;
   }
   
   if (!calculation) {
@@ -378,12 +92,16 @@ const CalculationResult = () => {
         </h1>
       </div>
       
-      {isBasicCalculation ? (
-        renderBasicResults
-      ) : isPartnershipCalculation ? (
-        renderPartnershipResults
-      ) : isTargetCalculation ? (
-        renderTargetResults
+      {isBasicCalculation && basicCalculation ? (
+        <BasicView calculation={basicCalculation} archetypes={archetypes} />
+      ) : isPartnershipCalculation && partnershipCalculation ? (
+        <PartnershipView 
+          calculation={partnershipCalculation} 
+          clientArchetypes={clientArchetypes} 
+          partnerArchetypes={partnerArchetypes} 
+        />
+      ) : isTargetCalculation && targetCalculation ? (
+        <TargetView calculation={targetCalculation} archetypes={archetypes} />
       ) : (
         <div>Неподдерживаемый тип расчета</div>
       )}
