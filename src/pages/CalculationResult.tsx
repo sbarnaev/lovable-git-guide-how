@@ -9,6 +9,7 @@ import { AIContentSection } from '@/components/AIContentSection';
 import { NoteEditor } from '@/components/note-editor';
 import { ClientInfo } from '@/components/calculation-result/ClientInfo';
 import { ProfileCodes } from '@/components/calculation-result/ProfileCodes';
+import { ProfileAtlas } from '@/components/calculation-result/ProfileAtlas';
 import { ConsultationSection } from '@/components/calculation-result/ConsultationSection';
 import { TextbookSection } from '@/components/calculation-result/TextbookSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -223,6 +224,14 @@ const CalculationResult = () => {
         
         {/* Profile Codes */}
         <ProfileCodes calculation={typedCalculation} />
+        
+        {/* Profile Atlas - NEW SECTION */}
+        {archetypes.length > 0 && (
+          <ProfileAtlas 
+            calculation={typedCalculation}
+            archetypes={archetypes}
+          />
+        )}
         
         {/* Summary - Only show when we have archetypes and an ID */}
         {archetypes.length > 0 && id && (
