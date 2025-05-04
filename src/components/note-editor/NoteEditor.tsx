@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useCalculations } from '@/contexts/CalculationsContext';
+import { useCalculations } from '@/contexts/calculations';
 import { toast } from 'sonner';
 import { Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
