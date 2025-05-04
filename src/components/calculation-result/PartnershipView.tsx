@@ -1,15 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { PartnershipCalculation } from '@/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { PartnershipClientInfo } from './PartnershipClientInfo';
 import { PartnershipProfileCodes } from './PartnershipProfileCodes';
 import { PartnershipAtlas } from './PartnershipAtlas';
 import { PartnershipCompatibility } from './PartnershipCompatibility';
 import { ArchetypeDescription } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
-import { ProfileCodes } from './ProfileCodes';
 
 interface PartnershipViewProps {
   calculation: (PartnershipCalculation & { id: string; createdAt: string });
@@ -26,7 +24,25 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
   
   // Log calculation data for debugging
-  console.log("Partnership calculation data:", calculation);
+  useEffect(() => {
+    console.log("Partnership calculation data:", calculation);
+    if (calculation.results) {
+      console.log("Client profile:", calculation.results.clientProfile);
+      console.log("Partner profile:", calculation.results.partnerProfile);
+      
+      if (calculation.results.clientProfile && calculation.results.clientProfile.fullCodes) {
+        console.log("Client codes:", calculation.results.clientProfile.fullCodes);
+      } else {
+        console.log("Client codes missing");
+      }
+      
+      if (calculation.results.partnerProfile && calculation.results.partnerProfile.fullCodes) {
+        console.log("Partner codes:", calculation.results.partnerProfile.fullCodes);
+      } else {
+        console.log("Partner codes missing");
+      }
+    }
+  }, [calculation]);
   
   // Check that calculation exists first
   if (!calculation) {
@@ -67,6 +83,15 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   // Extract client and partner profiles for clarity
   const { clientProfile, partnerProfile } = calculation.results;
   
+  // Get short names for display
+  const getShortName = (fullName: string) => {
+    const nameParts = fullName.trim().split(' ');
+    return nameParts[0] || 'Клиент';
+  };
+
+  const clientShortName = getShortName(calculation.clientName);
+  const partnerShortName = getShortName(calculation.partnerName);
+  
   return (
     <div className="space-y-6">
       {/* Client Information */}
@@ -85,7 +110,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         {/* First person profile */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Профиль: {calculation.clientName.split(' ')[0]}</CardTitle>
+            <CardTitle className="text-lg">Профиль: {clientShortName}</CardTitle>
           </CardHeader>
           <CardContent>
             {clientProfile && clientProfile.fullCodes ? (
@@ -124,7 +149,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         {/* Second person profile */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Профиль: {calculation.partnerName.split(' ')[0]}</CardTitle>
+            <CardTitle className="text-lg">Профиль: {partnerShortName}</CardTitle>
           </CardHeader>
           <CardContent>
             {partnerProfile && partnerProfile.fullCodes ? (

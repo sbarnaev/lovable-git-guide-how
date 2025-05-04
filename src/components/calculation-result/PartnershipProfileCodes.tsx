@@ -19,12 +19,14 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
 }) => {
   // Get short names for display
   const getShortName = (fullName: string) => {
-    const nameParts = fullName.split(' ');
+    const nameParts = fullName.trim().split(' ');
     return nameParts[0] || 'Клиент';
   };
 
   const client = getShortName(clientName);
   const partner = getShortName(partnerName);
+
+  console.log("Partnership profile codes:", { clientProfile, partnerProfile });
 
   // Check if both profiles exist first
   if (!clientProfile || !partnerProfile) {

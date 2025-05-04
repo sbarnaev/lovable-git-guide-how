@@ -36,6 +36,12 @@ export const useCalculationData = (id: string | undefined) => {
             if (basicCalc.results.archetypeDescriptions) {
               setArchetypes(basicCalc.results.archetypeDescriptions);
             }
+            
+            // Ensure that basic calculation also has fullCodes
+            if (basicCalc.results && !basicCalc.results.fullCodes) {
+              basicCalc.results.fullCodes = calculateAllCodes(basicCalc.birthDate);
+              console.log("Generated codes for basic calculation:", basicCalc.results.fullCodes);
+            }
           }
           
           // For target calculations, we create a simplified archetype for AI content
@@ -51,31 +57,52 @@ export const useCalculationData = (id: string | undefined) => {
             setArchetypes(simplifiedArchetypes);
           }
 
-          // For partnership calculation, set both client and partner archetypes
+          // For partnership calculation, set both client and partner archetypes and ensure fullCodes
           if (fetchedCalculation.type === 'partnership') {
             const partnershipCalc = fetchedCalculation as (PartnershipCalculation & { id: string; createdAt: string });
             console.log("Partnership calculation:", partnershipCalc);
             
             // Ensure we have the required profile data
             if (partnershipCalc.results) {
-              // Make sure clientProfile and partnerProfile have fullCodes
-              if (partnershipCalc.results.clientProfile && !partnershipCalc.results.clientProfile.fullCodes) {
-                // Calculate codes if missing
-                const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
-                if (partnershipCalc.results.clientProfile) {
-                  partnershipCalc.results.clientProfile.fullCodes = clientCodes;
-                }
+              // Make sure clientProfile and partnerProfile exist
+              if (!partnershipCalc.results.clientProfile) {
+                console.log("Creating clientProfile");
+                partnershipCalc.results.clientProfile = {
+                  numerology: { lifePath: 0, destiny: 0, personality: 0 },
+                  strengths: [],
+                  challenges: [],
+                  recommendations: []
+                };
               }
               
-              if (partnershipCalc.results.partnerProfile && !partnershipCalc.results.partnerProfile.fullCodes) {
-                // Calculate codes if missing
+              if (!partnershipCalc.results.partnerProfile) {
+                console.log("Creating partnerProfile");
+                partnershipCalc.results.partnerProfile = {
+                  numerology: { lifePath: 0, destiny: 0, personality: 0 },
+                  strengths: [],
+                  challenges: [],
+                  recommendations: []
+                };
+              }
+              
+              // Calculate codes if missing for client
+              if (!partnershipCalc.results.clientProfile.fullCodes) {
+                console.log("Calculating client codes for", partnershipCalc.birthDate);
+                const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
+                partnershipCalc.results.clientProfile.fullCodes = clientCodes;
+                console.log("Generated client codes:", clientCodes);
+              }
+              
+              // Calculate codes if missing for partner
+              if (!partnershipCalc.results.partnerProfile.fullCodes) {
+                console.log("Calculating partner codes for", partnershipCalc.partnerBirthDate);
                 const partnerCodes = calculateAllCodes(partnershipCalc.partnerBirthDate);
-                if (partnershipCalc.results.partnerProfile) {
-                  partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
-                }
+                partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
+                console.log("Generated partner codes:", partnerCodes);
               }
             }
             
+            // Set archetypes for client and partner
             if (partnershipCalc.results.clientArchetypes) {
               setClientArchetypes(partnershipCalc.results.clientArchetypes);
             }

@@ -18,6 +18,16 @@ export const SecondaryArchetypes: React.FC<SecondaryArchetypesProps> = ({
   getImageUrl, 
   onImageClick 
 }) => {
+  console.log("Secondary archetypes codes:", codes);
+  
+  if (!codes) {
+    return (
+      <div className="text-center text-muted-foreground text-sm py-2">
+        Данные кодов отсутствуют
+      </div>
+    );
+  }
+  
   return (
     <div className="grid grid-cols-4 gap-2">
       {/* Connector */}
