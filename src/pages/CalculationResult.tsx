@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,9 @@ import { ProfileCodes } from '@/components/calculation-result/ProfileCodes';
 import { ConsultationSection } from '@/components/calculation-result/ConsultationSection';
 import { TextbookSection } from '@/components/calculation-result/TextbookSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// Note: This is a temporary flag to disable notes
+const NOTES_DISABLED = true;
 
 const CalculationResult = () => {
   const { id } = useParams<{ id: string }>();
@@ -198,8 +200,8 @@ const CalculationResult = () => {
           />
         )}
         
-        {/* Notes */}
-        {id && (
+        {/* Notes - conditionally disabled */}
+        {!NOTES_DISABLED && id && (
           <div className="space-y-4">
             <NoteEditor calculationId={id} />
           </div>
@@ -243,8 +245,8 @@ const CalculationResult = () => {
         {/* Textbook Section */}
         <TextbookSection calculation={typedCalculation} archetypes={archetypes} />
         
-        {/* Notes Section */}
-        {id && (
+        {/* Notes Section - conditionally disabled */}
+        {!NOTES_DISABLED && id && (
           <div className="space-y-4">
             <NoteEditor calculationId={id} />
           </div>
