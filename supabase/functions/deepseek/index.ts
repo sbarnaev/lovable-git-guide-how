@@ -17,7 +17,7 @@ const DEFAULT_PROMPTS = {
   
   'practices': `Ты - опытный нумеролог, психолог и коуч. На основе предоставленных нумерологических архетипов разработай комплекс практических упражнений и рекомендаций для личностного роста.`,
   
-  chat: `Ты - опытный нумеролог и психолог-консультант. Ты отвечаешь на вопросы клиента на основе архетипов его нумерологического профиля.`
+  chat: `Ты - опытный нумеролог и психолог-консультант, помогающий специалисту проводить нумерологическую консультацию. Используй полный анализ всех предоставленных нумерологических архетипов клиента.`
 };
 
 const corsHeaders = {
@@ -42,7 +42,7 @@ serve(async (req) => {
       throw new Error("Missing required parameters: contentType, archetypes");
     }
 
-    // Format the archetypes data for the prompt
+    // Format the archetypes data for the prompt - now with more detailed formatting
     const archetypesText = archetypes.map((arch: ArchetypeDescription) => {
       let text = `# ${arch.title} (Код ${arch.code}: ${arch.value})\n`;
       
@@ -114,6 +114,8 @@ serve(async (req) => {
       systemMessage = systemMessage.replace('{{userMessage}}', userMessage);
     }
 
+    console.log("Sending request to DeepSeek with system message:", systemMessage.substring(0, 100) + "...");
+
     // Request to the DeepSeek API
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
@@ -125,7 +127,7 @@ serve(async (req) => {
         model: "deepseek-chat",
         messages: [
           { role: "system", content: systemMessage },
-          { role: "user", content: `Данные по нумерологическим архетипам:\n\n${archetypesText}` }
+          { role: "user", content: `Данные по нумерологическим архетипам клиента:\n\n${archetypesText}` }
         ],
         temperature: 0.7,
         max_tokens: 1500,

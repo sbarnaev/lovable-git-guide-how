@@ -16,13 +16,20 @@ export const ClientInfo: React.FC<ClientInfoProps> = ({ calculation }) => {
   // Split name into parts
   const nameParts = calculation.clientName.trim().split(' ');
   
-  // Extract last name (last part) and first/middle names (all other parts)
+  // Extract first name, middle name (if any), and last name
+  let firstName = '';
+  let middleName = '';
   let lastName = '';
-  let firstMiddleNames = calculation.clientName;
   
-  if (nameParts.length > 1) {
-    lastName = nameParts[nameParts.length - 1];
-    firstMiddleNames = nameParts.slice(0, nameParts.length - 1).join(' ');
+  if (nameParts.length === 1) {
+    firstName = nameParts[0];
+  } else if (nameParts.length === 2) {
+    firstName = nameParts[0];
+    lastName = nameParts[1];
+  } else if (nameParts.length >= 3) {
+    firstName = nameParts[0];
+    middleName = nameParts[1];
+    lastName = nameParts.slice(2).join(' ');
   }
   
   return (
@@ -35,7 +42,9 @@ export const ClientInfo: React.FC<ClientInfoProps> = ({ calculation }) => {
           <div className="flex flex-col">
             <div className="flex items-center mb-1">
               <User className="mr-2 h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{firstMiddleNames}</span>
+              <span className="font-medium">
+                {firstName} {middleName}
+              </span>
             </div>
             {lastName && (
               <div className="ml-6 text-muted-foreground">

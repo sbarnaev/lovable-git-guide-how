@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArchetypeDescription } from '@/types/numerology';
@@ -15,6 +15,7 @@ import {
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  isStreaming?: boolean;
 }
 
 interface AIChatProps {
@@ -27,6 +28,7 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load existing chat messages on mount
   useEffect(() => {
@@ -40,7 +42,7 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
           // If no chat history, add initial welcome message
           const welcomeMessage = { 
             role: 'assistant' as const, 
-            content: 'Привет! Я твой помощник по нумерологии. Задай мне любой вопрос, и я помогу тебе разобраться в твоем нумерологическом профиле.' 
+            content: 'Здравствуйте! Я ваш помощник по нумерологической консультации. Я знаком с профилем клиента и могу помочь вам с интерпретацией кодов, рекомендациями по практикам и стратегиями для консультации. Задайте мне вопрос, и я постараюсь помочь.' 
           };
           setMessages([welcomeMessage]);
           // Save the welcome message to the database
@@ -61,11 +63,12 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
   
   // Scroll to bottom whenever messages change
   useEffect(() => {
-    const chatContainer = document.getElementById('chat-messages-container');
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+    scrollToBottom();
   }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleSend = async () => {
     if (!input.trim() || submitting) return;
@@ -79,31 +82,53 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
       // Save user message
       await saveChatMessage(calculationId, 'user', userMessage.content);
       
+      // Add assistant placeholder message with streaming indicator
+      setMessages((prev) => [
+        ...prev, 
+        { role: 'assistant', content: '', isStreaming: true }
+      ]);
+
       // Generate AI response
       const response = await generateDeepSeekContent('chat', archetypes, userMessage.content);
       
-      const assistantMessage = { 
-        role: 'assistant' as const, 
-        content: response.content.replace(/\*\*/g, '') // Remove markdown formatting
-      };
+      // Replace streaming message with complete response
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const streamingIndex = newMessages.findIndex(m => m.isStreaming);
+        if (streamingIndex !== -1) {
+          newMessages[streamingIndex] = { 
+            role: 'assistant',
+            content: response.content.replace(/\*\*/g, '') // Remove markdown formatting
+          };
+        }
+        return newMessages;
+      });
       
       // Save assistant message
-      await saveChatMessage(calculationId, 'assistant', assistantMessage.content);
-      
-      setMessages((prev) => [...prev, assistantMessage]);
+      await saveChatMessage(calculationId, 'assistant', response.content.replace(/\*\*/g, ''));
     } catch (error) {
       console.error('Error in AI chat:', error);
       toast.error('Не удалось получить ответ от ассистента');
       
-      // Add error message to the chat
-      const errorMessage = { 
-        role: 'assistant' as const, 
-        content: 'Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.' 
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      // Update streaming message with error
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const streamingIndex = newMessages.findIndex(m => m.isStreaming);
+        if (streamingIndex !== -1) {
+          newMessages[streamingIndex] = { 
+            role: 'assistant',
+            content: 'Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.'
+          };
+        }
+        return newMessages;
+      });
       
       // Save error message
-      await saveChatMessage(calculationId, 'assistant', errorMessage.content);
+      await saveChatMessage(
+        calculationId, 
+        'assistant', 
+        'Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте еще раз позже.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -137,8 +162,7 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
   return (
     <div className="h-full flex flex-col">
       <div 
-        id="chat-messages-container"
-        className="flex-grow overflow-auto mb-4 space-y-4 max-h-[400px] min-h-[300px]"
+        className="flex-grow overflow-auto mb-4 space-y-4 max-h-[400px] min-h-[300px] pr-1"
       >
         {messages.map((message, i) => (
           <div
@@ -150,25 +174,25 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
                 : "mr-auto bg-muted"
             )}
           >
-            {formatMessage(message.content)}
+            {message.isStreaming ? (
+              <div className="flex space-x-2">
+                <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce"></div>
+              </div>
+            ) : (
+              formatMessage(message.content)
+            )}
           </div>
         ))}
-        {submitting && (
-          <div className="mr-auto bg-muted rounded-lg p-3">
-            <div className="flex space-x-2">
-              <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="h-2 w-2 bg-numerica/60 rounded-full animate-bounce"></div>
-            </div>
-          </div>
-        )}
+        <div ref={messagesEndRef} />
       </div>
       <div className="flex gap-2 mt-auto">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyPress}
-          placeholder="Задайте вопрос..."
+          placeholder="Задайте вопрос по нумерологической консультации..."
           className="resize-none"
           disabled={submitting}
         />

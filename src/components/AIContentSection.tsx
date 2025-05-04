@@ -94,7 +94,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         // Process HTML heading tags that we converted earlier
         if (line.match(/<h[1-6]>(.+)<\/h[1-6]>/)) {
           return (
-            <h3 key={index} className="font-medium text-lg mt-5 mb-2 text-numerica">
+            <h3 key={index} className="font-semibold text-lg mt-6 mb-3 text-numerica">
               {line.replace(/<h[1-6]>(.+)<\/h[1-6]>/, '$1')}
             </h3>
           );
@@ -103,7 +103,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         // Check for section headers (lines that end with a colon)
         if (line.match(/^.{3,40}:$/)) {
           return (
-            <h3 key={index} className="font-medium text-lg mt-5 mb-2 text-numerica">
+            <h3 key={index} className="font-semibold text-lg mt-6 mb-3 text-numerica">
               {line}
             </h3>
           );
@@ -112,7 +112,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         // Check for bullet points
         if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
           return (
-            <li key={index} className="ml-5 mb-2 pl-1">
+            <li key={index} className="ml-5 mb-3 pl-1">
               {line.substring(1).trim()}
             </li>
           );
@@ -122,17 +122,17 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         const numberedMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
         if (numberedMatch) {
           return (
-            <div key={index} className="flex mb-2">
-              <span className="font-medium mr-2">{numberedMatch[1]}.</span>
+            <div key={index} className="flex mb-3 pl-5 gap-2">
+              <span className="font-medium">{numberedMatch[1]}.</span>
               <span>{numberedMatch[2]}</span>
             </div>
           );
         }
         
-        // Regular paragraph
+        // Regular paragraph with better spacing and styling
         return (
           <p key={index} className={cn(
-            "mb-3",
+            "mb-3 leading-relaxed",
             line.length < 100 && line.match(/^[А-Я0-9]/) ? "font-medium" : ""
           )}>
             {line}
@@ -161,6 +161,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
           onClick={handleRefresh} 
           disabled={loading || isGenerating}
           className="h-8 w-8 p-0"
+          title="Обновить контент"
         >
           <RefreshCw className={cn("h-4 w-4", (loading || isGenerating) ? "animate-spin" : "")} />
           <span className="sr-only">Обновить</span>
@@ -178,7 +179,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         ) : isGenerating ? (
           <div className="text-center py-4">
             <div className="inline-block animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full mr-2"></div>
-            <span>Идет расчет...</span>
+            <span>Идет генерация контента...</span>
           </div>
         ) : error ? (
           <div className="text-destructive">{error}</div>
