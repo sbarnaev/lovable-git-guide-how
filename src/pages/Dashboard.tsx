@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCalculations } from "@/contexts/CalculationsContext";
+import { useCalculations } from "@/contexts/calculations";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Calculator, Calendar, Clock, History, User } from "lucide-react";

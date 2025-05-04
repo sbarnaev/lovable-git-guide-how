@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useCalculations } from "@/contexts/CalculationsContext";
+import { useCalculations } from "@/contexts/calculations";
 import { toast } from "sonner";
 import { calculateAllCodes } from "@/utils/numerologyCalculator";
 import { getArchetypeDescriptions } from "@/utils/archetypeDescriptions";

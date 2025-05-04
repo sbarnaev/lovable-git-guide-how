@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useCalculations } from '@/contexts/CalculationsContext';
+import { useCalculations } from '@/contexts/calculations';
 import { BasicCalculation, Calculation } from '@/types';
 import { ArchetypeDescription } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
