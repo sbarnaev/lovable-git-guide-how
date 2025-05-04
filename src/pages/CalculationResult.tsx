@@ -438,7 +438,6 @@ const CalculationResult = () => {
     if (!calculation || calculation.type !== 'basic') return null;
     
     const basicCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
-    const { clientName, birthDate } = basicCalculation.inputs;
     
     return (
       <Card className="mb-6">
@@ -450,13 +449,13 @@ const CalculationResult = () => {
             <div className="flex items-center">
               <User className="mr-2 h-4 w-4 text-muted-foreground" />
               <span>
-                {clientName}
+                {basicCalculation.clientName}
               </span>
             </div>
             <div className="flex items-center">
               <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
               <span>
-                {format(new Date(birthDate), 'dd MMMM yyyy', { locale: ru })}
+                {format(new Date(basicCalculation.birthDate), 'dd MMMM yyyy', { locale: ru })}
               </span>
             </div>
             <div className="flex items-center">

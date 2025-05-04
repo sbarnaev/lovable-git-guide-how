@@ -172,7 +172,11 @@ export const getChatMessages = async (
       
     if (error) throw error;
     
-    return data || [];
+    // Ensure we're casting the role to the correct type
+    return (data || []).map(message => ({
+      role: message.role as 'user' | 'assistant',
+      content: message.content
+    }));
   } catch (error) {
     console.error('Error fetching chat messages:', error);
     return [];
