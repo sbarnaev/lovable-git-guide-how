@@ -35,8 +35,23 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const clientShortName = getShortName(clientName);
   const partnerShortName = getShortName(partnerName);
   
+  // Improved findArchetype function with better logging
   const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType, code: number): ArchetypeDescription | undefined => {
-    return archetypes.find(arch => arch.code === codeType && arch.value === code);
+    if (!archetypes || archetypes.length === 0) {
+      console.log(`No archetypes found for ${codeType} search`);
+      return undefined;
+    }
+
+    console.log(`Searching for archetype: ${codeType} with code ${code} in ${archetypes.length} archetypes`);
+    
+    const found = archetypes.find(arch => arch.code === codeType && arch.value === code);
+    
+    if (!found) {
+      console.log(`No matching archetype found for ${codeType} code ${code}`);
+      console.log("Available archetypes:", archetypes.map(a => `${a.code}:${a.value}`).join(', '));
+    }
+    
+    return found;
   };
   
   // Handler for selecting a code type
@@ -45,6 +60,8 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
       setActiveCodeType(null);
     } else {
       setActiveCodeType(codeType);
+      // Log the selection for debugging
+      console.log(`Selected code type: ${codeType}`);
     }
   };
 
@@ -103,6 +120,19 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     );
   };
 
+  // Debug archetypes when component renders
+  React.useEffect(() => {
+    console.log("Client archetypes count:", clientArchetypes?.length || 0);
+    console.log("Partner archetypes count:", partnerArchetypes?.length || 0);
+    
+    if (clientProfile?.fullCodes) {
+      console.log("Client codes:", clientProfile.fullCodes);
+    }
+    if (partnerProfile?.fullCodes) {
+      console.log("Partner codes:", partnerProfile.fullCodes);
+    }
+  }, [clientArchetypes, partnerArchetypes, clientProfile, partnerProfile]);
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Учебник</h2>
@@ -152,3 +182,4 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     </div>
   );
 };
+

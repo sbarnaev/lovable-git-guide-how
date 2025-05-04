@@ -5,7 +5,6 @@ import { PartnershipClientInfo } from './PartnershipClientInfo';
 import { PartnershipAtlas } from './PartnershipAtlas';
 import { ArchetypeDescription } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
-import { PartnershipConsultationSection } from './PartnershipConsultationSection';
 import { PartnershipTextbookSection } from './PartnershipTextbookSection';
 
 interface PartnershipViewProps {
@@ -191,7 +190,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         />
       </div>
       
-      {/* Textbook Section - New */}
+      {/* Textbook Section */}
       <PartnershipTextbookSection 
         clientProfile={clientProfile}
         partnerProfile={partnerProfile}
@@ -200,14 +199,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         clientName={calculation.clientName}
         partnerName={calculation.partnerName}
       />
-      
-      {/* Consultation Section - New */}
-      {calculation.id && combinedArchetypes.length > 0 && (
-        <PartnershipConsultationSection 
-          calculationId={calculation.id}
-          combinedArchetypes={combinedArchetypes}
-        />
-      )}
       
       {/* AI Sections - kept */}
       {calculation.id && combinedArchetypes.length > 0 && (
