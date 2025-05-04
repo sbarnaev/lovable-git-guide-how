@@ -24,8 +24,8 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   // Combine archetypes for AI analysis
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
   
-  // Проверяем наличие результатов расчета
-  if (!calculation.results || !calculation.results.clientProfile || !calculation.results.partnerProfile) {
+  // Проверяем наличие самого объекта результатов расчета
+  if (!calculation.results) {
     return (
       <div className="space-y-6">
         <Card>

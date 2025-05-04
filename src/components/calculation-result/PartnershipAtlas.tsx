@@ -22,7 +22,8 @@ export const PartnershipAtlas: React.FC<PartnershipAtlasProps> = ({
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>('male');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
-  if (!profile || !profile.fullCodes || archetypes.length === 0) {
+  // Проверка наличия данных профиля и кодов
+  if (!profile || !profile.fullCodes) {
     return (
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between pb-2">

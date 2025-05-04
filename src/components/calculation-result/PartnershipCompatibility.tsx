@@ -29,6 +29,22 @@ interface PartnershipCompatibilityProps {
 }
 
 export const PartnershipCompatibility: React.FC<PartnershipCompatibilityProps> = ({ calculation }) => {
+  // Проверка наличия данных о совместимости
+  if (!calculation.results || !calculation.results.compatibility) {
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-lg">Совместимость</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 text-muted-foreground">
+            Данные о совместимости отсутствуют
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   const { compatibility } = calculation.results;
   
   const radarData = {
@@ -120,35 +136,39 @@ export const PartnershipCompatibility: React.FC<PartnershipCompatibilityProps> =
         </div>
         
         {/* Compatibility Analysis */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div>
-            <h4 className="font-medium mb-2">Сильные стороны отношений:</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              {calculation.results.strengths.map((strength, index) => (
-                <li key={index}>{strength}</li>
-              ))}
-            </ul>
+        {calculation.results.strengths && calculation.results.challenges && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div>
+              <h4 className="font-medium mb-2">Сильные стороны отношений:</h4>
+              <ul className="list-disc pl-5 space-y-1">
+                {calculation.results.strengths.map((strength, index) => (
+                  <li key={index}>{strength}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-2">Вызовы в отношениях:</h4>
+              <ul className="list-disc pl-5 space-y-1">
+                {calculation.results.challenges.map((challenge, index) => (
+                  <li key={index}>{challenge}</li>
+                ))}
+              </ul>
+            </div>
           </div>
-          
-          <div>
-            <h4 className="font-medium mb-2">Вызовы в отношениях:</h4>
-            <ul className="list-disc pl-5 space-y-1">
-              {calculation.results.challenges.map((challenge, index) => (
-                <li key={index}>{challenge}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        )}
         
         {/* Recommendations */}
-        <div className="mt-6">
-          <h4 className="font-medium mb-2">Рекомендации:</h4>
-          <ul className="list-disc pl-5 space-y-1">
-            {calculation.results.recommendations.map((recommendation, index) => (
-              <li key={index}>{recommendation}</li>
-            ))}
-          </ul>
-        </div>
+        {calculation.results.recommendations && (
+          <div className="mt-6">
+            <h4 className="font-medium mb-2">Рекомендации:</h4>
+            <ul className="list-disc pl-5 space-y-1">
+              {calculation.results.recommendations.map((recommendation, index) => (
+                <li key={index}>{recommendation}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
