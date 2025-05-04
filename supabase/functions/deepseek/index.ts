@@ -1,9 +1,24 @@
 
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { ArchetypeDescription } from "../../../src/types/numerology.ts";
 
-// Get the API key from environment variables
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
-const SYSTEM_PROMPT = `Ты эксперт по нумерологии, специализирующийся на прочтении нумерологических профилей. Твоя задача — анализировать нумерологические архетипы и предоставлять информацию о них в структурированном и понятном формате. Ты общаешься на русском языке. Не используй маркеры форматирования, такие как ** или ##.`;
+
+// Default prompts if none are provided in the request
+const DEFAULT_PROMPTS = {
+  summary: `Ты - опытный нумеролог и психолог. Проанализируй и представь краткий обзор личности на основе предоставленных нумерологических архетипов.`,
+  
+  'strengths-weaknesses': `Ты - опытный нумеролог и психолог. На основе предоставленных нумерологических архетипов составь детальный анализ сильных и слабых сторон личности.`,
+  
+  'code-conflicts': `Ты - опытный нумеролог и психолог. На основе предоставленных нумерологических архетипов проанализируй потенциальные конфликты между различными аспектами личности.`,
+  
+  'potential-problems': `Ты - опытный нумеролог и психолог. На основе предоставленных нумерологических архетипов выяви и опиши потенциальные проблемы, с которыми может столкнуться человек в своём развитии.`,
+  
+  'practices': `Ты - опытный нумеролог, психолог и коуч. На основе предоставленных нумерологических архетипов разработай комплекс практических упражнений и рекомендаций для личностного роста.`,
+  
+  chat: `Ты - опытный нумеролог и психолог-консультант. Ты отвечаешь на вопросы клиента на основе архетипов его нумерологического профиля.`
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,114 +28,136 @@ const corsHeaders = {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Check if API key is available
     if (!DEEPSEEK_API_KEY) {
-      console.error("Missing DeepSeek API Key");
-      throw new Error("Missing DeepSeek API Key");
+      throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
-    const { contentType, archetypes, userMessage } = await req.json();
+    const { contentType, archetypes, userMessage, prompt } = await req.json();
     
-    console.log(`Processing ${contentType} request with ${archetypes.length} archetypes`);
-    
-    let systemPrompt = SYSTEM_PROMPT;
-    let userPromptContent = "";
-    
-    const archetypesJson = JSON.stringify(archetypes, null, 2);
-    
-    // Define different prompt structures based on content type
-    switch (contentType) {
-      case 'summary':
-        userPromptContent = `Вот мои нумерологические архетипы: ${archetypesJson}\n\nСоздай краткое саммари (5-7 абзацев) моего нумерологического профиля, основанное на этих архетипах. Используй понятный язык, опиши мои ключевые сильные стороны, вызовы и возможности для роста. Не используй маркеры форматирования как ** или ##.`;
-        break;
-        
-      case 'strengths-weaknesses':
-        userPromptContent = `Вот мои нумерологические архетипы: ${archetypesJson}\n\nПроанализируй мои ключевые сильные и слабые стороны на основе этих архетипов. Создай два отдельных раздела: "Сильные стороны:" и "Области для развития:". В каждом разделе перечисли не менее 5-7 ключевых пунктов с кратким объяснением. Используй понятный язык без маркеров форматирования как ** или ##.`;
-        break;
-        
-      case 'code-conflicts':
-        userPromptContent = `Вот мои нумерологические архетипы: ${archetypesJson}\n\nПроанализируй потенциальные конфликты между разными кодами в моём профиле. Опиши, как эти коды могут противоречить друг другу и создавать внутренние противоречия. Для каждого конфликта предложи стратегию его разрешения. Не используй маркеры форматирования как ** или ##.`;
-        break;
-        
-      case 'potential-problems':
-        userPromptContent = `Вот мои нумерологические архетипы: ${archetypesJson}\n\nНа основе моего нумерологического профиля выяви потенциальные проблемы, с которыми я могу столкнуться в жизни, включая эмоциональные трудности, проблемы в отношениях и профессиональные вызовы. Для каждой проблемы предложи практические способы их предотвращения или преодоления. Не используй маркеры форматирования как ** или ##.`;
-        break;
-        
-      case 'practices':
-        userPromptContent = `Вот мои нумерологические архетипы: ${archetypesJson}\n\nПредложи практические упражнения и практики, которые помогут мне усилить положительные аспекты моего нумерологического профиля и работать над слабостями. Включи ежедневные практики, медитации и аффирмации, соответствующие моему нумерологическому профилю. Не используй маркеры форматирования как ** или ##.`;
-        break;
-        
-      case 'chat':
-        // For chat, use the user's message directly
-        systemPrompt = `${SYSTEM_PROMPT}\n\nИнформация о профиле пользователя: ${archetypesJson}`;
-        userPromptContent = userMessage || "Привет! Расскажи мне о моём профиле.";
-        break;
-        
-      default:
-        userPromptContent = `Вот мои нумерологические архетипы: ${archetypesJson}\n\nПредоставь анализ моего нумерологического профиля на основе этих архетипов. Не используй маркеры форматирования как ** или ##.`;
-    }
-    
-    console.log(`Sending request to DeepSeek API for ${contentType}`);
-    
-    // For testing when DEEPSEEK_API_KEY is missing, return mock data
-    if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === "test-key") {
-      console.log("Using mock data since no valid API key is available");
-      const mockContent = `Это тестовый ответ для ${contentType}. В реальном приложении здесь будет контент от DeepSeek API.
-      
-      Для работы функции необходимо добавить действительный DEEPSEEK_API_KEY в переменные окружения Edge Function.
-      
-      Этот ответ генерируется автоматически, поскольку API ключ отсутствует или недействителен.`;
-      
-      return new Response(JSON.stringify({ content: mockContent }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!contentType || !archetypes || archetypes.length === 0) {
+      throw new Error("Missing required parameters: contentType, archetypes");
     }
 
-    // Make the real API call if we have a key
+    // Format the archetypes data for the prompt
+    const archetypesText = archetypes.map((arch: ArchetypeDescription) => {
+      let text = `# ${arch.title} (Код ${arch.code}: ${arch.value})\n`;
+      
+      // Add description if available
+      if (arch.description) {
+        text += `Описание: ${arch.description}\n\n`;
+      }
+      
+      // Add resource manifestation for Personality
+      if (arch.code === 'personality' && arch.resourceManifestation) {
+        text += `Ресурсное проявление: ${arch.resourceManifestation}\n`;
+      }
+      
+      // Add distorted manifestation for Personality
+      if (arch.code === 'personality' && arch.distortedManifestation) {
+        text += `Искаженное проявление: ${arch.distortedManifestation}\n`;
+      }
+      
+      // Add development task for Personality
+      if (arch.code === 'personality' && arch.developmentTask) {
+        text += `Задача развития: ${arch.developmentTask}\n`;
+      }
+      
+      // Add key task for Connector
+      if (arch.code === 'connector' && arch.keyTask) {
+        text += `Ключевая задача: ${arch.keyTask}\n`;
+      }
+      
+      // Add formula for Realization
+      if (arch.code === 'realization' && arch.formula) {
+        text += `Формула: ${arch.formula}\n`;
+      }
+      
+      // Add resource qualities if available
+      if (arch.resourceQualities && arch.resourceQualities.length > 0) {
+        text += `\nРесурсные качества:\n`;
+        arch.resourceQualities.forEach((quality, index) => {
+          text += `${index + 1}. ${quality}\n`;
+        });
+      }
+      
+      // Add key distortions if available
+      if (arch.keyDistortions && arch.keyDistortions.length > 0) {
+        text += `\nКлючевые искажения:\n`;
+        arch.keyDistortions.forEach((distortion, index) => {
+          text += `${index + 1}. ${distortion}\n`;
+        });
+      }
+      
+      // Add recommendations if available
+      if (arch.recommendations && arch.recommendations.length > 0) {
+        text += `\nРекомендации:\n`;
+        arch.recommendations.forEach((rec, index) => {
+          text += `${index + 1}. ${rec}\n`;
+        });
+      }
+      
+      return text;
+    }).join('\n\n');
+
+    // Use provided prompt or fallback to default
+    const promptToUse = prompt || DEFAULT_PROMPTS[contentType];
+    
+    // Build the full system message
+    let systemMessage = promptToUse;
+    
+    // For chat type, include the user message in the prompt
+    if (contentType === "chat" && userMessage) {
+      systemMessage = systemMessage.replace('{{userMessage}}', userMessage);
+    }
+
+    // Request to the DeepSeek API
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: "deepseek-chat",
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPromptContent }
+          { role: "system", content: systemMessage },
+          { role: "user", content: `Данные по нумерологическим архетипам:\n\n${archetypesText}` }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 1500,
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("DeepSeek API error:", errorData);
-      throw new Error(`DeepSeek API error: ${JSON.stringify(errorData)}`);
+    const data = await response.json();
+    
+    if (!data.choices || data.choices.length === 0) {
+      console.error("Invalid response from DeepSeek:", data);
+      throw new Error("Invalid response from DeepSeek API");
     }
 
-    const data = await response.json();
-    // Remove any markdown formatting like ** or ##
-    let content = data.choices[0].message.content;
-    content = content.replace(/\*\*/g, '').replace(/##/g, '');
-    
-    console.log(`Successfully generated ${contentType} content`);
-    
-    return new Response(JSON.stringify({ content }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ content: data.choices[0].message.content }),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
   } catch (error) {
     console.error("Error in deepseek function:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Unknown error" }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
       }
     );
   }

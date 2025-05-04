@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/CalculationsContext";
@@ -105,17 +103,14 @@ const BasicCalculationForm = () => {
         },
       };
       
-      addCalculation(calculationData);
+      const newCalculation = await addCalculation(calculationData);
       toast.success("Расчет успешно создан");
       
-      // Wait a bit for the calculation to be added to state
-      setTimeout(() => {
-        navigate("/calculations");
-      }, 500);
+      // Navigate directly to the calculation result page
+      navigate(`/calculations/${newCalculation.id}`);
     } catch (error) {
       toast.error("Не удалось создать расчет");
       console.error("Ошибка при создании расчета:", error);
-    } finally {
       setIsSubmitting(false);
     }
   };

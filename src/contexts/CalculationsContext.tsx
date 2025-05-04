@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { BasicCalculation, Calculation, PartnershipCalculation, TargetCalculation } from '@/types';
@@ -18,7 +17,7 @@ interface StoredCalculation {
 interface CalculationContextProps {
   calculations: Calculation[];
   loading: boolean;
-  addCalculation: (calculation: BasicCalculation | PartnershipCalculation | TargetCalculation) => void;
+  addCalculation: (calculation: BasicCalculation | PartnershipCalculation | TargetCalculation) => Promise<Calculation>;
   getCalculation: (id: string) => Calculation | undefined;
   saveCalculations: (calculationsToSave: Calculation[]) => Promise<void>;
   deleteCalculation: (id: string) => Promise<void>;
@@ -71,9 +70,28 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  const addCalculation = (calculation: BasicCalculation | PartnershipCalculation | TargetCalculation) => {
-    const newCalculation = { ...calculation, id: uuidv4(), createdAt: new Date().toISOString() };
-    setCalculations((prevCalculations) => [...prevCalculations, newCalculation as Calculation]);
+  const addCalculation = async (calculation: BasicCalculation | PartnershipCalculation | TargetCalculation) => {
+    const newCalculation = { ...calculation, id: uuidv4(), createdAt: new Date().toISOString() } as Calculation;
+    
+    setCalculations((prevCalculations) => [...prevCalculations, newCalculation]);
+    
+    // If user is logged in, save to Supabase
+    if (user) {
+      try {
+        const { error } = await supabase.from('calculations').insert({
+          id: newCalculation.id,
+          data: newCalculation as unknown as Json,
+          user_id: user.id
+        });
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error saving calculation:', error);
+        toast.error('Не удалось сохранить расчет на сервере');
+      }
+    }
+    
+    return newCalculation;
   };
 
   const getCalculation = (id: string): Calculation | undefined => {

@@ -25,6 +25,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [initialized, setInitialized] = useState<boolean>(false);
 
   const fetchContent = async () => {
     setLoading(true);
@@ -54,21 +55,24 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
     } finally {
       setLoading(false);
       setIsGenerating(false);
+      setInitialized(true);
     }
   };
 
   useEffect(() => {
-    if (calculationId && archetypes.length > 0) {
+    if (calculationId && archetypes.length > 0 && !initialized) {
       fetchContent();
     }
-  }, [calculationId, archetypes.length, type]);
+  }, [calculationId, archetypes.length, type, initialized]);
 
   const formatContent = (text: string) => {
     if (!text) return [];
     
     // Remove markdown markers like ** and ## that we don't want
     text = text.replace(/\*\*/g, '');
-    text = text.replace(/##/g, '');
+    
+    // Handle headings more effectively
+    text = text.replace(/^#{1,6}\s+(.+)$/gm, '<h3>$1</h3>');
     
     // Split the text by line breaks and map each line
     return text.split('\n').map((line, index) => {
@@ -76,6 +80,15 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
       
       // Skip empty lines
       if (!line) return <br key={index} />;
+      
+      // Process HTML heading tags that we converted earlier
+      if (line.match(/<h[1-6]>(.+)<\/h[1-6]>/)) {
+        return (
+          <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+            {line.replace(/<h[1-6]>(.+)<\/h[1-6]>/, '$1')}
+          </h3>
+        );
+      }
       
       // Check for section headers (lines that end with a colon)
       if (line.match(/^.+:$/)) {
@@ -119,6 +132,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
 
   const handleRefresh = () => {
     setContent('');
+    setInitialized(false);
     fetchContent();
   };
 

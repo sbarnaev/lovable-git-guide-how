@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -48,38 +47,33 @@ const PartnershipCalculationForm = () => {
       recommendations: ["Развивать совместные интересы", "Уделять внимание активному слушанию", "Прояснять ожидания"]
     };
     
-    setTimeout(() => {
-      try {
-        const calculationData = {
-          type: 'partnership' as const,
-          clientName,
-          birthDate,
-          partnerName,
-          partnerBirthDate,
-          results,
-        };
-        
-        addCalculation(calculationData);
-        
-        toast({
-          title: "Успешно",
-          description: "Расчет успешно создан",
-        });
-        
-        // Navigate after a short delay to allow state update
-        setTimeout(() => {
-          navigate("/calculations");
-        }, 500);
-      } catch (error) {
-        toast({
-          title: "Ошибка",
-          description: "Не удалось создать расчет",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-    }, 1500);
+    try {
+      const calculationData = {
+        type: 'partnership' as const,
+        clientName,
+        birthDate,
+        partnerName,
+        partnerBirthDate,
+        results,
+      };
+      
+      const newCalculation = await addCalculation(calculationData);
+      
+      toast({
+        title: "Успешно",
+        description: "Расчет успешно создан",
+      });
+      
+      // Navigate directly to the calculation result page
+      navigate(`/calculations/${newCalculation.id}`);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось создать расчет",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   return (
