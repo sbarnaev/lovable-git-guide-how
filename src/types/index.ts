@@ -41,6 +41,10 @@ export interface PartnershipCalculationResults {
   strengths: string[];
   challenges: string[];
   recommendations: string[];
+  clientProfile: BasicCalculationResults;
+  partnerProfile: BasicCalculationResults;
+  clientArchetypes?: ArchetypeDescription[];
+  partnerArchetypes?: ArchetypeDescription[];
 }
 
 export interface TargetCalculationResults {

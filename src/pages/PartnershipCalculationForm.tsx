@@ -9,6 +9,9 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/calculations";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { NumerologyCodeType, ArchetypeDescription } from "@/types/numerology";
+import { calculateNumerologyProfile } from "@/utils/numerologyCalculator";
+import { calculateCompatibility } from "@/utils/partnershipCalculator";
 
 const PartnershipCalculationForm = () => {
   const navigate = useNavigate();
@@ -35,27 +38,43 @@ const PartnershipCalculationForm = () => {
     
     setIsSubmitting(true);
     
-    // Mock calculation result
-    const results = {
-      compatibility: {
-        overall: Math.floor(Math.random() * 100),
-        emotional: Math.floor(Math.random() * 100),
-        intellectual: Math.floor(Math.random() * 100),
-        physical: Math.floor(Math.random() * 100),
-      },
-      strengths: ["Глубокое взаимопонимание", "Схожие ценности", "Дополняющие качества"],
-      challenges: ["Разные типы коммуникации", "Противоположные подходы к решению проблем"],
-      recommendations: ["Развивать совместные интересы", "Уделять внимание активному слушанию", "Прояснять ожидания"]
-    };
-    
     try {
+      // Calculate numerology profiles for both people
+      const clientProfile = calculateNumerologyProfile(new Date(birthDate), clientName);
+      const partnerProfile = calculateNumerologyProfile(new Date(partnerBirthDate), partnerName);
+      
+      // Calculate partnership compatibility
+      const compatibilityResults = calculateCompatibility(clientProfile, partnerProfile);
+      
+      // Prepare archetype descriptions for both people
+      const clientArchetypes: ArchetypeDescription[] = Object.entries(clientProfile.archetypeDescriptions || {})
+        .map(([code, archetype]) => ({
+          ...archetype,
+          code: code as NumerologyCodeType
+        }));
+      
+      const partnerArchetypes: ArchetypeDescription[] = Object.entries(partnerProfile.archetypeDescriptions || {})
+        .map(([code, archetype]) => ({
+          ...archetype,
+          code: code as NumerologyCodeType
+        }));
+      
       const calculationData = {
         type: 'partnership' as const,
         clientName,
         birthDate,
         partnerName,
         partnerBirthDate,
-        results,
+        results: {
+          compatibility: compatibilityResults.compatibility,
+          strengths: compatibilityResults.strengths,
+          challenges: compatibilityResults.challenges,
+          recommendations: compatibilityResults.recommendations,
+          clientProfile: clientProfile,
+          partnerProfile: partnerProfile,
+          clientArchetypes,
+          partnerArchetypes
+        },
       };
       
       const newCalculation = await addCalculation(calculationData);
@@ -68,11 +87,13 @@ const PartnershipCalculationForm = () => {
       // Navigate directly to the calculation result page
       navigate(`/calculations/${newCalculation.id}`);
     } catch (error) {
+      console.error("Error creating calculation:", error);
       toast({
         title: "Ошибка",
         description: "Не удалось создать расчет",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };

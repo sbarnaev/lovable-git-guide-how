@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useCalculations } from '@/contexts/calculations';
-import { BasicCalculation, Calculation, TargetCalculation } from '@/types';
+import { BasicCalculation, Calculation, PartnershipCalculation, TargetCalculation } from '@/types';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
 import { NoteEditor } from '@/components/note-editor';
@@ -12,6 +13,7 @@ import { ProfileCodes } from '@/components/calculation-result/ProfileCodes';
 import { ProfileAtlas } from '@/components/calculation-result/ProfileAtlas';
 import { ConsultationSection } from '@/components/calculation-result/ConsultationSection';
 import { TextbookSection } from '@/components/calculation-result/TextbookSection';
+import { PartnershipView } from '@/components/calculation-result/PartnershipView';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Note: This is a temporary flag to disable notes
@@ -25,6 +27,8 @@ const CalculationResult = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [archetypes, setArchetypes] = useState<ArchetypeDescription[]>([]);
+  const [clientArchetypes, setClientArchetypes] = useState<ArchetypeDescription[]>([]);
+  const [partnerArchetypes, setPartnerArchetypes] = useState<ArchetypeDescription[]>([]);
   
   // Fetch calculation data only once on component mount or when id changes
   useEffect(() => {
@@ -61,6 +65,29 @@ const CalculationResult = () => {
             
             setArchetypes(simplifiedArchetypes);
           }
+
+          // For partnership calculation, set both client and partner archetypes
+          if (fetchedCalculation.type === 'partnership') {
+            const partnershipCalc = fetchedCalculation as (PartnershipCalculation & { id: string; createdAt: string });
+            
+            if (partnershipCalc.results.clientArchetypes) {
+              setClientArchetypes(partnershipCalc.results.clientArchetypes);
+            }
+            
+            if (partnershipCalc.results.partnerArchetypes) {
+              setPartnerArchetypes(partnershipCalc.results.partnerArchetypes);
+            }
+            
+            // Combine both sets of archetypes for AI analysis
+            const combined = [
+              ...(partnershipCalc.results.clientArchetypes || []),
+              ...(partnershipCalc.results.partnerArchetypes || [])
+            ];
+            
+            if (combined.length > 0) {
+              setArchetypes(combined);
+            }
+          }
         } else {
           setError('Calculation not found.');
         }
@@ -84,23 +111,40 @@ const CalculationResult = () => {
   const isTargetCalculation = useMemo(() => {
     return calculation?.type === 'target';
   }, [calculation]);
+
+  // Determine if we're showing a partnership calculation
+  const isPartnershipCalculation = useMemo(() => {
+    return calculation?.type === 'partnership';
+  }, [calculation]);
   
   // Memoize the typed calculation to avoid unnecessary re-renders
   const typedCalculation = useMemo(() => {
     if (isBasicCalculation) {
       return calculation as (BasicCalculation & { id: string; createdAt: string });
     }
+    if (isPartnershipCalculation) {
+      return calculation as (PartnershipCalculation & { id: string; createdAt: string });
+    }
+    if (isTargetCalculation) {
+      return calculation as (TargetCalculation & { id: string; createdAt: string });
+    }
     return undefined;
-  }, [calculation, isBasicCalculation]);
+  }, [calculation, isBasicCalculation, isPartnershipCalculation, isTargetCalculation]);
 
   // Memoize the content of these functions to prevent unnecessary re-renders
   const renderPartnershipResults = useMemo(() => {
+    if (!id || !calculation || calculation.type !== 'partnership') return null;
+    
+    const partnershipCalc = calculation as (PartnershipCalculation & { id: string; createdAt: string });
+    
     return (
-      <div className="text-center p-4">
-        <div className="text-muted-foreground">Расчет партнерства в разработке.</div>
-      </div>
+      <PartnershipView 
+        calculation={partnershipCalc} 
+        clientArchetypes={clientArchetypes} 
+        partnerArchetypes={partnerArchetypes} 
+      />
     );
-  }, []);
+  }, [id, calculation, clientArchetypes, partnerArchetypes]);
 
   const renderTargetResults = useMemo(() => {
     if (!id || !calculation) return null;

@@ -78,6 +78,19 @@ const DEFAULT_PROMPTS = {
   chat: `Ты - опытный нумеролог и психолог-консультант, помогающий специалисту проводить нумерологическую консультацию. Используй полный анализ всех предоставленных нумерологических архетипов клиента.`
 };
 
+// Additional partnership-specific prompts
+const PARTNERSHIP_PROMPTS = {
+  summary: `Ты - опытный нумеролог и психолог. Проанализируй и представь анализ совместимости двух людей на основе их нумерологических архетипов. Покажи, как их коды взаимодействуют между собой, где есть синергия, а где потенциальные конфликты.`,
+  
+  'strengths-weaknesses': `Ты - опытный нумеролог и психолог. На основе предоставленных нумерологических архетипов двух людей составь детальный анализ сильных и слабых сторон их взаимодействия в отношениях.`,
+  
+  'code-conflicts': `Ты - опытный нумеролог и психолог. На основе предоставленных нумерологических архетипов двух людей проанализируй потенциальные конфликты между ними и предложи способы их гармонизации.`,
+  
+  'practices': `Ты - опытный нумеролог, психолог и коуч. На основе предоставленных нумерологических архетипов двух людей разработай комплекс практических рекомендаций для улучшения их взаимопонимания и взаимодействия.`,
+  
+  chat: `Ты - опытный нумеролог и психолог-консультант, помогающий специалисту проводить нумерологическую консультацию по совместимости двух людей. Используй полный анализ всех предоставленных нумерологических архетипов обоих людей. Даже если в вопросе не упомянуты оба человека, рассматривай ситуацию как взаимодействие между ними.`
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -94,15 +107,27 @@ serve(async (req) => {
       throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
-    const { contentType, archetypes, userMessage, prompt } = await req.json();
+    const { contentType, archetypes, userMessage, prompt, isPartnership } = await req.json();
     
     if (!contentType || !archetypes || archetypes.length === 0) {
       throw new Error("Missing required parameters: contentType, archetypes");
     }
 
     // Format the archetypes data for the prompt - now with more detailed formatting
-    const archetypesText = archetypes.map((arch: ArchetypeDescription) => {
-      let text = `# ${arch.title} (Код ${arch.code}: ${arch.value})\n`;
+    const archetypesText = archetypes.map((arch: ArchetypeDescription, index: number) => {
+      let personPrefix = "";
+      
+      // If this is a partnership calculation, split the archetypes between two people
+      if (isPartnership) {
+        const halfLength = Math.floor(archetypes.length / 2);
+        if (index < halfLength) {
+          personPrefix = "Первый человек - ";
+        } else {
+          personPrefix = "Второй человек - ";
+        }
+      }
+      
+      let text = `# ${personPrefix}${arch.title} (Код ${arch.code}: ${arch.value})\n`;
       
       // Add description if available
       if (arch.description) {
@@ -161,15 +186,18 @@ serve(async (req) => {
       return text;
     }).join('\n\n');
 
-    // Use provided prompt or fallback to default
-    const promptToUse = prompt || DEFAULT_PROMPTS[contentType];
+    // Select appropriate prompt set based on whether this is a partnership calculation
+    const promptSet = isPartnership ? PARTNERSHIP_PROMPTS : DEFAULT_PROMPTS;
+    
+    // Use provided prompt or fallback to default from the appropriate set
+    const promptToUse = prompt || promptSet[contentType] || DEFAULT_PROMPTS[contentType];
     
     // Build the full system message
     let systemMessage = promptToUse;
     
     // For chat type, include the user message in the prompt
     if (contentType === "chat" && userMessage) {
-      systemMessage = systemMessage.replace('{{userMessage}}', userMessage);
+      systemMessage = `${systemMessage}\n\nВопрос клиента: "${userMessage}"`;
     }
 
     console.log("Sending request to DeepSeek with system message:", systemMessage.substring(0, 100) + "...");
