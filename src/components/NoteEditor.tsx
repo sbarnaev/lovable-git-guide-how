@@ -26,13 +26,11 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           setContent(note.content);
           setNoteId(note.id);
           
-          // Using a timeout to ensure DOM is ready
-          setTimeout(() => {
-            const editorElement = document.getElementById('note-editor');
-            if (editorElement) {
-              editorElement.innerHTML = note.content;
-            }
-          }, 0);
+          // Используем safe approach для обновления DOM
+          const editorElement = document.getElementById('note-editor');
+          if (editorElement) {
+            editorElement.innerHTML = note.content;
+          }
         }
       } catch (error) {
         console.error('Error fetching note:', error);
@@ -77,13 +75,13 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const formatText = (command: string, value: string | null = null) => {
     document.execCommand(command, false, value);
     
-    // Focus the editor after formatting
+    // Фокус на редактор после форматирования
     const editorElement = document.getElementById('note-editor');
     if (editorElement) {
       editorElement.focus();
     }
     
-    // Update the content state from the editor
+    // Обновляем состояние контента из редактора
     updateContentFromEditor();
   };
   
@@ -147,6 +145,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           )}
           contentEditable={!loading}
           onInput={updateContentFromEditor}
+          dangerouslySetInnerHTML={{ __html: content }}
         />
         
         <div className="flex justify-end">

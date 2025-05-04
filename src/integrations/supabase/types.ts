@@ -194,18 +194,21 @@ export type Database = {
           data: Json
           id: string
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           data: Json
           id: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           data?: Json
           id?: string
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -241,12 +244,36 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

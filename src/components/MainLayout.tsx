@@ -12,14 +12,15 @@ import {
   Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const MainLayout = () => {
-  const { user, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
   
@@ -36,6 +37,19 @@ const MainLayout = () => {
     { path: "/calculations", icon: <Calculator size={20} />, label: "Расчеты" },
     { path: "/history", icon: <History size={20} />, label: "История" },
   ];
+
+  // Получаем инициалы пользователя
+  const getUserInitials = () => {
+    if (profile?.name) {
+      const nameParts = profile.name.split(' ');
+      if (nameParts.length > 1) {
+        return `${nameParts[0].charAt(0)}${nameParts[1].charAt(0)}`;
+      } else {
+        return profile.name.substring(0, 2).toUpperCase();
+      }
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || 'ГП';
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -74,12 +88,19 @@ const MainLayout = () => {
                 </div>
               </NavLink>
             ))}
-            <div className="ml-4">
+            <div className="ml-4 flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{getUserInitials()}</AvatarFallback>
+              </Avatar>
+              <div className="hidden md:block">
+                <div className="text-sm font-medium">{profile?.name || user?.email}</div>
+                <div className="text-xs text-muted-foreground">{profile?.role === 'admin' ? 'Администратор' : 'Консультант'}</div>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 ml-2"
               >
                 <LogOut size={16} />
                 <span>Выход</span>
@@ -93,6 +114,16 @@ const MainLayout = () => {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-16 z-30 bg-background/95 backdrop-blur-sm animate-fadeIn">
           <nav className="container py-4 flex flex-col">
+            <div className="flex items-center gap-4 mb-4 p-4 bg-accent/50 rounded-md">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback>{getUserInitials()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="font-medium">{profile?.name || user?.email}</div>
+                <div className="text-xs text-muted-foreground">{profile?.role === 'admin' ? 'Администратор' : 'Консультант'}</div>
+              </div>
+            </div>
+            
             {navItems.map((item, index) => (
               <NavLink
                 key={item.path}

@@ -1,87 +1,174 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface UserProfile {
+  id: string;
+  name: string | null;
+  role: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
   isLoading: boolean;
+  session: Session | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  logout: () => Promise<void>;
   error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo - in a real app, this would be authenticated against a backend
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    email: 'admin@numerica.com',
-    name: 'Администратор',
-    role: 'admin',
-    createdAt: new Date().toISOString() // Добавлено обязательное поле createdAt
-  },
-  {
-    id: '2',
-    email: 'consultant@numerica.com',
-    name: 'Консультант',
-    role: 'consultant', // Изменено на допустимое значение (добавлено в тип User)
-    createdAt: new Date().toISOString() // Добавлено обязательное поле createdAt
-  }
-];
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('numerica_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem('numerica_user');
+    // Установка слушателя изменений состояния авторизации
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        // Если пользователь авторизован, загружаем его профиль
+        if (currentSession?.user) {
+          const userId = currentSession.user.id;
+          // Используем setTimeout для предотвращения блокировки Supabase
+          setTimeout(() => {
+            fetchUserProfile(userId);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
       }
-    }
-    setIsLoading(false);
+    );
+
+    // Проверка существующей сессии
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        fetchUserProfile(currentSession.user.id);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, name, role')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile(data as UserProfile);
+      }
+    } catch (err) {
+      console.error('Exception when fetching profile:', err);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Simulate API request delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      const foundUser = MOCK_USERS.find(user => user.email.toLowerCase() === email.toLowerCase());
+      if (error) throw error;
       
-      if (!foundUser || password !== '12345678') {
-        throw new Error('Неверный email или пароль');
+      if (data?.user) {
+        toast.success('Вход выполнен успешно');
       }
-      
-      setUser(foundUser);
-      localStorage.setItem('numerica_user', JSON.stringify(foundUser));
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Произошла ошибка при входе');
-      }
+    } catch (err: any) {
+      setError(err.message || 'Произошла ошибка при входе');
+      toast.error(err.message || 'Произошла ошибка при входе');
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('numerica_user');
+  const register = async (email: string, password: string, name: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.user) {
+        toast.success('Регистрация прошла успешно. Проверьте почту для подтверждения.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Произошла ошибка при регистрации');
+      toast.error(err.message || 'Произошла ошибка при регистрации');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      toast.success('Вы вышли из системы');
+    } catch (err: any) {
+      console.error('Error logging out:', err);
+      toast.error('Произошла ошибка при выходе');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, error }}>
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      session,
+      isLoading,
+      login,
+      register,
+      logout,
+      error
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,11 +1,12 @@
 
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
 const AuthLayout: React.FC = () => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -16,7 +17,8 @@ const AuthLayout: React.FC = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Сохраняем текущий маршрут для перенаправления после входа
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return <Outlet />;

@@ -5,12 +5,14 @@ import { BasicCalculation, Calculation, PartnershipCalculation, TargetCalculatio
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
+import { useAuth } from './AuthContext';
 
 interface StoredCalculation {
   id: string;
   data: Json;
   created_at: string;
   updated_at?: string;
+  user_id?: string;
 }
 
 interface CalculationContextProps {
@@ -18,8 +20,8 @@ interface CalculationContextProps {
   loading: boolean;
   addCalculation: (calculation: BasicCalculation | PartnershipCalculation | TargetCalculation) => void;
   getCalculation: (id: string) => Calculation | undefined;
-  saveCalculations: (calculationsToSave: Calculation[]) => void;
-  deleteCalculation: (id: string) => void;
+  saveCalculations: (calculationsToSave: Calculation[]) => Promise<void>;
+  deleteCalculation: (id: string) => Promise<void>;
   saveNote: (calculationId: string, content: string) => Promise<{ id: string } | undefined>;
   getNote: (calculationId: string) => Promise<{ id: string; content: string } | undefined>;
   updateNote: (noteId: string, content: string) => Promise<{ id: string } | undefined>;
@@ -30,12 +32,19 @@ const CalculationContext = createContext<CalculationContextProps | undefined>(un
 export const CalculationsProvider = ({ children }: { children: React.ReactNode }) => {
   const [calculations, setCalculations] = useState<Calculation[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchCalculations();
-  }, []);
+    if (user) {
+      fetchCalculations();
+    } else {
+      setCalculations([]);
+    }
+  }, [user]);
 
   const fetchCalculations = async () => {
+    if (!user) return;
+    
     setLoading(true);
     try {
       const { data: storedCalculations, error } = await supabase
@@ -72,11 +81,17 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   };
 
   const saveCalculations = async (calculationsToSave: Calculation[]) => {
+    if (!user) {
+      toast.error('Для сохранения расчетов необходимо авторизоваться');
+      return;
+    }
+    
     try {
       const formattedData = calculationsToSave.map(calculation => ({
         id: calculation.id,
         data: calculation as unknown as Json,
-        created_at: calculation.createdAt
+        created_at: calculation.createdAt,
+        user_id: user.id
       }));
       
       const { error } = await supabase
@@ -93,6 +108,11 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   };
 
   const deleteCalculation = async (id: string) => {
+    if (!user) {
+      toast.error('Для удаления расчетов необходимо авторизоваться');
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('calculations')
@@ -110,6 +130,11 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   };
 
   const saveNote = async (calculationId: string, content: string) => {
+    if (!user) {
+      toast.error('Для сохранения заметок необходимо авторизоваться');
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('calculation_notes')
@@ -128,6 +153,8 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   };
 
   const getNote = async (calculationId: string) => {
+    if (!user) return undefined;
+    
     try {
       const { data, error } = await supabase
         .from('calculation_notes')
@@ -141,8 +168,8 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
         return { id: data.id, content: data.content };
       }
       return undefined;
-    } catch (error) {
-      // Only log the error if it's not the "no data found" error
+    } catch (error: any) {
+      // Только логируем ошибку, если это не "no data found"
       if (error.code !== 'PGRST116') {
         console.error('Error fetching note:', error);
         toast.error('Не удалось загрузить заметку');
@@ -152,6 +179,11 @@ export const CalculationsProvider = ({ children }: { children: React.ReactNode }
   };
 
   const updateNote = async (noteId: string, content: string) => {
+    if (!user) {
+      toast.error('Для обновления заметок необходимо авторизоваться');
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('calculation_notes')
