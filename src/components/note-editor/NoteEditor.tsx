@@ -163,7 +163,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           ref={editorRef}
           className={cn(
             "min-h-[250px] max-h-[450px] overflow-y-auto p-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-            "bg-white text-left direction-ltr", 
+            "bg-white text-left", 
             loading && "opacity-50",
             "[&>blockquote]:border-l-4 [&>blockquote]:border-primary/40 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-3 [&>blockquote]:bg-muted/30 [&>blockquote]:py-2 [&>blockquote]:pr-2 [&>blockquote]:rounded-sm",
             "[&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5",
@@ -177,7 +177,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           onInput={updateContentFromEditor}
           dangerouslySetInnerHTML={{ __html: content }}
           spellCheck={true}
-          style={{ direction: 'ltr' }} 
+          dir="ltr"
         />
         
         <div className="flex justify-end">
@@ -194,3 +194,4 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     </Card>
   );
 };
+
