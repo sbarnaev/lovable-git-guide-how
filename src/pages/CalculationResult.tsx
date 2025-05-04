@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -439,7 +438,7 @@ const CalculationResult = () => {
     if (!calculation || calculation.type !== 'basic') return null;
     
     const basicCalculation = calculation as (BasicCalculation & { id: string; createdAt: string });
-    const { firstName, lastName, birthDate } = basicCalculation.inputs;
+    const { clientName, birthDate } = basicCalculation.inputs;
     
     return (
       <Card className="mb-6">
@@ -451,7 +450,7 @@ const CalculationResult = () => {
             <div className="flex items-center">
               <User className="mr-2 h-4 w-4 text-muted-foreground" />
               <span>
-                {firstName} {lastName}
+                {clientName}
               </span>
             </div>
             <div className="flex items-center">

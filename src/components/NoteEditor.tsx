@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCalculations } from '@/contexts/CalculationsContext';
@@ -16,7 +16,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [noteId, setNoteId] = useState<string | null>(null);
   const { saveNote, getNote, updateNote } = useCalculations();
-  const editorRef = React.useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchNote = async () => {

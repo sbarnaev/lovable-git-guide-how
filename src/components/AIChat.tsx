@@ -84,7 +84,7 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
       
       const assistantMessage = { 
         role: 'assistant' as const, 
-        content: response.content
+        content: response.content.replace(/\*\*/g, '') // Remove markdown formatting
       };
       
       // Save assistant message
@@ -117,6 +117,9 @@ export const AIChat = ({ archetypes, calculationId }: AIChatProps) => {
   };
   
   const formatMessage = (content: string) => {
+    // Remove markdown formatting like ** for bold
+    content = content.replace(/\*\*/g, '');
+    
     return content.split('\n').map((line, i) => (
       line ? <p key={i} className="mb-1">{line}</p> : <br key={i} />
     ));

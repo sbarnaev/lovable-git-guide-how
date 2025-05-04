@@ -64,6 +64,10 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
   }, [calculationId, archetypes, type]);
 
   const formatContent = (text: string) => {
+    // Remove markdown markers like ** and ## that we don't want
+    text = text.replace(/\*\*/g, '');
+    text = text.replace(/##/g, '');
+    
     // Split the text by line breaks and map each line
     return text.split('\n').map((line, index) => {
       line = line.trim();

@@ -11,5 +11,4 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-// DeepSeek API key используется в edge функции через переменную окружения
-export const DEEPSEEK_API_KEY = "sk-c41441aa0398496691ab4276756da8cb";
+// The DeepSeek API key is set in the Supabase Edge Functions, so we don't need to expose it here

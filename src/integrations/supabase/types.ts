@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_generated_content: {
+        Row: {
+          calculation_id: string
+          content: string
+          content_type: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          calculation_id: string
+          content: string
+          content_type: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          calculation_id?: string
+          content?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generated_content_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       archetype_descriptions: {
         Row: {
           burnout_signs: string[] | null
@@ -173,6 +208,38 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          calculation_id: string
+          content: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          calculation_id: string
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          calculation_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "calculations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
