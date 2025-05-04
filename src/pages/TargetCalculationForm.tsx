@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCalculations } from "@/contexts/calculations";
 import { useToast } from "@/hooks/use-toast";
+import { generateDeepSeekContent, saveGeneratedContent } from "@/services/deepseekService";
 
 const TargetCalculationForm = () => {
   const navigate = useNavigate();
@@ -34,23 +35,25 @@ const TargetCalculationForm = () => {
     
     setIsSubmitting(true);
     
-    // Mock calculation result
-    const results = {
-      analysis: {
-        mainFactors: ["Фактор карьеры", "Фактор личных отношений", "Фактор самореализации"],
-        currentPhase: "Период трансформации",
-        potentialOutcomes: ["Рост в профессиональной сфере", "Углубление личных отношений", "Обретение новых навыков"]
-      },
-      recommendations: [
-        "Сосредоточиться на развитии профессиональных навыков",
-        "Уделить внимание межличностным отношениям",
-        "Регулярно проводить рефлексию действий и результатов",
-        "Выделить приоритеты на ближайший период"
-      ],
-      timeframe: "3-6 месяцев"
-    };
-    
     try {
+      // Mock calculation result - this will be shown initially
+      // and then updated with AI-generated content
+      const results = {
+        analysis: {
+          mainFactors: ["Фактор карьеры", "Фактор личных отношений", "Фактор самореализации"],
+          currentPhase: "Период трансформации",
+          potentialOutcomes: ["Рост в профессиональной сфере", "Углубление личных отношений", "Обретение новых навыков"]
+        },
+        recommendations: [
+          "Сосредоточиться на развитии профессиональных навыков",
+          "Уделить внимание межличностным отношениям",
+          "Регулярно проводить рефлексию действий и результатов",
+          "Выделить приоритеты на ближайший период"
+        ],
+        timeframe: "3-6 месяцев"
+      };
+      
+      // Create the calculation data
       const calculationData = {
         type: 'target' as const,
         clientName,
@@ -59,7 +62,42 @@ const TargetCalculationForm = () => {
         results,
       };
       
+      // Save the calculation to get an ID
       const newCalculation = await addCalculation(calculationData);
+      
+      // Now we have a calculation ID, we can generate and store AI content
+      // We're using a fake archetype as the TargetCalculation doesn't have archetypes
+      // Ideally, you would have proper target calculation archetypes here
+      const fakeArchetypes = [{ 
+        code: "target", 
+        title: "Целевой расчет",
+        description: `Запрос клиента: ${targetQuery}`
+      }];
+      
+      // Generate content for different sections in parallel
+      const generatePromises = [
+        // Generate and save analysis content
+        generateDeepSeekContent('summary', fakeArchetypes)
+          .then(response => saveGeneratedContent(newCalculation.id, 'summary', response.content)),
+        
+        // Generate and save recommendations
+        generateDeepSeekContent('practices', fakeArchetypes)
+          .then(response => saveGeneratedContent(newCalculation.id, 'practices', response.content)),
+          
+        // Generate and save potential problems
+        generateDeepSeekContent('potential-problems', fakeArchetypes)
+          .then(response => saveGeneratedContent(newCalculation.id, 'potential-problems', response.content))
+      ];
+      
+      // Start the content generation in background
+      // We won't await this - it will continue generating even after navigation
+      Promise.all(generatePromises)
+        .then(() => {
+          console.log("AI content generated and saved for calculation:", newCalculation.id);
+        })
+        .catch(error => {
+          console.error("Failed to generate some AI content:", error);
+        });
       
       toast({
         title: "Успешно",
@@ -69,6 +107,7 @@ const TargetCalculationForm = () => {
       // Navigate directly to the calculation result page
       navigate(`/calculations/${newCalculation.id}`);
     } catch (error) {
+      console.error("Error creating calculation:", error);
       toast({
         title: "Ошибка",
         description: "Не удалось создать расчет",
