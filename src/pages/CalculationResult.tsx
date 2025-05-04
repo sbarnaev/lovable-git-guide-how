@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -11,7 +12,7 @@ import { BasicCalculation, Calculation } from '@/types';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
 import { AIChat } from '@/components/AIChat';
-import { NoteEditor } from '@/components/NoteEditor';
+import { NoteEditor } from '@/components/note-editor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const CalculationResult = () => {
