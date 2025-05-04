@@ -1,91 +1,306 @@
+
 import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { useToast } from "@/hooks/use-toast"
 
 interface ArchetypeFormProps {
-  archetype: ArchetypeDescription | undefined;
-  onChange: (updatedArchetype: ArchetypeDescription) => void;
+  loading?: boolean;
+  archetype?: ArchetypeDescription;
+  onChange?: (updatedArchetype: ArchetypeDescription) => void;
+  
+  // New props to match those passed from ArchetypesAdminPage.tsx
+  selectedCode?: NumerologyCodeType;
+  setSelectedCode?: (code: NumerologyCodeType) => void;
+  selectedValue?: number;
+  setSelectedValue?: (value: number) => void;
+  onSave?: () => void;
+  
+  // General fields
+  title?: string;
+  setTitle?: (value: string) => void;
+  description?: string;
+  setDescription?: (value: string) => void;
+  maleImageUrl?: string;
+  setMaleImageUrl?: (value: string) => void;
+  femaleImageUrl?: string;
+  setFemaleImageUrl?: (value: string) => void;
+  
+  // Personality Code fields
+  resourceManifestation?: string;
+  setResourceManifestation?: (value: string) => void;
+  distortedManifestation?: string;
+  setDistortedManifestation?: (value: string) => void;
+  developmentTask?: string;
+  setDevelopmentTask?: (value: string) => void;
+  resourceQualities?: string;
+  setResourceQualities?: (value: string) => void;
+  keyDistortions?: string;
+  setKeyDistortions?: (value: string) => void;
+  
+  // Connector Code fields
+  keyTask?: string;
+  setKeyTask?: (value: string) => void;
+  workingAspects?: string;
+  setWorkingAspects?: (value: string) => void;
+  nonWorkingAspects?: string;
+  setNonWorkingAspects?: (value: string) => void;
+  worldContactBasis?: string;
+  setWorldContactBasis?: (value: string) => void;
+  
+  // Realization Code fields
+  formula?: string;
+  setFormula?: (value: string) => void;
+  potentialRealizationWays?: string;
+  setPotentialRealizationWays?: (value: string) => void;
+  successSources?: string;
+  setSuccessSources?: (value: string) => void;
+  realizationType?: string;
+  setRealizationType?: (value: string) => void;
+  realizationObstacles?: string;
+  setRealizationObstacles?: (value: string) => void;
+  recommendations?: string;
+  setRecommendations?: (value: string) => void;
+  
+  // Generator Code fields
+  generatorFormula?: string;
+  setGeneratorFormula?: (value: string) => void;
+  energySources?: string;
+  setEnergySources?: (value: string) => void;
+  energyDrains?: string;
+  setEnergyDrains?: (value: string) => void;
+  flowSigns?: string;
+  setFlowSigns?: (value: string) => void;
+  burnoutSigns?: string;
+  setBurnoutSigns?: (value: string) => void;
+  generatorRecommendation?: string;
+  setGeneratorRecommendation?: (value: string) => void;
+  
+  // Mission Code fields
+  missionEssence?: string;
+  setMissionEssence?: (value: string) => void;
+  missionRealizationFactors?: string;
+  setMissionRealizationFactors?: (value: string) => void;
+  missionChallenges?: string;
+  setMissionChallenges?: (value: string) => void;
+  missionObstacles?: string;
+  setMissionObstacles?: (value: string) => void;
+  mainTransformation?: string;
+  setMainTransformation?: (value: string) => void;
 }
 
 export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
+  loading,
   archetype,
   onChange,
+  selectedCode,
+  setSelectedCode,
+  selectedValue,
+  setSelectedValue,
+  onSave,
+  // General fields
+  title: propTitle,
+  setTitle,
+  description: propDescription,
+  setDescription,
+  maleImageUrl: propMaleImageUrl,
+  setMaleImageUrl,
+  femaleImageUrl: propFemaleImageUrl,
+  setFemaleImageUrl,
+  // Personality Code fields
+  resourceManifestation: propResourceManifestation,
+  setResourceManifestation,
+  distortedManifestation: propDistortedManifestation,
+  setDistortedManifestation,
+  developmentTask: propDevelopmentTask,
+  setDevelopmentTask,
+  resourceQualities: propResourceQualities,
+  setResourceQualities,
+  keyDistortions: propKeyDistortions,
+  setKeyDistortions,
+  // Connector Code fields
+  keyTask: propKeyTask,
+  setKeyTask,
+  workingAspects: propWorkingAspects,
+  setWorkingAspects,
+  nonWorkingAspects: propNonWorkingAspects,
+  setNonWorkingAspects,
+  worldContactBasis: propWorldContactBasis,
+  setWorldContactBasis,
+  // Realization Code fields
+  formula: propFormula,
+  setFormula,
+  potentialRealizationWays: propPotentialRealizationWays,
+  setPotentialRealizationWays,
+  successSources: propSuccessSources,
+  setSuccessSources,
+  realizationType: propRealizationType,
+  setRealizationType,
+  realizationObstacles: propRealizationObstacles,
+  setRealizationObstacles,
+  recommendations: propRecommendations,
+  setRecommendations,
+  // Generator Code fields
+  generatorFormula: propGeneratorFormula,
+  setGeneratorFormula,
+  energySources: propEnergySources,
+  setEnergySources,
+  energyDrains: propEnergyDrains,
+  setEnergyDrains,
+  flowSigns: propFlowSigns,
+  setFlowSigns,
+  burnoutSigns: propBurnoutSigns,
+  setBurnoutSigns,
+  generatorRecommendation: propGeneratorRecommendation,
+  setGeneratorRecommendation,
+  // Mission Code fields
+  missionEssence: propMissionEssence,
+  setMissionEssence,
+  missionRealizationFactors: propMissionRealizationFactors,
+  setMissionRealizationFactors,
+  missionChallenges: propMissionChallenges,
+  setMissionChallenges,
+  missionObstacles: propMissionObstacles,
+  setMissionObstacles,
+  mainTransformation: propMainTransformation,
+  setMainTransformation,
 }) => {
-  const [title, setTitle] = useState(archetype?.title || '');
-  const [description, setDescription] = useState(archetype?.description || '');
-  const [code, setCode] = useState<NumerologyCodeType>(archetype?.code || 'all');
-  const [value, setValue] = useState(archetype?.value?.toString() || '');
-  const [resourceManifestation, setResourceManifestation] = useState(archetype?.resourceManifestation || '');
-  const [distortedManifestation, setDistortedManifestation] = useState(archetype?.distortedManifestation || '');
-  const [developmentTask, setDevelopmentTask] = useState(archetype?.developmentTask || '');
-  const [keyTask, setKeyTask] = useState(archetype?.keyTask || '');
-  const [worldContactBasis, setWorldContactBasis] = useState(archetype?.worldContactBasis || '');
-  const [formula, setFormula] = useState(archetype?.formula || '');
-  const [realizationType, setRealizationType] = useState(archetype?.realizationType || '');
-  const [generatorFormula, setGeneratorFormula] = useState(archetype?.generatorFormula || '');
-  const [generatorRecommendation, setGeneratorRecommendation] = useState(archetype?.generatorRecommendation || '');
-  const [missionEssence, setMissionEssence] = useState(archetype?.missionEssence || '');
-  const [mainTransformation, setMainTransformation] = useState(archetype?.mainTransformation || '');
-  const [missionChallenges, setMissionChallenges] = useState(archetype?.missionChallenges || '');
+  const [localTitle, setLocalTitle] = useState(propTitle || archetype?.title || '');
+  const [localDescription, setLocalDescription] = useState(propDescription || archetype?.description || '');
+  const [code, setCode] = useState<NumerologyCodeType>(selectedCode || archetype?.code || 'all');
+  const [value, setValue] = useState(selectedValue?.toString() || archetype?.value?.toString() || '');
+  const [localResourceManifestation, setLocalResourceManifestation] = useState(propResourceManifestation || archetype?.resourceManifestation || '');
+  const [localDistortedManifestation, setLocalDistortedManifestation] = useState(propDistortedManifestation || archetype?.distortedManifestation || '');
+  const [localDevelopmentTask, setLocalDevelopmentTask] = useState(propDevelopmentTask || archetype?.developmentTask || '');
+  const [localKeyTask, setLocalKeyTask] = useState(propKeyTask || archetype?.keyTask || '');
+  const [localWorldContactBasis, setLocalWorldContactBasis] = useState(propWorldContactBasis || archetype?.worldContactBasis || '');
+  const [localFormula, setLocalFormula] = useState(propFormula || archetype?.formula || '');
+  const [localRealizationType, setLocalRealizationType] = useState(propRealizationType || archetype?.realizationType || '');
+  const [localGeneratorFormula, setLocalGeneratorFormula] = useState(propGeneratorFormula || archetype?.generatorFormula || '');
+  const [localGeneratorRecommendation, setLocalGeneratorRecommendation] = useState(propGeneratorRecommendation || archetype?.generatorRecommendation || '');
+  const [localMissionEssence, setLocalMissionEssence] = useState(propMissionEssence || archetype?.missionEssence || '');
+  const [localMainTransformation, setLocalMainTransformation] = useState(propMainTransformation || archetype?.mainTransformation || '');
+  const [localMissionChallenges, setLocalMissionChallenges] = useState(propMissionChallenges || archetype?.missionChallenges || '');
 
-  const [resourceQualities, setResourceQualities] = useState<string[]>(archetype?.resourceQualities || []);
-  const [keyDistortions, setKeyDistortions] = useState<string[]>(archetype?.keyDistortions || []);
-  const [workingAspects, setWorkingAspects] = useState<string[]>(archetype?.workingAspects || []);
-  const [nonWorkingAspects, setNonWorkingAspects] = useState<string[]>(archetype?.nonWorkingAspects || []);
-  const [potentialRealizationWays, setPotentialRealizationWays] = useState<string[]>(archetype?.potentialRealizationWays || []);
-  const [successSources, setSuccessSources] = useState<string[]>(archetype?.successSources || []);
-  const [realizationObstacles, setRealizationObstacles] = useState<string[]>(archetype?.realizationObstacles || []);
-  const [recommendations, setRecommendations] = useState<string[]>(archetype?.recommendations || []);
-  const [energySources, setEnergySources] = useState<string[]>(archetype?.energySources || []);
-  const [energyDrains, setEnergyDrains] = useState<string[]>(archetype?.energyDrains || []);
-  const [flowSigns, setFlowSigns] = useState<string[]>(archetype?.flowSigns || []);
-  const [burnoutSigns, setBurnoutSigns] = useState<string[]>(archetype?.burnoutSigns || []);
-  const [missionRealizationFactors, setMissionRealizationFactors] = useState<string[]>(archetype?.missionRealizationFactors || []);
-  const [missionObstacles, setMissionObstacles] = useState<string[]>(archetype?.missionObstacles || []);
+  // Handle arrays or string inputs for array fields
+  const parseStringOrArray = (value: string | string[] | undefined): string[] => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return value.split('\n').filter(line => line.trim() !== '');
+    return [];
+  };
+
+  const [resourceQualitiesArray, setResourceQualitiesArray] = useState<string[]>(
+    parseStringOrArray(archetype?.resourceQualities || propResourceQualities)
+  );
+  const [keyDistortionsArray, setKeyDistortionsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.keyDistortions || propKeyDistortions)
+  );
+  const [workingAspectsArray, setWorkingAspectsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.workingAspects || propWorkingAspects)
+  );
+  const [nonWorkingAspectsArray, setNonWorkingAspectsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.nonWorkingAspects || propNonWorkingAspects)
+  );
+  const [potentialRealizationWaysArray, setPotentialRealizationWaysArray] = useState<string[]>(
+    parseStringOrArray(archetype?.potentialRealizationWays || propPotentialRealizationWays)
+  );
+  const [successSourcesArray, setSuccessSourcesArray] = useState<string[]>(
+    parseStringOrArray(archetype?.successSources || propSuccessSources)
+  );
+  const [realizationObstaclesArray, setRealizationObstaclesArray] = useState<string[]>(
+    parseStringOrArray(archetype?.realizationObstacles || propRealizationObstacles)
+  );
+  const [recommendationsArray, setRecommendationsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.recommendations || propRecommendations)
+  );
+  const [energySourcesArray, setEnergySourcesArray] = useState<string[]>(
+    parseStringOrArray(archetype?.energySources || propEnergySources)
+  );
+  const [energyDrainsArray, setEnergyDrainsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.energyDrains || propEnergyDrains)
+  );
+  const [flowSignsArray, setFlowSignsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.flowSigns || propFlowSigns)
+  );
+  const [burnoutSignsArray, setBurnoutSignsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.burnoutSigns || propBurnoutSigns)
+  );
+  const [missionRealizationFactorsArray, setMissionRealizationFactorsArray] = useState<string[]>(
+    parseStringOrArray(archetype?.missionRealizationFactors || propMissionRealizationFactors)
+  );
+  const [missionObstaclesArray, setMissionObstaclesArray] = useState<string[]>(
+    parseStringOrArray(archetype?.missionObstacles || propMissionObstacles)
+  );
 
   const { toast } = useToast()
 
   useEffect(() => {
     if (archetype) {
-      setTitle(archetype.title || '');
-      setDescription(archetype.description || '');
+      setLocalTitle(archetype.title || '');
+      setLocalDescription(archetype.description || '');
       setCode(archetype.code || 'all');
       setValue(archetype.value?.toString() || '');
-      setResourceManifestation(archetype.resourceManifestation || '');
-      setDistortedManifestation(archetype.distortedManifestation || '');
-      setDevelopmentTask(archetype.developmentTask || '');
-      setKeyTask(archetype.keyTask || '');
-      setWorldContactBasis(archetype.worldContactBasis || '');
-      setFormula(archetype.formula || '');
-      setRealizationType(archetype.realizationType || '');
-      setGeneratorFormula(archetype.generatorFormula || '');
-      setGeneratorRecommendation(archetype.generatorRecommendation || '');
-      setMissionEssence(archetype.missionEssence || '');
-      setMainTransformation(archetype.mainTransformation || '');
-      setMissionChallenges(archetype.missionChallenges || '');
+      setLocalResourceManifestation(archetype.resourceManifestation || '');
+      setLocalDistortedManifestation(archetype.distortedManifestation || '');
+      setLocalDevelopmentTask(archetype.developmentTask || '');
+      setLocalKeyTask(archetype.keyTask || '');
+      setLocalWorldContactBasis(archetype.worldContactBasis || '');
+      setLocalFormula(archetype.formula || '');
+      setLocalRealizationType(archetype.realizationType || '');
+      setLocalGeneratorFormula(archetype.generatorFormula || '');
+      setLocalGeneratorRecommendation(archetype.generatorRecommendation || '');
+      setLocalMissionEssence(archetype.missionEssence || '');
+      setLocalMainTransformation(archetype.mainTransformation || '');
+      setLocalMissionChallenges(archetype.missionChallenges || '');
 
-      setResourceQualities(archetype.resourceQualities || []);
-      setKeyDistortions(archetype.keyDistortions || []);
-      setWorkingAspects(archetype.workingAspects || []);
-      setNonWorkingAspects(archetype.nonWorkingAspects || []);
-      setPotentialRealizationWays(archetype.potentialRealizationWays || []);
-      setSuccessSources(archetype.successSources || []);
-      setRealizationObstacles(archetype.realizationObstacles || []);
-      setRecommendations(archetype.recommendations || []);
-      setEnergySources(archetype.energySources || []);
-      setEnergyDrains(archetype.energyDrains || []);
-      setFlowSigns(archetype.flowSigns || []);
-      setBurnoutSigns(archetype.burnoutSigns || []);
-      setMissionRealizationFactors(archetype.missionRealizationFactors || []);
-      setMissionObstacles(archetype.missionObstacles || []);
+      setResourceQualitiesArray(archetype.resourceQualities || []);
+      setKeyDistortionsArray(archetype.keyDistortions || []);
+      setWorkingAspectsArray(archetype.workingAspects || []);
+      setNonWorkingAspectsArray(archetype.nonWorkingAspects || []);
+      setPotentialRealizationWaysArray(archetype.potentialRealizationWays || []);
+      setSuccessSourcesArray(archetype.successSources || []);
+      setRealizationObstaclesArray(archetype.realizationObstacles || []);
+      setRecommendationsArray(archetype.recommendations || []);
+      setEnergySourcesArray(archetype.energySources || []);
+      setEnergyDrainsArray(archetype.energyDrains || []);
+      setFlowSignsArray(archetype.flowSigns || []);
+      setBurnoutSignsArray(archetype.burnoutSigns || []);
+      setMissionRealizationFactorsArray(archetype.missionRealizationFactors || []);
+      setMissionObstaclesArray(archetype.missionObstacles || []);
     }
   }, [archetype]);
+
+  // Update local state when props change
+  useEffect(() => {
+    if (propTitle !== undefined) setLocalTitle(propTitle);
+    if (propDescription !== undefined) setLocalDescription(propDescription);
+    if (selectedCode !== undefined) setCode(selectedCode);
+    if (selectedValue !== undefined) setValue(selectedValue.toString());
+    if (propResourceManifestation !== undefined) setLocalResourceManifestation(propResourceManifestation);
+    if (propDistortedManifestation !== undefined) setLocalDistortedManifestation(propDistortedManifestation);
+    if (propDevelopmentTask !== undefined) setLocalDevelopmentTask(propDevelopmentTask);
+    if (propKeyTask !== undefined) setLocalKeyTask(propKeyTask);
+    if (propWorldContactBasis !== undefined) setLocalWorldContactBasis(propWorldContactBasis);
+    if (propFormula !== undefined) setLocalFormula(propFormula);
+    if (propRealizationType !== undefined) setLocalRealizationType(propRealizationType);
+    if (propGeneratorFormula !== undefined) setLocalGeneratorFormula(propGeneratorFormula);
+    if (propGeneratorRecommendation !== undefined) setLocalGeneratorRecommendation(propGeneratorRecommendation);
+    if (propMissionEssence !== undefined) setLocalMissionEssence(propMissionEssence);
+    if (propMainTransformation !== undefined) setLocalMainTransformation(propMainTransformation);
+    if (propMissionChallenges !== undefined) setLocalMissionChallenges(propMissionChallenges);
+  }, [
+    propTitle, propDescription, selectedCode, selectedValue, 
+    propResourceManifestation, propDistortedManifestation, propDevelopmentTask,
+    propKeyTask, propWorldContactBasis, propFormula, propRealizationType,
+    propGeneratorFormula, propGeneratorRecommendation, propMissionEssence,
+    propMainTransformation, propMissionChallenges
+  ]);
 
   const handleStringArrayChange = (setter: (value: string[]) => void, index: number, value: string, array: string[]) => {
     const newArray = [...array];
@@ -104,7 +319,7 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
   };
 
   const handleSave = () => {
-    if (!title || !code || !value) {
+    if (!localTitle || !code || !value) {
       toast({
         title: "Ошибка",
         description: "Пожалуйста, заполните все обязательные поля (Название, Код, Значение).",
@@ -113,43 +328,56 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
       return;
     }
 
-    const updatedArchetype: ArchetypeDescription = {
-      code,
-      value: parseInt(value, 10),
-      title,
-      description,
-      resourceManifestation,
-      distortedManifestation,
-      developmentTask,
-      keyTask,
-      worldContactBasis,
-      formula,
-      realizationType,
-      generatorFormula,
-      generatorRecommendation,
-      missionEssence,
-      mainTransformation,
-      missionChallenges,
-      resourceQualities,
-      keyDistortions,
-      workingAspects,
-      nonWorkingAspects,
-      potentialRealizationWays,
-      successSources,
-      realizationObstacles,
-      recommendations,
-      energySources,
-      energyDrains,
-      flowSigns,
-      burnoutSigns,
-      missionRealizationFactors,
-      missionObstacles,
-    };
-    onChange(updatedArchetype);
-    toast({
-      title: "Успешно",
-      description: "Архетип сохранен.",
-    });
+    // If we're using direct state setters (from AdminPage)
+    if (setTitle && setDescription && setSelectedCode && setSelectedValue && onSave) {
+      setTitle(localTitle);
+      setDescription(localDescription);
+      setSelectedCode(code);
+      setSelectedValue(parseInt(value, 10));
+      onSave();
+      return;
+    }
+
+    // Original update logic
+    if (onChange) {
+      const updatedArchetype: ArchetypeDescription = {
+        code,
+        value: parseInt(value, 10),
+        title: localTitle,
+        description: localDescription,
+        resourceManifestation: localResourceManifestation,
+        distortedManifestation: localDistortedManifestation,
+        developmentTask: localDevelopmentTask,
+        keyTask: localKeyTask,
+        worldContactBasis: localWorldContactBasis,
+        formula: localFormula,
+        realizationType: localRealizationType,
+        generatorFormula: localGeneratorFormula,
+        generatorRecommendation: localGeneratorRecommendation,
+        missionEssence: localMissionEssence,
+        mainTransformation: localMainTransformation,
+        missionChallenges: localMissionChallenges,
+        resourceQualities: resourceQualitiesArray,
+        keyDistortions: keyDistortionsArray,
+        workingAspects: workingAspectsArray,
+        nonWorkingAspects: nonWorkingAspectsArray,
+        potentialRealizationWays: potentialRealizationWaysArray,
+        successSources: successSourcesArray,
+        realizationObstacles: realizationObstaclesArray,
+        recommendations: recommendationsArray,
+        energySources: energySourcesArray,
+        energyDrains: energyDrainsArray,
+        flowSigns: flowSignsArray,
+        burnoutSigns: burnoutSignsArray,
+        missionRealizationFactors: missionRealizationFactorsArray,
+        missionObstacles: missionObstaclesArray,
+      };
+      onChange(updatedArchetype);
+      toast({
+        title: "Успешно",
+        description: "Архетип сохранен.",
+      });
+    }
   };
 
   const tabLabels: Record<NumerologyCodeType, string> = {
@@ -174,8 +402,9 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
             <Input
               type="text"
               id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={localTitle}
+              onChange={(e) => setLocalTitle(e.target.value)}
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
@@ -185,6 +414,7 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
               className="w-full border rounded-md py-2 px-3"
               value={code}
               onChange={(e) => setCode(e.target.value as NumerologyCodeType)}
+              disabled={loading}
             >
               <option value="personality">Личность</option>
               <option value="connector">Коннектор</option>
@@ -202,6 +432,7 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
               id="value"
               value={value}
               onChange={(e) => setValue(e.target.value)}
+              disabled={loading}
             />
           </div>
         </div>
@@ -210,8 +441,9 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
           <Label htmlFor="description">Описание</Label>
           <Textarea
             id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={localDescription}
+            onChange={(e) => setLocalDescription(e.target.value)}
+            disabled={loading}
           />
         </div>
 
@@ -229,16 +461,18 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
                 <Label htmlFor="resourceManifestation">Ресурсное проявление</Label>
                 <Textarea
                   id="resourceManifestation"
-                  value={resourceManifestation}
-                  onChange={(e) => setResourceManifestation(e.target.value)}
+                  value={localResourceManifestation}
+                  onChange={(e) => setLocalResourceManifestation(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="distortedManifestation">Искаженное проявление</Label>
                 <Textarea
                   id="distortedManifestation"
-                  value={distortedManifestation}
-                  onChange={(e) => setDistortedManifestation(e.target.value)}
+                  value={localDistortedManifestation}
+                  onChange={(e) => setLocalDistortedManifestation(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -246,8 +480,9 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
               <Label htmlFor="developmentTask">Задача развития</Label>
               <Textarea
                 id="developmentTask"
-                value={developmentTask}
-                onChange={(e) => setDevelopmentTask(e.target.value)}
+                value={localDevelopmentTask}
+                onChange={(e) => setLocalDevelopmentTask(e.target.value)}
+                disabled={loading}
               />
             </div>
           </TabsContent>
@@ -259,16 +494,18 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
                 <Label htmlFor="keyTask">Ключевая задача</Label>
                 <Textarea
                   id="keyTask"
-                  value={keyTask}
-                  onChange={(e) => setKeyTask(e.target.value)}
+                  value={localKeyTask}
+                  onChange={(e) => setLocalKeyTask(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="worldContactBasis">Контакт с миром должен строиться на</Label>
                 <Textarea
                   id="worldContactBasis"
-                  value={worldContactBasis}
-                  onChange={(e) => setWorldContactBasis(e.target.value)}
+                  value={localWorldContactBasis}
+                  onChange={(e) => setLocalWorldContactBasis(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -280,16 +517,18 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
               <Label htmlFor="formula">Формула</Label>
               <Textarea
                 id="formula"
-                value={formula}
-                onChange={(e) => setFormula(e.target.value)}
+                value={localFormula}
+                onChange={(e) => setLocalFormula(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="realizationType">Тип реализации</Label>
               <Textarea
                 id="realizationType"
-                value={realizationType}
-                onChange={(e) => setRealizationType(e.target.value)}
+                value={localRealizationType}
+                onChange={(e) => setLocalRealizationType(e.target.value)}
+                disabled={loading}
               />
             </div>
           </TabsContent>
@@ -300,16 +539,18 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
               <Label htmlFor="generatorFormula">Формула</Label>
               <Textarea
                 id="generatorFormula"
-                value={generatorFormula}
-                onChange={(e) => setGeneratorFormula(e.target.value)}
+                value={localGeneratorFormula}
+                onChange={(e) => setLocalGeneratorFormula(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="generatorRecommendation">Рекомендация</Label>
               <Textarea
                 id="generatorRecommendation"
-                value={generatorRecommendation}
-                onChange={(e) => setGeneratorRecommendation(e.target.value)}
+                value={localGeneratorRecommendation}
+                onChange={(e) => setLocalGeneratorRecommendation(e.target.value)}
+                disabled={loading}
               />
             </div>
           </TabsContent>
@@ -320,24 +561,27 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
               <Label htmlFor="missionEssence">Суть миссии</Label>
               <Textarea
                 id="missionEssence"
-                value={missionEssence}
-                onChange={(e) => setMissionEssence(e.target.value)}
+                value={localMissionEssence}
+                onChange={(e) => setLocalMissionEssence(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="mainTransformation">Главная трансформация</Label>
               <Textarea
                 id="mainTransformation"
-                value={mainTransformation}
-                onChange={(e) => setMainTransformation(e.target.value)}
+                value={localMainTransformation}
+                onChange={(e) => setLocalMainTransformation(e.target.value)}
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="missionChallenges">Испытания миссии</Label>
               <Textarea
                 id="missionChallenges"
-                value={missionChallenges}
-                onChange={(e) => setMissionChallenges(e.target.value)}
+                value={localMissionChallenges}
+                onChange={(e) => setLocalMissionChallenges(e.target.value)}
+                disabled={loading}
               />
             </div>
           </TabsContent>
@@ -351,120 +595,134 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
             <h3 className="text-lg font-semibold">Общие параметры</h3>
             <SectionArrays 
               title="Ресурсные качества"
-              values={resourceQualities}
-              setValues={setResourceQualities}
+              values={resourceQualitiesArray}
+              setValues={setResourceQualitiesArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Ключевые искажения"
-              values={keyDistortions}
-              setValues={setKeyDistortions}
+              values={keyDistortionsArray}
+              setValues={setKeyDistortionsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Что работает (в ресурсе)"
-              values={workingAspects}
-              setValues={setWorkingAspects}
+              values={workingAspectsArray}
+              setValues={setWorkingAspectsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Что не работает (искажения)"
-              values={nonWorkingAspects}
-              setValues={setNonWorkingAspects}
+              values={nonWorkingAspectsArray}
+              setValues={setNonWorkingAspectsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Как реализуется потенциал"
-              values={potentialRealizationWays}
-              setValues={setPotentialRealizationWays}
+              values={potentialRealizationWaysArray}
+              setValues={setPotentialRealizationWaysArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Источники успеха"
-              values={successSources}
-              setValues={setSuccessSources}
+              values={successSourcesArray}
+              setValues={setSuccessSourcesArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Искажения (что мешает реализовываться)"
-              values={realizationObstacles}
-              setValues={setRealizationObstacles}
+              values={realizationObstaclesArray}
+              setValues={setRealizationObstaclesArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Рекомендации"
-              values={recommendations}
-              setValues={setRecommendations}
+              values={recommendationsArray}
+              setValues={setRecommendationsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Что дает энергию"
-              values={energySources}
-              setValues={setEnergySources}
+              values={energySourcesArray}
+              setValues={setEnergySourcesArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Что забирает энергию"
-              values={energyDrains}
-              setValues={setEnergyDrains}
+              values={energyDrainsArray}
+              setValues={setEnergyDrainsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Признаки, что человек в потоке"
-              values={flowSigns}
-              setValues={setFlowSigns}
+              values={flowSignsArray}
+              setValues={setFlowSignsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Признаки, что человек выгорел"
-              values={burnoutSigns}
-              setValues={setBurnoutSigns}
+              values={burnoutSignsArray}
+              setValues={setBurnoutSignsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Что реализует миссию"
-              values={missionRealizationFactors}
-              setValues={setMissionRealizationFactors}
+              values={missionRealizationFactorsArray}
+              setValues={setMissionRealizationFactorsArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
             <SectionArrays 
               title="Что мешает реализовываться"
-              values={missionObstacles}
-              setValues={setMissionObstacles}
+              values={missionObstaclesArray}
+              setValues={setMissionObstaclesArray}
               handleStringArrayChange={handleStringArrayChange}
               handleAddStringToArray={handleAddStringToArray}
               handleRemoveStringFromArray={handleRemoveStringFromArray}
+              disabled={loading}
             />
           </TabsContent>
         </Tabs>
 
-        <Button onClick={handleSave}>Сохранить</Button>
+        <Button onClick={handleSave} disabled={loading}>Сохранить</Button>
       </CardContent>
     </Card>
   );
@@ -477,6 +735,7 @@ interface SectionArraysProps {
   handleStringArrayChange: (setter: (value: string[]) => void, index: number, value: string, array: string[]) => void;
   handleAddStringToArray: (setter: (value: string[]) => void, array: string[]) => void;
   handleRemoveStringFromArray: (setter: (value: string[]) => void, index: number, array: string[]) => void;
+  disabled?: boolean;
 }
 
 const SectionArrays: React.FC<SectionArraysProps> = ({
@@ -486,6 +745,7 @@ const SectionArrays: React.FC<SectionArraysProps> = ({
   handleStringArrayChange,
   handleAddStringToArray,
   handleRemoveStringFromArray,
+  disabled = false,
 }) => {
   return (
     <div className="space-y-2">
@@ -497,12 +757,14 @@ const SectionArrays: React.FC<SectionArraysProps> = ({
             value={value}
             onChange={(e) => handleStringArrayChange(setValues, index, e.target.value, values)}
             className="flex-grow"
+            disabled={disabled}
           />
           <Button
             type="button"
             variant="destructive"
             size="icon"
             onClick={() => handleRemoveStringFromArray(setValues, index, values)}
+            disabled={disabled}
           >
             Удалить
           </Button>
@@ -512,9 +774,11 @@ const SectionArrays: React.FC<SectionArraysProps> = ({
         type="button"
         variant="secondary"
         onClick={() => handleAddStringToArray(setValues, values)}
+        disabled={disabled}
       >
         Добавить {title}
       </Button>
     </div>
   );
 };
+
