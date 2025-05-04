@@ -61,9 +61,11 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
     if (calculationId && archetypes.length > 0) {
       fetchContent();
     }
-  }, [calculationId, archetypes, type]);
+  }, [calculationId, archetypes.length, type]);
 
   const formatContent = (text: string) => {
+    if (!text) return [];
+    
     // Remove markdown markers like ** and ## that we don't want
     text = text.replace(/\*\*/g, '');
     text = text.replace(/##/g, '');

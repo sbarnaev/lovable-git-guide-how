@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+// Get the API key from environment variables
 const DEEPSEEK_API_KEY = Deno.env.get("DEEPSEEK_API_KEY");
 const SYSTEM_PROMPT = `Ты эксперт по нумерологии, специализирующийся на прочтении нумерологических профилей. Твоя задача — анализировать нумерологические архетипы и предоставлять информацию о них в структурированном и понятном формате. Ты общаешься на русском языке. Не используй маркеры форматирования, такие как ** или ##.`;
 
@@ -16,7 +17,9 @@ serve(async (req) => {
   }
 
   try {
+    // Check if API key is available
     if (!DEEPSEEK_API_KEY) {
+      console.error("Missing DeepSeek API Key");
       throw new Error("Missing DeepSeek API Key");
     }
 
@@ -63,6 +66,21 @@ serve(async (req) => {
     
     console.log(`Sending request to DeepSeek API for ${contentType}`);
     
+    // For testing when DEEPSEEK_API_KEY is missing, return mock data
+    if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === "test-key") {
+      console.log("Using mock data since no valid API key is available");
+      const mockContent = `Это тестовый ответ для ${contentType}. В реальном приложении здесь будет контент от DeepSeek API.
+      
+      Для работы функции необходимо добавить действительный DEEPSEEK_API_KEY в переменные окружения Edge Function.
+      
+      Этот ответ генерируется автоматически, поскольку API ключ отсутствует или недействителен.`;
+      
+      return new Response(JSON.stringify({ content: mockContent }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Make the real API call if we have a key
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
       headers: {

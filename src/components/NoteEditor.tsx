@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCalculations } from '@/contexts/CalculationsContext';
@@ -16,8 +16,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const [loading, setLoading] = useState(false);
   const [noteId, setNoteId] = useState<string | null>(null);
   const { saveNote, getNote, updateNote } = useCalculations();
-  const editorRef = useRef<HTMLDivElement>(null);
-
+  
   useEffect(() => {
     const fetchNote = async () => {
       setLoading(true);
@@ -27,22 +26,33 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           setContent(note.content);
           setNoteId(note.id);
           
-          if (editorRef.current) {
-            editorRef.current.innerHTML = note.content;
-          }
+          // Using a timeout to ensure DOM is ready
+          setTimeout(() => {
+            const editorElement = document.getElementById('note-editor');
+            if (editorElement) {
+              editorElement.innerHTML = note.content;
+            }
+          }, 0);
         }
+      } catch (error) {
+        console.error('Error fetching note:', error);
+        toast.error('Не удалось загрузить заметку');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchNote();
+    if (calculationId) {
+      fetchNote();
+    }
   }, [calculationId, getNote]);
 
   const handleSave = async () => {
-    if (!editorRef.current) return;
+    const editorElement = document.getElementById('note-editor');
+    if (!editorElement) return;
     
-    const htmlContent = editorRef.current.innerHTML;
+    const htmlContent = editorElement.innerHTML;
+    
     setLoading(true);
     try {
       let result;
@@ -56,6 +66,9 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
         setNoteId(result.id);
         toast.success('Заметка сохранена');
       }
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error('Не удалось сохранить заметку');
     } finally {
       setLoading(false);
     }
@@ -63,7 +76,22 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   
   const formatText = (command: string, value: string | null = null) => {
     document.execCommand(command, false, value);
-    editorRef.current?.focus();
+    
+    // Focus the editor after formatting
+    const editorElement = document.getElementById('note-editor');
+    if (editorElement) {
+      editorElement.focus();
+    }
+    
+    // Update the content state from the editor
+    updateContentFromEditor();
+  };
+  
+  const updateContentFromEditor = () => {
+    const editorElement = document.getElementById('note-editor');
+    if (editorElement) {
+      setContent(editorElement.innerHTML);
+    }
   };
 
   return (
@@ -112,14 +140,13 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
         </div>
         
         <div 
-          ref={editorRef}
+          id="note-editor"
           className={cn(
             "min-h-[200px] max-h-[400px] overflow-y-auto p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
             loading && "opacity-50"
           )}
           contentEditable={!loading}
-          onInput={() => setContent(editorRef.current?.innerHTML || '')}
-          dangerouslySetInnerHTML={{ __html: content }}
+          onInput={updateContentFromEditor}
         />
         
         <div className="flex justify-end">
