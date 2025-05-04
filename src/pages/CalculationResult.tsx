@@ -145,30 +145,36 @@ const CalculationResult = () => {
             <CardTitle className="text-lg">Анализ</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium">Основные факторы:</h3>
-                <ul className="list-disc pl-5 mt-1 space-y-1">
-                  {targetCalc.results.analysis.mainFactors.map((factor, index) => (
-                    <li key={index}>{factor}</li>
-                  ))}
-                </ul>
+            {targetCalc.results && targetCalc.results.analysis ? (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium">Основные факторы:</h3>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    {targetCalc.results.analysis.mainFactors?.map((factor, index) => (
+                      <li key={index}>{factor}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">Текущая фаза:</h3>
+                  <p className="mt-1">{targetCalc.results.analysis.currentPhase}</p>
+                </div>
+                
+                <div>
+                  <h3 className="font-medium">Потенциальные результаты:</h3>
+                  <ul className="list-disc pl-5 mt-1 space-y-1">
+                    {targetCalc.results.analysis.potentialOutcomes?.map((outcome, index) => (
+                      <li key={index}>{outcome}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              
-              <div>
-                <h3 className="font-medium">Текущая фаза:</h3>
-                <p className="mt-1">{targetCalc.results.analysis.currentPhase}</p>
+            ) : (
+              <div className="text-center p-4 text-muted-foreground">
+                Данные анализа отсутствуют.
               </div>
-              
-              <div>
-                <h3 className="font-medium">Потенциальные результаты:</h3>
-                <ul className="list-disc pl-5 mt-1 space-y-1">
-                  {targetCalc.results.analysis.potentialOutcomes.map((outcome, index) => (
-                    <li key={index}>{outcome}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
         

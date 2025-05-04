@@ -37,7 +37,7 @@ const TargetCalculationForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Initial calculation result structure
+      // Initial calculation result structure with properly initialized properties
       const results = {
         analysis: {
           mainFactors: ["Фактор карьеры", "Фактор личных отношений", "Фактор самореализации"],

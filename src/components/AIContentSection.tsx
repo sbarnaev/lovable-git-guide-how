@@ -48,6 +48,10 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
       setIsGenerating(true);
       const response = await generateDeepSeekContent(type, archetypes);
       
+      if (!response || !response.content) {
+        throw new Error('Failed to generate content');
+      }
+      
       // Save the generated content
       await saveGeneratedContent(calculationId, type, response.content);
       
@@ -67,72 +71,77 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
     if (calculationId && archetypes.length > 0 && !initialized) {
       fetchContent();
     }
-  }, [fetchContent, initialized]);
+  }, [fetchContent, initialized, calculationId, archetypes.length]);
 
   // Pre-process content once instead of on every render
   const formattedContent = (() => {
     if (!content) return [];
     
-    // Remove markdown markers like ** and ## that we don't want
-    let processedText = content.replace(/\*\*/g, '');
-    
-    // Handle headings more effectively
-    processedText = processedText.replace(/^#{1,6}\s+(.+)$/gm, '<h3>$1</h3>');
-    
-    // Split the text by line breaks and map each line
-    return processedText.split('\n').map((line, index) => {
-      line = line.trim();
+    try {
+      // Remove markdown markers like ** and ## that we don't want
+      let processedText = content.replace(/\*\*/g, '');
       
-      // Skip empty lines
-      if (!line) return <br key={index} />;
+      // Handle headings more effectively
+      processedText = processedText.replace(/^#{1,6}\s+(.+)$/gm, '<h3>$1</h3>');
       
-      // Process HTML heading tags that we converted earlier
-      if (line.match(/<h[1-6]>(.+)<\/h[1-6]>/)) {
+      // Split the text by line breaks and map each line
+      return processedText.split('\n').map((line, index) => {
+        line = line.trim();
+        
+        // Skip empty lines
+        if (!line) return <br key={index} />;
+        
+        // Process HTML heading tags that we converted earlier
+        if (line.match(/<h[1-6]>(.+)<\/h[1-6]>/)) {
+          return (
+            <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+              {line.replace(/<h[1-6]>(.+)<\/h[1-6]>/, '$1')}
+            </h3>
+          );
+        }
+        
+        // Check for section headers (lines that end with a colon)
+        if (line.match(/^.+:$/)) {
+          return (
+            <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+              {line}
+            </h3>
+          );
+        }
+        
+        // Check for bullet points
+        if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+          return (
+            <li key={index} className="ml-5 mb-2">
+              {line.substring(1).trim()}
+            </li>
+          );
+        }
+        
+        // Check for numbered points
+        const numberedMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
+        if (numberedMatch) {
+          return (
+            <li key={index} className="ml-5 mb-2 list-decimal">
+              {numberedMatch[2]}
+            </li>
+          );
+        }
+        
+        // Regular paragraph
         return (
-          <h3 key={index} className="font-medium text-lg mt-4 mb-2">
-            {line.replace(/<h[1-6]>(.+)<\/h[1-6]>/, '$1')}
-          </h3>
-        );
-      }
-      
-      // Check for section headers (lines that end with a colon)
-      if (line.match(/^.+:$/)) {
-        return (
-          <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+          <p key={index} className={cn(
+            "mb-3",
+            line.length < 100 && line.match(/^[А-Я0-9]/) ? "font-medium" : ""
+          )}>
             {line}
-          </h3>
+          </p>
         );
-      }
-      
-      // Check for bullet points
-      if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
-        return (
-          <li key={index} className="ml-5 mb-2">
-            {line.substring(1).trim()}
-          </li>
-        );
-      }
-      
-      // Check for numbered points
-      const numberedMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
-      if (numberedMatch) {
-        return (
-          <li key={index} className="ml-5 mb-2 list-decimal">
-            {numberedMatch[2]}
-          </li>
-        );
-      }
-      
-      // Regular paragraph
-      return (
-        <p key={index} className={cn(
-          "mb-3",
-          line.length < 100 && line.match(/^[А-Я0-9]/) ? "font-medium" : ""
-        )}>
-          {line}
-        </p>
-      );
-    });
+      });
+    } catch (err) {
+      console.error("Error formatting content:", err);
+      return [<p key="error" className="text-destructive">Ошибка форматирования контента.</p>];
+    }
   })();
 
   const handleRefresh = () => {

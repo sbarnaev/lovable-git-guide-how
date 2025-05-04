@@ -1,338 +1,520 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { NumerologyCodeType } from "@/types/numerology";
-import { GeneralTabContent } from "./GeneralTabContent";
-import { PersonalityTabContent } from "./PersonalityTabContent";
-import { ConnectorTabContent } from "./ConnectorTabContent";
-import { RealizationTabContent } from "./RealizationTabContent";
-import { GeneratorTabContent } from "./GeneratorTabContent";
-import { MissionTabContent } from "./MissionTabContent";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
+import { useToast } from "@/hooks/use-toast"
 
 interface ArchetypeFormProps {
-  selectedCode: NumerologyCodeType;
-  setSelectedCode: React.Dispatch<React.SetStateAction<NumerologyCodeType>>;
-  selectedValue: number;
-  setSelectedValue: React.Dispatch<React.SetStateAction<number>>;
-  onSave: () => void;
-  loading?: boolean;
-  // General fields
-  title: string;
-  setTitle: React.Dispatch<React.SetStateAction<string>>;
-  description: string;
-  setDescription: React.Dispatch<React.SetStateAction<string>>;
-  maleImageUrl: string;
-  setMaleImageUrl: React.Dispatch<React.SetStateAction<string>>;
-  femaleImageUrl: string;
-  setFemaleImageUrl: React.Dispatch<React.SetStateAction<string>>;
-  // Personality Code fields
-  resourceManifestation: string;
-  setResourceManifestation: React.Dispatch<React.SetStateAction<string>>;
-  distortedManifestation: string;
-  setDistortedManifestation: React.Dispatch<React.SetStateAction<string>>;
-  developmentTask: string;
-  setDevelopmentTask: React.Dispatch<React.SetStateAction<string>>;
-  resourceQualities: string;
-  setResourceQualities: React.Dispatch<React.SetStateAction<string>>;
-  keyDistortions: string;
-  setKeyDistortions: React.Dispatch<React.SetStateAction<string>>;
-  // Connector Code fields
-  keyTask: string;
-  setKeyTask: React.Dispatch<React.SetStateAction<string>>;
-  workingAspects: string;
-  setWorkingAspects: React.Dispatch<React.SetStateAction<string>>;
-  nonWorkingAspects: string;
-  setNonWorkingAspects: React.Dispatch<React.SetStateAction<string>>;
-  worldContactBasis: string;
-  setWorldContactBasis: React.Dispatch<React.SetStateAction<string>>;
-  // Realization Code fields
-  formula: string;
-  setFormula: React.Dispatch<React.SetStateAction<string>>;
-  potentialRealizationWays: string;
-  setPotentialRealizationWays: React.Dispatch<React.SetStateAction<string>>;
-  successSources: string;
-  setSuccessSources: React.Dispatch<React.SetStateAction<string>>;
-  realizationType: string;
-  setRealizationType: React.Dispatch<React.SetStateAction<string>>;
-  realizationObstacles: string;
-  setRealizationObstacles: React.Dispatch<React.SetStateAction<string>>;
-  recommendations: string;
-  setRecommendations: React.Dispatch<React.SetStateAction<string>>;
-  // Generator Code fields
-  generatorFormula: string;
-  setGeneratorFormula: React.Dispatch<React.SetStateAction<string>>;
-  energySources: string;
-  setEnergySources: React.Dispatch<React.SetStateAction<string>>;
-  energyDrains: string;
-  setEnergyDrains: React.Dispatch<React.SetStateAction<string>>;
-  flowSigns: string;
-  setFlowSigns: React.Dispatch<React.SetStateAction<string>>;
-  burnoutSigns: string;
-  setBurnoutSigns: React.Dispatch<React.SetStateAction<string>>;
-  generatorRecommendation: string;
-  setGeneratorRecommendation: React.Dispatch<React.SetStateAction<string>>;
-  // Mission Code fields
-  missionEssence: string;
-  setMissionEssence: React.Dispatch<React.SetStateAction<string>>;
-  missionRealizationFactors: string;
-  setMissionRealizationFactors: React.Dispatch<React.SetStateAction<string>>;
-  missionChallenges: string;
-  setMissionChallenges: React.Dispatch<React.SetStateAction<string>>;
-  missionObstacles: string;
-  setMissionObstacles: React.Dispatch<React.SetStateAction<string>>;
-  mainTransformation: string;
-  setMainTransformation: React.Dispatch<React.SetStateAction<string>>;
+  archetype: ArchetypeDescription | undefined;
+  onChange: (updatedArchetype: ArchetypeDescription) => void;
 }
 
-export const ArchetypeForm = (props: ArchetypeFormProps) => {
-  const allowedValues = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const missionAllowedValues = [...allowedValues, 11]; // Для миссии добавляем мастер-число 11
-  
-  const [archetypeValue, setArchetypeValue] = useState<number>(props.selectedValue);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  
-  const handleSaveClick = async () => {
-    try {
-      setIsSaving(true);
-      await props.onSave();
-    } catch (error) {
-      toast.error(`Ошибка: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsSaving(false);
+export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
+  archetype,
+  onChange,
+}) => {
+  const [title, setTitle] = useState(archetype?.title || '');
+  const [description, setDescription] = useState(archetype?.description || '');
+  const [code, setCode] = useState<NumerologyCodeType>(archetype?.code || 'all');
+  const [value, setValue] = useState(archetype?.value?.toString() || '');
+  const [resourceManifestation, setResourceManifestation] = useState(archetype?.resourceManifestation || '');
+  const [distortedManifestation, setDistortedManifestation] = useState(archetype?.distortedManifestation || '');
+  const [developmentTask, setDevelopmentTask] = useState(archetype?.developmentTask || '');
+  const [keyTask, setKeyTask] = useState(archetype?.keyTask || '');
+  const [worldContactBasis, setWorldContactBasis] = useState(archetype?.worldContactBasis || '');
+  const [formula, setFormula] = useState(archetype?.formula || '');
+  const [realizationType, setRealizationType] = useState(archetype?.realizationType || '');
+  const [generatorFormula, setGeneratorFormula] = useState(archetype?.generatorFormula || '');
+  const [generatorRecommendation, setGeneratorRecommendation] = useState(archetype?.generatorRecommendation || '');
+  const [missionEssence, setMissionEssence] = useState(archetype?.missionEssence || '');
+  const [mainTransformation, setMainTransformation] = useState(archetype?.mainTransformation || '');
+  const [missionChallenges, setMissionChallenges] = useState(archetype?.missionChallenges || '');
+
+  const [resourceQualities, setResourceQualities] = useState<string[]>(archetype?.resourceQualities || []);
+  const [keyDistortions, setKeyDistortions] = useState<string[]>(archetype?.keyDistortions || []);
+  const [workingAspects, setWorkingAspects] = useState<string[]>(archetype?.workingAspects || []);
+  const [nonWorkingAspects, setNonWorkingAspects] = useState<string[]>(archetype?.nonWorkingAspects || []);
+  const [potentialRealizationWays, setPotentialRealizationWays] = useState<string[]>(archetype?.potentialRealizationWays || []);
+  const [successSources, setSuccessSources] = useState<string[]>(archetype?.successSources || []);
+  const [realizationObstacles, setRealizationObstacles] = useState<string[]>(archetype?.realizationObstacles || []);
+  const [recommendations, setRecommendations] = useState<string[]>(archetype?.recommendations || []);
+  const [energySources, setEnergySources] = useState<string[]>(archetype?.energySources || []);
+  const [energyDrains, setEnergyDrains] = useState<string[]>(archetype?.energyDrains || []);
+  const [flowSigns, setFlowSigns] = useState<string[]>(archetype?.flowSigns || []);
+  const [burnoutSigns, setBurnoutSigns] = useState<string[]>(archetype?.burnoutSigns || []);
+  const [missionRealizationFactors, setMissionRealizationFactors] = useState<string[]>(archetype?.missionRealizationFactors || []);
+  const [missionObstacles, setMissionObstacles] = useState<string[]>(archetype?.missionObstacles || []);
+
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (archetype) {
+      setTitle(archetype.title || '');
+      setDescription(archetype.description || '');
+      setCode(archetype.code || 'all');
+      setValue(archetype.value?.toString() || '');
+      setResourceManifestation(archetype.resourceManifestation || '');
+      setDistortedManifestation(archetype.distortedManifestation || '');
+      setDevelopmentTask(archetype.developmentTask || '');
+      setKeyTask(archetype.keyTask || '');
+      setWorldContactBasis(archetype.worldContactBasis || '');
+      setFormula(archetype.formula || '');
+      setRealizationType(archetype.realizationType || '');
+      setGeneratorFormula(archetype.generatorFormula || '');
+      setGeneratorRecommendation(archetype.generatorRecommendation || '');
+      setMissionEssence(archetype.missionEssence || '');
+      setMainTransformation(archetype.mainTransformation || '');
+      setMissionChallenges(archetype.missionChallenges || '');
+
+      setResourceQualities(archetype.resourceQualities || []);
+      setKeyDistortions(archetype.keyDistortions || []);
+      setWorkingAspects(archetype.workingAspects || []);
+      setNonWorkingAspects(archetype.nonWorkingAspects || []);
+      setPotentialRealizationWays(archetype.potentialRealizationWays || []);
+      setSuccessSources(archetype.successSources || []);
+      setRealizationObstacles(archetype.realizationObstacles || []);
+      setRecommendations(archetype.recommendations || []);
+      setEnergySources(archetype.energySources || []);
+      setEnergyDrains(archetype.energyDrains || []);
+      setFlowSigns(archetype.flowSigns || []);
+      setBurnoutSigns(archetype.burnoutSigns || []);
+      setMissionRealizationFactors(archetype.missionRealizationFactors || []);
+      setMissionObstacles(archetype.missionObstacles || []);
     }
-  };
-  
-  const codeLabels: Record<NumerologyCodeType, string> = {
-    personality: "Код Личности",
-    connector: "Код Коннектора",
-    realization: "Код Реализации",
-    generator: "Код Генератора",
-    mission: "Код Миссии",
-    all: "Все коды" // Добавляем для типа 'all'
+  }, [archetype]);
+
+  const handleStringArrayChange = (setter: (value: string[]) => void, index: number, value: string, array: string[]) => {
+    const newArray = [...array];
+    newArray[index] = value;
+    setter(newArray);
   };
 
-  // Инициализируем отображение соответствующего контента для выбранного кода
-  const getTabContent = () => {
-    switch (props.selectedCode) {
-      case 'personality':
-        return (
-          <PersonalityTabContent
-            resourceManifestation={props.resourceManifestation}
-            setResourceManifestation={props.setResourceManifestation}
-            distortedManifestation={props.distortedManifestation}
-            setDistortedManifestation={props.setDistortedManifestation}
-            developmentTask={props.developmentTask}
-            setDevelopmentTask={props.setDevelopmentTask}
-            resourceQualities={props.resourceQualities}
-            setResourceQualities={props.setResourceQualities}
-            keyDistortions={props.keyDistortions}
-            setKeyDistortions={props.setKeyDistortions}
-          />
-        );
-      case 'connector':
-        return (
-          <ConnectorTabContent
-            keyTask={props.keyTask}
-            setKeyTask={props.setKeyTask}
-            workingAspects={props.workingAspects}
-            setWorkingAspects={props.setWorkingAspects}
-            nonWorkingAspects={props.nonWorkingAspects}
-            setNonWorkingAspects={props.setNonWorkingAspects}
-            worldContactBasis={props.worldContactBasis}
-            setWorldContactBasis={props.setWorldContactBasis}
-          />
-        );
-      case 'realization':
-        return (
-          <RealizationTabContent
-            formula={props.formula}
-            setFormula={props.setFormula}
-            potentialRealizationWays={props.potentialRealizationWays}
-            setPotentialRealizationWays={props.setPotentialRealizationWays}
-            successSources={props.successSources}
-            setSuccessSources={props.setSuccessSources}
-            realizationType={props.realizationType}
-            setRealizationType={props.setRealizationType}
-            realizationObstacles={props.realizationObstacles}
-            setRealizationObstacles={props.setRealizationObstacles}
-            recommendations={props.recommendations}
-            setRecommendations={props.setRecommendations}
-          />
-        );
-      case 'generator':
-        return (
-          <GeneratorTabContent
-            generatorFormula={props.generatorFormula}
-            setGeneratorFormula={props.setGeneratorFormula}
-            energySources={props.energySources}
-            setEnergySources={props.setEnergySources}
-            energyDrains={props.energyDrains}
-            setEnergyDrains={props.setEnergyDrains}
-            flowSigns={props.flowSigns}
-            setFlowSigns={props.setFlowSigns}
-            burnoutSigns={props.burnoutSigns}
-            setBurnoutSigns={props.setBurnoutSigns}
-            generatorRecommendation={props.generatorRecommendation}
-            setGeneratorRecommendation={props.setGeneratorRecommendation}
-          />
-        );
-      case 'mission':
-        return (
-          <MissionTabContent
-            missionEssence={props.missionEssence}
-            setMissionEssence={props.setMissionEssence}
-            missionRealizationFactors={props.missionRealizationFactors}
-            setMissionRealizationFactors={props.setMissionRealizationFactors}
-            missionChallenges={props.missionChallenges}
-            setMissionChallenges={props.setMissionChallenges}
-            missionObstacles={props.missionObstacles}
-            setMissionObstacles={props.setMissionObstacles}
-            mainTransformation={props.mainTransformation}
-            setMainTransformation={props.setMainTransformation}
-          />
-        );
-      default:
-        return (
-          <GeneralTabContent
-            title={props.title}
-            setTitle={props.setTitle}
-            description={props.description}
-            setDescription={props.setDescription}
-            maleImageUrl={props.maleImageUrl}
-            setMaleImageUrl={props.setMaleImageUrl}
-            femaleImageUrl={props.femaleImageUrl}
-            setFemaleImageUrl={props.setFemaleImageUrl}
-          />
-        );
-    }
+  const handleAddStringToArray = (setter: (value: string[]) => void, array: string[]) => {
+    setter([...array, '']);
   };
-  
+
+  const handleRemoveStringFromArray = (setter: (value: string[]) => void, index: number, array: string[]) => {
+    const newArray = [...array];
+    newArray.splice(index, 1);
+    setter(newArray);
+  };
+
+  const handleSave = () => {
+    if (!title || !code || !value) {
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, заполните все обязательные поля (Название, Код, Значение).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedArchetype: ArchetypeDescription = {
+      code,
+      value: parseInt(value, 10),
+      title,
+      description,
+      resourceManifestation,
+      distortedManifestation,
+      developmentTask,
+      keyTask,
+      worldContactBasis,
+      formula,
+      realizationType,
+      generatorFormula,
+      generatorRecommendation,
+      missionEssence,
+      mainTransformation,
+      missionChallenges,
+      resourceQualities,
+      keyDistortions,
+      workingAspects,
+      nonWorkingAspects,
+      potentialRealizationWays,
+      successSources,
+      realizationObstacles,
+      recommendations,
+      energySources,
+      energyDrains,
+      flowSigns,
+      burnoutSigns,
+      missionRealizationFactors,
+      missionObstacles,
+    };
+    onChange(updatedArchetype);
+    toast({
+      title: "Успешно",
+      description: "Архетип сохранен.",
+    });
+  };
+
+  const tabLabels: Record<NumerologyCodeType, string> = {
+    personality: 'Личность',
+    connector: 'Коннектор',
+    realization: 'Реализация',
+    generator: 'Генератор',
+    mission: 'Миссия',
+    all: 'Общее',
+    target: 'Цель'
+  };
+
   return (
-    <div className="space-y-6">
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-xl">Архетип {archetypeValue}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Выберите значение архетипа</label>
-              <Select 
-                value={archetypeValue.toString()} 
-                onValueChange={(value) => {
-                  const numValue = parseInt(value);
-                  setArchetypeValue(numValue);
-                  props.setSelectedValue(numValue);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите значение" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allowedValues.map((value) => (
-                    <SelectItem key={value} value={value.toString()}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                  {/* Добавляем 11 только для миссии */}
-                  {props.selectedCode === 'mission' && (
-                    <SelectItem key={11} value="11">
-                      11 (мастер-число)
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Выберите тип кода</label>
-              <Select 
-                value={props.selectedCode} 
-                onValueChange={(value: NumerologyCodeType) => {
-                  props.setSelectedCode(value);
-                  
-                  // Если выбрана миссия и значение было 11, оставляем его
-                  // Если выбран другой код и было 11, сбрасываем на 1
-                  if (value !== 'mission' && props.selectedValue === 11) {
-                    props.setSelectedValue(1);
-                    setArchetypeValue(1);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите код" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="personality">Код Личности</SelectItem>
-                  <SelectItem value="connector">Код Коннектора</SelectItem>
-                  <SelectItem value="realization">Код Реализации</SelectItem>
-                  <SelectItem value="generator">Код Генератора</SelectItem>
-                  <SelectItem value="mission">Код Миссии</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Редактировать Архетип</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Название</Label>
+            <Input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
-          
-          <div className="bg-muted p-4 rounded-md">
-            <p className="text-sm">
-              <strong>Редактирование:</strong> {codeLabels[props.selectedCode]} для архетипа {props.selectedValue}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {props.loading ? (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Загрузка данных...</span>
-        </div>
-      ) : (
-        <>
-          <Tabs defaultValue="general">
-            <TabsList className="grid grid-cols-6 mb-4 w-full">
-              <TabsTrigger value="general">Общее</TabsTrigger>
-              <TabsTrigger value="codeDetails">Данные кода</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="general">
-              <GeneralTabContent
-                title={props.title}
-                setTitle={props.setTitle}
-                description={props.description}
-                setDescription={props.setDescription}
-                maleImageUrl={props.maleImageUrl}
-                setMaleImageUrl={props.setMaleImageUrl}
-                femaleImageUrl={props.femaleImageUrl}
-                setFemaleImageUrl={props.setFemaleImageUrl}
-              />
-            </TabsContent>
-            
-            <TabsContent value="codeDetails">
-              {getTabContent()}
-            </TabsContent>
-          </Tabs>
-          
-          <div className="py-4 flex justify-center">
-            <Button 
-              onClick={handleSaveClick} 
-              size="lg" 
-              className="px-8"
-              disabled={isSaving || props.loading}
+          <div className="space-y-2">
+            <Label htmlFor="code">Код</Label>
+            <select
+              id="code"
+              className="w-full border rounded-md py-2 px-3"
+              value={code}
+              onChange={(e) => setCode(e.target.value as NumerologyCodeType)}
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
-                </>
-              ) : 'Сохранить архетип'}
-            </Button>
+              <option value="personality">Личность</option>
+              <option value="connector">Коннектор</option>
+              <option value="realization">Реализация</option>
+              <option value="generator">Генератор</option>
+              <option value="mission">Миссия</option>
+              <option value="target">Цель</option>
+              <option value="all">Общее</option>
+            </select>
           </div>
-        </>
-      )}
+          <div className="space-y-2">
+            <Label htmlFor="value">Значение</Label>
+            <Input
+              type="number"
+              id="value"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="description">Описание</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <Tabs defaultValue="all" className="space-y-4">
+          <TabsList>
+            {Object.entries(tabLabels).map(([key, label]) => (
+              <TabsTrigger key={key} value={key as NumerologyCodeType}>{label}</TabsTrigger>
+            ))}
+          </TabsList>
+          
+          <TabsContent value="personality" className="space-y-4">
+            <h3 className="text-lg font-semibold">Код Личности</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="resourceManifestation">Ресурсное проявление</Label>
+                <Textarea
+                  id="resourceManifestation"
+                  value={resourceManifestation}
+                  onChange={(e) => setResourceManifestation(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="distortedManifestation">Искаженное проявление</Label>
+                <Textarea
+                  id="distortedManifestation"
+                  value={distortedManifestation}
+                  onChange={(e) => setDistortedManifestation(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="developmentTask">Задача развития</Label>
+              <Textarea
+                id="developmentTask"
+                value={developmentTask}
+                onChange={(e) => setDevelopmentTask(e.target.value)}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="connector" className="space-y-4">
+            <h3 className="text-lg font-semibold">Код Коннектора</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="keyTask">Ключевая задача</Label>
+                <Textarea
+                  id="keyTask"
+                  value={keyTask}
+                  onChange={(e) => setKeyTask(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="worldContactBasis">Контакт с миром должен строиться на</Label>
+                <Textarea
+                  id="worldContactBasis"
+                  value={worldContactBasis}
+                  onChange={(e) => setWorldContactBasis(e.target.value)}
+                />
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="realization" className="space-y-4">
+            <h3 className="text-lg font-semibold">Код Реализации</h3>
+            <div className="space-y-2">
+              <Label htmlFor="formula">Формула</Label>
+              <Textarea
+                id="formula"
+                value={formula}
+                onChange={(e) => setFormula(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="realizationType">Тип реализации</Label>
+              <Textarea
+                id="realizationType"
+                value={realizationType}
+                onChange={(e) => setRealizationType(e.target.value)}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="generator" className="space-y-4">
+            <h3 className="text-lg font-semibold">Код Генератора</h3>
+            <div className="space-y-2">
+              <Label htmlFor="generatorFormula">Формула</Label>
+              <Textarea
+                id="generatorFormula"
+                value={generatorFormula}
+                onChange={(e) => setGeneratorFormula(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="generatorRecommendation">Рекомендация</Label>
+              <Textarea
+                id="generatorRecommendation"
+                value={generatorRecommendation}
+                onChange={(e) => setGeneratorRecommendation(e.target.value)}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="mission" className="space-y-4">
+            <h3 className="text-lg font-semibold">Код Миссии</h3>
+            <div className="space-y-2">
+              <Label htmlFor="missionEssence">Суть миссии</Label>
+              <Textarea
+                id="missionEssence"
+                value={missionEssence}
+                onChange={(e) => setMissionEssence(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="mainTransformation">Главная трансформация</Label>
+              <Textarea
+                id="mainTransformation"
+                value={mainTransformation}
+                onChange={(e) => setMainTransformation(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="missionChallenges">Испытания миссии</Label>
+              <Textarea
+                id="missionChallenges"
+                value={missionChallenges}
+                onChange={(e) => setMissionChallenges(e.target.value)}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="target" className="space-y-4">
+            <h3 className="text-lg font-semibold">Целевой расчет</h3>
+            <p>Специфические поля для целевого расчета отсутствуют.</p>
+          </TabsContent>
+          
+          <TabsContent value="all" className="space-y-4">
+            <h3 className="text-lg font-semibold">Общие параметры</h3>
+            <SectionArrays 
+              title="Ресурсные качества"
+              values={resourceQualities}
+              setValues={setResourceQualities}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Ключевые искажения"
+              values={keyDistortions}
+              setValues={setKeyDistortions}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Что работает (в ресурсе)"
+              values={workingAspects}
+              setValues={setWorkingAspects}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Что не работает (искажения)"
+              values={nonWorkingAspects}
+              setValues={setNonWorkingAspects}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Как реализуется потенциал"
+              values={potentialRealizationWays}
+              setValues={setPotentialRealizationWays}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Источники успеха"
+              values={successSources}
+              setValues={setSuccessSources}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Искажения (что мешает реализовываться)"
+              values={realizationObstacles}
+              setValues={setRealizationObstacles}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Рекомендации"
+              values={recommendations}
+              setValues={setRecommendations}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Что дает энергию"
+              values={energySources}
+              setValues={setEnergySources}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Что забирает энергию"
+              values={energyDrains}
+              setValues={setEnergyDrains}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Признаки, что человек в потоке"
+              values={flowSigns}
+              setValues={setFlowSigns}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Признаки, что человек выгорел"
+              values={burnoutSigns}
+              setValues={setBurnoutSigns}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Что реализует миссию"
+              values={missionRealizationFactors}
+              setValues={setMissionRealizationFactors}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+            <SectionArrays 
+              title="Что мешает реализовываться"
+              values={missionObstacles}
+              setValues={setMissionObstacles}
+              handleStringArrayChange={handleStringArrayChange}
+              handleAddStringToArray={handleAddStringToArray}
+              handleRemoveStringFromArray={handleRemoveStringFromArray}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <Button onClick={handleSave}>Сохранить</Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface SectionArraysProps {
+  title: string;
+  values: string[];
+  setValues: (value: string[]) => void;
+  handleStringArrayChange: (setter: (value: string[]) => void, index: number, value: string, array: string[]) => void;
+  handleAddStringToArray: (setter: (value: string[]) => void, array: string[]) => void;
+  handleRemoveStringFromArray: (setter: (value: string[]) => void, index: number, array: string[]) => void;
+}
+
+const SectionArrays: React.FC<SectionArraysProps> = ({
+  title,
+  values,
+  setValues,
+  handleStringArrayChange,
+  handleAddStringToArray,
+  handleRemoveStringFromArray,
+}) => {
+  return (
+    <div className="space-y-2">
+      <Label>{title}</Label>
+      {values.map((value, index) => (
+        <div key={index} className="flex items-center space-x-2">
+          <Input
+            type="text"
+            value={value}
+            onChange={(e) => handleStringArrayChange(setValues, index, e.target.value, values)}
+            className="flex-grow"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            onClick={() => handleRemoveStringFromArray(setValues, index, values)}
+          >
+            Удалить
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={() => handleAddStringToArray(setValues, values)}
+      >
+        Добавить {title}
+      </Button>
     </div>
   );
 };
