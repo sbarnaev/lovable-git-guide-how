@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArchetypeDescription } from '@/types/numerology';
 import { BasicCalculationResults } from '@/types';
@@ -22,7 +23,18 @@ export const PartnershipAtlas: React.FC<PartnershipAtlasProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   if (!profile || !profile.fullCodes || archetypes.length === 0) {
-    return null;
+    return (
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-lg">Атлас профиля: {name.split(' ')[0] || 'Клиент'}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center py-4 text-muted-foreground">
+            Данные для атласа отсутствуют
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   const { fullCodes } = profile;

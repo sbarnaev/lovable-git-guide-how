@@ -26,8 +26,20 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
   const client = getShortName(clientName);
   const partner = getShortName(partnerName);
 
-  if (!clientProfile.fullCodes || !partnerProfile.fullCodes) {
-    return null;
+  // Check if both profiles have fullCodes before proceeding
+  if (!clientProfile?.fullCodes || !partnerProfile?.fullCodes) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Сравнение профилей</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 text-muted-foreground">
+            Данные о кодах профилей отсутствуют
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   const clientCodes = clientProfile.fullCodes;

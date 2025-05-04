@@ -35,38 +35,39 @@ const PartnershipCalculationForm = () => {
     const generatorCode = getRandomDigit();
     const missionCode = getRandomDigit();
     
-    const archetypeDescriptions: Record<string, ArchetypeDescription> = {
-      personality: {
+    // Create archetype descriptions as an array directly
+    const archetypeDescriptions: ArchetypeDescription[] = [
+      {
         code: 'personality' as NumerologyCodeType,
         title: `Код личности ${personalityCode}`,
         description: `Описание кода личности ${personalityCode} для ${fullName}`,
         value: personalityCode
       },
-      connector: {
+      {
         code: 'connector' as NumerologyCodeType,
         title: `Код коннектора ${connectorCode}`,
         description: `Описание кода коннектора ${connectorCode} для ${fullName}`,
         value: connectorCode
       },
-      realization: {
+      {
         code: 'realization' as NumerologyCodeType,
         title: `Код реализации ${realizationCode}`,
         description: `Описание кода реализации ${realizationCode} для ${fullName}`,
         value: realizationCode
       },
-      generator: {
+      {
         code: 'generator' as NumerologyCodeType,
         title: `Код генератора ${generatorCode}`,
         description: `Описание кода генератора ${generatorCode} для ${fullName}`,
         value: generatorCode
       },
-      mission: {
+      {
         code: 'mission' as NumerologyCodeType,
         title: `Код миссии ${missionCode}`,
         description: `Описание кода миссии ${missionCode} для ${fullName}`,
         value: missionCode
       }
-    };
+    ];
     
     return {
       numerology: {
