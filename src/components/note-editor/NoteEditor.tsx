@@ -35,6 +35,8 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           // Безопасно обновляем содержимое редактора
           if (editorRef.current) {
             editorRef.current.innerHTML = note.content;
+            // Ensure proper text direction
+            ensureProperTextDirection();
           }
           
           // Извлекаем блоки из содержимого, если они есть
@@ -52,6 +54,23 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       fetchNote();
     }
   }, [calculationId, getNote]);
+
+  // Ensure text direction is properly set
+  const ensureProperTextDirection = () => {
+    if (editorRef.current) {
+      // Force RTL direction off
+      editorRef.current.setAttribute('dir', 'ltr');
+      editorRef.current.style.direction = 'ltr';
+      editorRef.current.style.textAlign = 'left';
+      
+      // Apply to all child elements as well
+      const allElements = editorRef.current.querySelectorAll('*');
+      allElements.forEach(el => {
+        (el as HTMLElement).style.direction = 'ltr';
+        (el as HTMLElement).style.textAlign = 'left';
+      });
+    }
+  };
 
   const extractBlocksFromContent = (htmlContent: string) => {
     // Поиск всех блоков по data-block-id
@@ -120,6 +139,9 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       setContent(editorRef.current.innerHTML);
       extractBlocksFromContent(editorRef.current.innerHTML);
       debouncedAutoSave();
+      
+      // Ensure proper text direction whenever content changes
+      ensureProperTextDirection();
     }
   };
 
@@ -193,6 +215,13 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   };
 
+  // Initialize the editor when first mounted
+  useEffect(() => {
+    if (editorRef.current) {
+      ensureProperTextDirection();
+    }
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -229,6 +258,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           dangerouslySetInnerHTML={{ __html: content }}
           spellCheck={true}
           dir="ltr"
+          style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'normal' }}
         />
         
         <div className="flex justify-end">
