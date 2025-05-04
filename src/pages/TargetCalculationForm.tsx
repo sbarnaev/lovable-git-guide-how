@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,7 @@ const TargetCalculationForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Mock calculation result - this will be shown initially
-      // and then updated with AI-generated content
+      // Initial calculation result structure
       const results = {
         analysis: {
           mainFactors: ["Фактор карьеры", "Фактор личных отношений", "Фактор самореализации"],
@@ -65,32 +65,31 @@ const TargetCalculationForm = () => {
       // Save the calculation to get an ID
       const newCalculation = await addCalculation(calculationData);
       
-      // Now we have a calculation ID, we can generate and store AI content
-      // Add value property to satisfy ArchetypeDescription interface
+      // Prepare for AI content generation
       const targetArchetypes = [{ 
         code: 'target' as NumerologyCodeType, 
         title: "Целевой расчет",
         description: `Запрос клиента: ${targetQuery}`,
-        value: 0 // Adding the required value property
+        value: 0
       }];
       
-      // Generate content for different sections in parallel
+      // Start background generation of content
+      // We'll use Promise.all but not await it, so it continues in the background
       const generatePromises = [
-        // Generate and save analysis content
         generateDeepSeekContent('summary', targetArchetypes)
-          .then(response => saveGeneratedContent(newCalculation.id, 'summary', response.content)),
+          .then(response => saveGeneratedContent(newCalculation.id, 'summary', response.content))
+          .catch(error => console.error("Error generating summary content:", error)),
         
-        // Generate and save recommendations
         generateDeepSeekContent('practices', targetArchetypes)
-          .then(response => saveGeneratedContent(newCalculation.id, 'practices', response.content)),
+          .then(response => saveGeneratedContent(newCalculation.id, 'practices', response.content))
+          .catch(error => console.error("Error generating practices content:", error)),
           
-        // Generate and save potential problems
         generateDeepSeekContent('potential-problems', targetArchetypes)
           .then(response => saveGeneratedContent(newCalculation.id, 'potential-problems', response.content))
+          .catch(error => console.error("Error generating potential-problems content:", error))
       ];
       
-      // Start the content generation in background
-      // We won't await this - it will continue generating even after navigation
+      // Start the generation process in the background
       Promise.all(generatePromises)
         .then(() => {
           console.log("AI content generated and saved for calculation:", newCalculation.id);

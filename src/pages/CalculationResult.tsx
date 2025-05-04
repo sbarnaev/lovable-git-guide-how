@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ const CalculationResult = () => {
   const [error, setError] = useState<string | null>(null);
   const [archetypes, setArchetypes] = useState<ArchetypeDescription[]>([]);
   
-  // Fetch calculation data only once on component mount
+  // Fetch calculation data only once on component mount or when id changes
   useEffect(() => {
     const fetchCalculation = async () => {
       if (!id) {
@@ -89,15 +90,16 @@ const CalculationResult = () => {
     return undefined;
   }, [calculation, isBasicCalculation]);
 
-  const renderPartnershipResults = () => {
+  // Memoize the content of these functions to prevent unnecessary re-renders
+  const renderPartnershipResults = useMemo(() => {
     return (
       <div className="text-center p-4">
         <div className="text-muted-foreground">Расчет партнерства в разработке.</div>
       </div>
     );
-  };
+  }, []);
 
-  const renderTargetResults = () => {
+  const renderTargetResults = useMemo(() => {
     if (!id || !calculation) return null;
     
     const targetCalc = calculation as (TargetCalculation & { id: string; createdAt: string });
@@ -128,12 +130,14 @@ const CalculationResult = () => {
         </Card>
         
         {/* AI Summary */}
-        <AIContentSection 
-          title="Саммари" 
-          type="summary"
-          archetypes={archetypes}
-          calculationId={id}
-        />
+        {archetypes.length > 0 && (
+          <AIContentSection 
+            title="Саммари" 
+            type="summary"
+            archetypes={archetypes}
+            calculationId={id}
+          />
+        )}
         
         {/* Target Analysis */}
         <Card className="overflow-hidden">
@@ -169,20 +173,24 @@ const CalculationResult = () => {
         </Card>
         
         {/* Recommendations */}
-        <AIContentSection 
-          title="Детальные рекомендации" 
-          type="practices"
-          archetypes={archetypes}
-          calculationId={id}
-        />
+        {archetypes.length > 0 && (
+          <AIContentSection 
+            title="Детальные рекомендации" 
+            type="practices"
+            archetypes={archetypes}
+            calculationId={id}
+          />
+        )}
         
         {/* Potential Problems */}
-        <AIContentSection 
-          title="Потенциальные проблемы и решения" 
-          type="potential-problems"
-          archetypes={archetypes}
-          calculationId={id}
-        />
+        {archetypes.length > 0 && (
+          <AIContentSection 
+            title="Потенциальные проблемы и решения" 
+            type="potential-problems"
+            archetypes={archetypes}
+            calculationId={id}
+          />
+        )}
         
         {/* Notes */}
         {id && (
@@ -192,9 +200,9 @@ const CalculationResult = () => {
         )}
       </div>
     );
-  };
+  }, [id, calculation, archetypes]);
 
-  const renderBasicResults = () => {
+  const renderBasicResults = useMemo(() => {
     // Only render if we have both calculation and ID
     if (!typedCalculation || !id) {
       return null;
@@ -237,7 +245,7 @@ const CalculationResult = () => {
         )}
       </div>
     );
-  };
+  }, [typedCalculation, id, archetypes]);
 
   if (loading) {
     return (
@@ -281,11 +289,11 @@ const CalculationResult = () => {
       </div>
       
       {calculation.type === 'basic' ? (
-        renderBasicResults()
+        renderBasicResults
       ) : calculation.type === 'partnership' ? (
-        renderPartnershipResults()
+        renderPartnershipResults
       ) : calculation.type === 'target' ? (
-        renderTargetResults()
+        renderTargetResults
       ) : (
         <div>Неподдерживаемый тип расчета</div>
       )}

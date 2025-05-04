@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   generateDeepSeekContent, 
@@ -27,7 +27,10 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [initialized, setInitialized] = useState<boolean>(false);
 
-  const fetchContent = async () => {
+  // Memoize the fetchContent function to prevent unnecessary re-renders
+  const fetchContent = useCallback(async () => {
+    if (!calculationId || archetypes.length === 0) return;
+    
     setLoading(true);
     setError(null);
     
@@ -57,25 +60,27 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
       setIsGenerating(false);
       setInitialized(true);
     }
-  };
+  }, [calculationId, archetypes, type]);
 
+  // Use effect with proper dependencies to prevent infinite loops
   useEffect(() => {
     if (calculationId && archetypes.length > 0 && !initialized) {
       fetchContent();
     }
-  }, [calculationId, archetypes.length, type, initialized]);
+  }, [fetchContent, initialized]);
 
-  const formatContent = (text: string) => {
-    if (!text) return [];
+  // Pre-process content once instead of on every render
+  const formattedContent = (() => {
+    if (!content) return [];
     
     // Remove markdown markers like ** and ## that we don't want
-    text = text.replace(/\*\*/g, '');
+    let processedText = content.replace(/\*\*/g, '');
     
     // Handle headings more effectively
-    text = text.replace(/^#{1,6}\s+(.+)$/gm, '<h3>$1</h3>');
+    processedText = processedText.replace(/^#{1,6}\s+(.+)$/gm, '<h3>$1</h3>');
     
     // Split the text by line breaks and map each line
-    return text.split('\n').map((line, index) => {
+    return processedText.split('\n').map((line, index) => {
       line = line.trim();
       
       // Skip empty lines
@@ -128,7 +133,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         </p>
       );
     });
-  };
+  })();
 
   const handleRefresh = () => {
     setContent('');
@@ -169,7 +174,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
           <div className="text-destructive">{error}</div>
         ) : (
           <div className="text-sm prose prose-slate max-w-none">
-            {formatContent(content)}
+            {formattedContent}
           </div>
         )}
       </CardContent>

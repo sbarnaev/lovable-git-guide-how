@@ -349,7 +349,7 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
       missionObstacles: data.mission_obstacles || undefined,
       mainTransformation: data.main_transformation || undefined,
       
-      // Для обратной совместимости
+      // Для обратной совм��стимости
       strengths: data.strengths || undefined,
       challenges: data.challenges || undefined,
     };
@@ -440,6 +440,17 @@ export async function getValuesForCodeType(codeType: NumerologyCodeType): Promis
     return [];
   }
 }
+
+// If this file doesn't contain the codeTypeTranslations object, we'll need to add it or update it in the component that uses it
+export const codeTypeTranslations: Record<NumerologyCodeType, string> = {
+  personality: 'Код личности',
+  connector: 'Код коннектора',
+  realization: 'Код реализации',
+  generator: 'Код генератора',
+  mission: 'Код миссии',
+  target: 'Целевой расчет',
+  all: 'Все коды'
+};
 
 // Инициализируем загрузкой архетипов из базы данных
 loadArchetypesFromDb().then(success => {
