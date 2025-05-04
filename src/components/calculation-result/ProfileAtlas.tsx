@@ -20,20 +20,25 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
   
   const { fullCodes } = calculation.results;
   
-  // Find archetypes by code and value
-  const personalityArchetype = archetypes.find(a => a.code === 'personality' && a.value === fullCodes.personalityCode);
-  const connectorArchetype = archetypes.find(a => a.code === 'connector' && a.value === fullCodes.connectorCode);
-  const realizationArchetype = archetypes.find(a => a.code === 'realization' && a.value === fullCodes.realizationCode);
-  const generatorArchetype = archetypes.find(a => a.code === 'generator' && a.value === fullCodes.generatorCode);
-  const missionArchetype = archetypes.find(a => a.code === 'mission' && a.value === fullCodes.missionCode);
-
-  // Get the appropriate image URLs based on gender selection
-  const getImageUrl = (archetype: ArchetypeDescription | undefined) => {
-    if (!archetype) return '/placeholder.svg';
+  // Find image URL by archetype value and gender
+  const getImageUrl = (value: number) => {
+    // Find any archetype with this value that has the appropriate image URL
+    const archsWithValue = archetypes.filter(a => a.value === value);
     
-    return selectedGender === 'male' 
-      ? (archetype.maleImageUrl || '/placeholder.svg')
-      : (archetype.femaleImageUrl || '/placeholder.svg');
+    if (archsWithValue.length === 0) return '/placeholder.svg';
+    
+    // Find an archetype with the requested gender image
+    const archWithImage = archsWithValue.find(
+      a => selectedGender === 'male' ? a.maleImageUrl : a.femaleImageUrl
+    );
+    
+    if (archWithImage) {
+      return selectedGender === 'male' 
+        ? (archWithImage.maleImageUrl || '/placeholder.svg')
+        : (archWithImage.femaleImageUrl || '/placeholder.svg');
+    }
+    
+    return '/placeholder.svg';
   };
 
   return (
@@ -64,11 +69,11 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
       <CardContent className="p-6">
         {/* Main personality archetype */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-40 h-40 relative mb-2">
+          <div className="w-40 h-60 relative mb-2">
             <img 
-              src={getImageUrl(personalityArchetype)} 
-              alt={personalityArchetype?.title || "Архетип личности"} 
-              className="w-full h-full object-cover rounded-full border-4 border-numerica"
+              src={getImageUrl(fullCodes.personalityCode)} 
+              alt={`Архетип личности ${fullCodes.personalityCode}`} 
+              className="w-full h-full object-contain rounded-md border-4 border-numerica"
             />
           </div>
           <div className="text-center">
@@ -81,11 +86,11 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
         <div className="grid grid-cols-4 gap-4">
           {/* Connector */}
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 relative mb-2">
+            <div className="w-24 h-36 relative mb-2">
               <img 
-                src={getImageUrl(connectorArchetype)} 
-                alt={connectorArchetype?.title || "Архетип коннектора"} 
-                className="w-full h-full object-cover rounded-full border-2 border-numerica"
+                src={getImageUrl(fullCodes.connectorCode)} 
+                alt={`Архетип коннектора ${fullCodes.connectorCode}`}
+                className="w-full h-full object-contain rounded-md border-2 border-numerica"
               />
             </div>
             <div className="text-center">
@@ -96,11 +101,11 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
           
           {/* Realization */}
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 relative mb-2">
+            <div className="w-24 h-36 relative mb-2">
               <img 
-                src={getImageUrl(realizationArchetype)} 
-                alt={realizationArchetype?.title || "Архетип реализации"} 
-                className="w-full h-full object-cover rounded-full border-2 border-numerica"
+                src={getImageUrl(fullCodes.realizationCode)} 
+                alt={`Архетип реализации ${fullCodes.realizationCode}`}
+                className="w-full h-full object-contain rounded-md border-2 border-numerica"
               />
             </div>
             <div className="text-center">
@@ -111,11 +116,11 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
           
           {/* Generator */}
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 relative mb-2">
+            <div className="w-24 h-36 relative mb-2">
               <img 
-                src={getImageUrl(generatorArchetype)} 
-                alt={generatorArchetype?.title || "Архетип генератора"} 
-                className="w-full h-full object-cover rounded-full border-2 border-numerica"
+                src={getImageUrl(fullCodes.generatorCode)} 
+                alt={`Архетип генератора ${fullCodes.generatorCode}`}
+                className="w-full h-full object-contain rounded-md border-2 border-numerica"
               />
             </div>
             <div className="text-center">
@@ -126,11 +131,11 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
           
           {/* Mission (with opacity) */}
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 relative mb-2">
+            <div className="w-24 h-36 relative mb-2">
               <img 
-                src={getImageUrl(missionArchetype)} 
-                alt={missionArchetype?.title || "Архетип миссии"} 
-                className="w-full h-full object-cover rounded-full border-2 border-numerica opacity-70"
+                src={getImageUrl(fullCodes.missionCode)} 
+                alt={`Архетип миссии ${fullCodes.missionCode}`}
+                className="w-full h-full object-contain rounded-md border-2 border-numerica opacity-70"
               />
             </div>
             <div className="text-center">

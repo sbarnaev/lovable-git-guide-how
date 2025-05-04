@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Image, Upload, Trash2, UserRound, Users } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import { NumerologyCodeType, ArchetypeDescription } from "@/types/numerology";
-import { addArchetypeDescription, getAllArchetypeDescriptions } from "@/utils/archetypeDescriptions";
+import { ArchetypeDescription } from "@/types/numerology";
+import { addArchetypeDescription } from "@/utils/archetypeDescriptions";
 
 interface ArchetypeImagesUploaderProps {
   archetypes: ArchetypeDescription[];
@@ -16,41 +16,38 @@ interface ArchetypeImagesUploaderProps {
 }
 
 export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImagesUploaderProps) => {
-  const [selectedCode, setSelectedCode] = useState<NumerologyCodeType>("personality");
   const [selectedValue, setSelectedValue] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   
   const maleImageInputRef = useRef<HTMLInputElement>(null);
   const femaleImageInputRef = useRef<HTMLInputElement>(null);
   
-  // Find the selected archetype
-  const selectedArchetype = archetypes.find(
-    a => a.code === selectedCode && a.value === selectedValue
-  );
-
-  const handleCodeChange = (code: NumerologyCodeType) => {
-    setSelectedCode(code);
-    // Reset value to 1 when changing code
-    setSelectedValue(1);
+  // Get all archetypes with the selected value
+  const selectedArchetypes = archetypes.filter(a => a.value === selectedValue);
+  
+  // For display, we'll use the personality archetype if available
+  const displayArchetype = selectedArchetypes.find(a => a.code === "personality") || selectedArchetypes[0];
+  
+  // Get the image URLs from any archetype with this value
+  const getMaleImageUrl = () => {
+    const archWithImage = selectedArchetypes.find(a => a.maleImageUrl);
+    return archWithImage?.maleImageUrl || "";
+  };
+  
+  const getFemaleImageUrl = () => {
+    const archWithImage = selectedArchetypes.find(a => a.femaleImageUrl);
+    return archWithImage?.femaleImageUrl || "";
   };
   
   const handleValueChange = (value: number) => {
     setSelectedValue(value);
   };
   
-  const codeOptions: { value: NumerologyCodeType; label: string }[] = [
-    { value: "personality", label: "Код личности" },
-    { value: "connector", label: "Код коннектора" },
-    { value: "realization", label: "Код реализации" },
-    { value: "generator", label: "Код генератора" },
-    { value: "mission", label: "Код миссии" }
-  ];
-  
   const valueOptions = Array.from({ length: 9 }, (_, i) => i + 1);
   
   const handleImageUpload = (gender: 'male' | 'female') => async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || !files[0] || !selectedArchetype) return;
+    if (!files || !files[0]) return;
     
     setLoading(true);
     
@@ -58,20 +55,23 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
       const file = files[0];
       const imageUrl = URL.createObjectURL(file);
       
-      // Create a copy of the selected archetype with the updated image URL
-      const updatedArchetype = { 
-        ...selectedArchetype,
-        ...(gender === 'male' ? { maleImageUrl: imageUrl } : { femaleImageUrl: imageUrl })
-      };
+      // Update image URL for all archetypes with this value
+      const updatePromises = selectedArchetypes.map(archetype => {
+        const updatedArchetype = { 
+          ...archetype,
+          ...(gender === 'male' ? { maleImageUrl: imageUrl } : { femaleImageUrl: imageUrl })
+        };
+        
+        return addArchetypeDescription(updatedArchetype);
+      });
       
-      // Save the updated archetype to the database
-      const success = await addArchetypeDescription(updatedArchetype);
+      const results = await Promise.all(updatePromises);
       
-      if (success) {
-        toast.success(`Фотография ${gender === 'male' ? 'мужского' : 'женского'} архетипа ${selectedCode}-${selectedValue} обновлена`);
+      if (results.every(Boolean)) {
+        toast.success(`Фотография ${gender === 'male' ? 'мужского' : 'женского'} архетипа ${selectedValue} обновлена`);
         onUpload(); // Refresh the parent component
       } else {
-        toast.error("Ошибка при сохранении архетипа");
+        toast.error("Ошибка при сохранении некоторых архетипов");
       }
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -82,25 +82,28 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
   };
   
   const handleDeleteImage = async (gender: 'male' | 'female') => {
-    if (!selectedArchetype) return;
+    if (selectedArchetypes.length === 0) return;
     
     setLoading(true);
     
     try {
-      // Create a copy of the selected archetype with the image URL set to undefined
-      const updatedArchetype = { 
-        ...selectedArchetype,
-        ...(gender === 'male' ? { maleImageUrl: undefined } : { femaleImageUrl: undefined })
-      };
+      // Remove image URL from all archetypes with this value
+      const updatePromises = selectedArchetypes.map(archetype => {
+        const updatedArchetype = { 
+          ...archetype,
+          ...(gender === 'male' ? { maleImageUrl: undefined } : { femaleImageUrl: undefined })
+        };
+        
+        return addArchetypeDescription(updatedArchetype);
+      });
       
-      // Save the updated archetype to the database
-      const success = await addArchetypeDescription(updatedArchetype);
+      const results = await Promise.all(updatePromises);
       
-      if (success) {
-        toast.success(`Фотография ${gender === 'male' ? 'мужского' : 'женского'} архетипа ${selectedCode}-${selectedValue} удалена`);
+      if (results.every(Boolean)) {
+        toast.success(`Фотография ${gender === 'male' ? 'мужского' : 'женского'} архетипа ${selectedValue} удалена`);
         onUpload(); // Refresh the parent component
       } else {
-        toast.error("Ошибка при удалении фотографии");
+        toast.error("Ошибка при удалении фотографий некоторых архетипов");
       }
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -117,36 +120,18 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-1/2">
-              <Label>Выберите тип кода</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
-                {codeOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={selectedCode === option.value ? "default" : "outline"}
-                    onClick={() => handleCodeChange(option.value)}
-                    className="w-full"
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="w-full md:w-1/2">
-              <Label>Выберите значение кода</Label>
-              <div className="grid grid-cols-3 md:grid-cols-3 gap-2 mt-2">
-                {valueOptions.map((value) => (
-                  <Button
-                    key={value}
-                    variant={selectedValue === value ? "default" : "outline"}
-                    onClick={() => handleValueChange(value)}
-                  >
-                    {value}
-                  </Button>
-                ))}
-              </div>
+          <div>
+            <Label>Выберите архетип (1-9)</Label>
+            <div className="grid grid-cols-3 md:grid-cols-9 gap-2 mt-2">
+              {valueOptions.map((value) => (
+                <Button
+                  key={value}
+                  variant={selectedValue === value ? "default" : "outline"}
+                  onClick={() => handleValueChange(value)}
+                >
+                  {value}
+                </Button>
+              ))}
             </div>
           </div>
           
@@ -154,10 +139,10 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
             <div className="flex items-center mb-4">
               <div className="flex-1">
                 <h3 className="text-lg font-medium">
-                  {selectedArchetype ? selectedArchetype.title : `Архетип ${selectedCode}-${selectedValue}`}
+                  {displayArchetype ? `Архетип ${selectedValue}` : `Архетип ${selectedValue}`}
                 </h3>
-                {selectedArchetype?.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{selectedArchetype.description}</p>
+                {displayArchetype?.description && (
+                  <p className="text-sm text-muted-foreground mt-1">{displayArchetype.description}</p>
                 )}
               </div>
             </div>
@@ -176,12 +161,12 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
               
               <TabsContent value="male">
                 <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="relative h-48 w-48 rounded-lg overflow-hidden border">
-                    {selectedArchetype?.maleImageUrl ? (
+                  <div className="relative h-64 w-48 rounded-lg overflow-hidden border">
+                    {getMaleImageUrl() ? (
                       <img 
-                        src={selectedArchetype.maleImageUrl} 
-                        alt={`Мужской архетип ${selectedCode}-${selectedValue}`} 
-                        className="h-full w-full object-cover"
+                        src={getMaleImageUrl()} 
+                        alt={`Мужской архетип ${selectedValue}`} 
+                        className="h-full w-full object-contain"
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center bg-muted">
@@ -210,7 +195,7 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
                       />
                     </div>
                     
-                    {selectedArchetype?.maleImageUrl && (
+                    {getMaleImageUrl() && (
                       <Button 
                         variant="destructive"
                         onClick={() => handleDeleteImage('male')}
@@ -227,12 +212,12 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
               
               <TabsContent value="female">
                 <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="relative h-48 w-48 rounded-lg overflow-hidden border">
-                    {selectedArchetype?.femaleImageUrl ? (
+                  <div className="relative h-64 w-48 rounded-lg overflow-hidden border">
+                    {getFemaleImageUrl() ? (
                       <img 
-                        src={selectedArchetype.femaleImageUrl} 
-                        alt={`Женский архетип ${selectedCode}-${selectedValue}`} 
-                        className="h-full w-full object-cover"
+                        src={getFemaleImageUrl()} 
+                        alt={`Женский архетип ${selectedValue}`} 
+                        className="h-full w-full object-contain"
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center bg-muted">
@@ -261,7 +246,7 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
                       />
                     </div>
                     
-                    {selectedArchetype?.femaleImageUrl && (
+                    {getFemaleImageUrl() && (
                       <Button 
                         variant="destructive"
                         onClick={() => handleDeleteImage('female')}
