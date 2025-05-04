@@ -9,6 +9,7 @@ import { PartnershipAtlas } from './PartnershipAtlas';
 import { PartnershipCompatibility } from './PartnershipCompatibility';
 import { ArchetypeDescription } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
+import { ProfileCodes } from './ProfileCodes';
 
 interface PartnershipViewProps {
   calculation: (PartnershipCalculation & { id: string; createdAt: string });
@@ -24,8 +25,8 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   // Combine archetypes for AI analysis
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
   
-  // Проверяем наличие самого объекта результатов расчета
-  if (!calculation.results) {
+  // Check that we have calculation results
+  if (!calculation || !calculation.results) {
     return (
       <div className="space-y-6">
         <Card>
@@ -42,18 +43,120 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     );
   }
   
+  // Extract client and partner profiles for clarity
+  const { clientProfile, partnerProfile } = calculation.results;
+  
+  // Ensure both profiles have data
+  if (!clientProfile || !partnerProfile) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Результаты расчета</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4 text-muted-foreground">
+              Данные профилей отсутствуют
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
       {/* Client Information */}
       <PartnershipClientInfo calculation={calculation} />
       
-      {/* Profile Comparison */}
+      {/* Comparison Profile Codes */}
       <PartnershipProfileCodes 
-        clientProfile={calculation.results.clientProfile}
-        partnerProfile={calculation.results.partnerProfile}
+        clientProfile={clientProfile}
+        partnerProfile={partnerProfile}
         clientName={calculation.clientName}
         partnerName={calculation.partnerName}
       />
+      
+      {/* Individual Profile Codes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* First person profile */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Профиль: {calculation.clientName.split(' ')[0]}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {clientProfile && clientProfile.fullCodes ? (
+              <div className="space-y-1">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.personalityCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Личности</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.connectorCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Коннектора</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.realizationCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Реализации</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.generatorCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Генератора</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.missionCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Миссии</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                Данные кодов отсутствуют
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Second person profile */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Профиль: {calculation.partnerName.split(' ')[0]}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {partnerProfile && partnerProfile.fullCodes ? (
+              <div className="space-y-1">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.personalityCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Личности</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.connectorCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Коннектора</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.realizationCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Реализации</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.generatorCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Генератора</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.missionCode}</div>
+                    <div className="text-sm text-muted-foreground">Код Миссии</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                Данные кодов отсутствуют
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
       
       {/* Compatibility Section */}
       <PartnershipCompatibility calculation={calculation} />
@@ -63,12 +166,12 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         <PartnershipAtlas 
           name={calculation.clientName}
           archetypes={clientArchetypes}
-          profile={calculation.results.clientProfile}
+          profile={clientProfile}
         />
         <PartnershipAtlas 
           name={calculation.partnerName}
           archetypes={partnerArchetypes}
-          profile={calculation.results.partnerProfile}
+          profile={partnerProfile}
         />
       </div>
       
@@ -114,3 +217,4 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     </div>
   );
 };
+

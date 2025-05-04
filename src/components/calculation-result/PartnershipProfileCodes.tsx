@@ -26,9 +26,9 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
   const client = getShortName(clientName);
   const partner = getShortName(partnerName);
 
-  // Проверяем наличие fullCodes в обоих профилях
-  const clientCodes = clientProfile && clientProfile.fullCodes;
-  const partnerCodes = partnerProfile && partnerProfile.fullCodes;
+  // Check if both profiles have fullCodes
+  const clientCodes = clientProfile?.fullCodes;
+  const partnerCodes = partnerProfile?.fullCodes;
   
   if (!clientCodes || !partnerCodes) {
     return (
@@ -38,7 +38,11 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
         </CardHeader>
         <CardContent>
           <div className="text-center py-4 text-muted-foreground">
-            Данные о кодах профилей отсутствуют
+            {!clientCodes && !partnerCodes 
+              ? "Данные о кодах профилей отсутствуют"
+              : !clientCodes 
+                ? `Данные о кодах профиля ${clientName} отсутствуют` 
+                : `Данные о кодах профиля ${partnerName} отсутствуют`}
           </div>
         </CardContent>
       </Card>
@@ -131,3 +135,4 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
     </Card>
   );
 };
+
