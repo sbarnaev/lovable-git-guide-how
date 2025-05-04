@@ -14,6 +14,7 @@ import { ConsultationSection } from '@/components/calculation-result/Consultatio
 import { TextbookSection } from '@/components/calculation-result/TextbookSection';
 import { PartnershipView } from '@/components/calculation-result/PartnershipView';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { calculateAllCodes } from '@/utils/numerologyCalculator';
 
 // Note: This is a temporary flag to disable notes
 const NOTES_DISABLED = true;
@@ -41,6 +42,8 @@ const CalculationResult = () => {
       setLoading(true);
       try {
         const fetchedCalculation = getCalculation(id);
+        console.log("Fetched calculation:", fetchedCalculation);
+        
         if (fetchedCalculation) {
           setCalculation(fetchedCalculation);
           
@@ -68,6 +71,27 @@ const CalculationResult = () => {
           // For partnership calculation, set both client and partner archetypes
           if (fetchedCalculation.type === 'partnership') {
             const partnershipCalc = fetchedCalculation as (PartnershipCalculation & { id: string; createdAt: string });
+            console.log("Partnership calculation:", partnershipCalc);
+            
+            // Ensure we have the required profile data
+            if (partnershipCalc.results) {
+              // Make sure clientProfile and partnerProfile have fullCodes
+              if (partnershipCalc.results.clientProfile && !partnershipCalc.results.clientProfile.fullCodes) {
+                // Calculate codes if missing
+                const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
+                if (partnershipCalc.results.clientProfile) {
+                  partnershipCalc.results.clientProfile.fullCodes = clientCodes;
+                }
+              }
+              
+              if (partnershipCalc.results.partnerProfile && !partnershipCalc.results.partnerProfile.fullCodes) {
+                // Calculate codes if missing
+                const partnerCodes = calculateAllCodes(partnershipCalc.partnerBirthDate);
+                if (partnershipCalc.results.partnerProfile) {
+                  partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
+                }
+              }
+            }
             
             if (partnershipCalc.results.clientArchetypes) {
               setClientArchetypes(partnershipCalc.results.clientArchetypes);

@@ -25,8 +25,29 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   // Combine archetypes for AI analysis
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
   
-  // Check that we have calculation results
-  if (!calculation || !calculation.results) {
+  // Log calculation data for debugging
+  console.log("Partnership calculation data:", calculation);
+  
+  // Check that calculation exists first
+  if (!calculation) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Результаты расчета</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4 text-muted-foreground">
+              Данные расчета отсутствуют
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Ensure we have results
+  if (!calculation.results) {
     return (
       <div className="space-y-6">
         <Card>
@@ -45,24 +66,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   
   // Extract client and partner profiles for clarity
   const { clientProfile, partnerProfile } = calculation.results;
-  
-  // Ensure both profiles have data
-  if (!clientProfile || !partnerProfile) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Результаты расчета</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-4 text-muted-foreground">
-              Данные профилей отсутствуют
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
   
   return (
     <div className="space-y-6">
@@ -217,4 +220,3 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     </div>
   );
 };
-

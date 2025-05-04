@@ -1,5 +1,6 @@
 
 import { BasicCalculationResults } from "@/types";
+import { calculateAllCodes } from "./numerologyCalculator";
 
 interface CompatibilityResult {
   compatibility: {
@@ -16,12 +17,29 @@ interface CompatibilityResult {
 /**
  * Calculate compatibility between two numerology profiles
  */
-export const calculateCompatibility = (profile1: BasicCalculationResults, profile2: BasicCalculationResults): CompatibilityResult => {
+export const calculateCompatibility = (profile1: BasicCalculationResults | undefined, profile2: BasicCalculationResults | undefined): CompatibilityResult => {
+  // Check if profiles exist
+  if (!profile1 || !profile2) {
+    console.error("One or both profiles are undefined in calculateCompatibility");
+    return {
+      compatibility: {
+        overall: 50,
+        emotional: 50,
+        intellectual: 50,
+        physical: 50,
+      },
+      strengths: ["Данные для анализа неполные"],
+      challenges: ["Требуется больше информации для точного анализа"],
+      recommendations: ["Заполните полные данные профилей для точного анализа"]
+    };
+  }
+  
   // Extract codes from both profiles
   const codes1 = profile1.fullCodes;
   const codes2 = profile2.fullCodes;
   
   if (!codes1 || !codes2) {
+    console.error("Missing fullCodes in one or both profiles");
     return {
       compatibility: {
         overall: 50,

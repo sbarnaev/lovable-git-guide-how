@@ -5,8 +5,8 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
 interface PartnershipProfileCodesProps {
-  clientProfile: BasicCalculationResults;
-  partnerProfile: BasicCalculationResults;
+  clientProfile: BasicCalculationResults | undefined;
+  partnerProfile: BasicCalculationResults | undefined;
   clientName: string;
   partnerName: string;
 }
@@ -25,6 +25,26 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
 
   const client = getShortName(clientName);
   const partner = getShortName(partnerName);
+
+  // Check if both profiles exist first
+  if (!clientProfile || !partnerProfile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Сравнение профилей</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-4 text-muted-foreground">
+            {!clientProfile && !partnerProfile 
+              ? "Данные о профилях отсутствуют"
+              : !clientProfile 
+                ? `Данные профиля для ${clientName} отсутствуют` 
+                : `Данные профиля для ${partnerName} отсутствуют`}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Check if both profiles have fullCodes
   const clientCodes = clientProfile?.fullCodes;
@@ -135,4 +155,3 @@ export const PartnershipProfileCodes: React.FC<PartnershipProfileCodesProps> = (
     </Card>
   );
 };
-
