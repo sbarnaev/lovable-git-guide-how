@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { ArchetypeDescription } from '@/types/numerology';
 import { BasicCalculation } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { MaleSign, FemaleSign } from 'lucide-react';
+import { UserRound, Users } from 'lucide-react';
 
 interface ProfileAtlasProps {
   calculation: (BasicCalculation & { id: string; createdAt: string }) | undefined;
@@ -46,7 +47,7 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
             onClick={() => setSelectedGender('male')}
             className="flex items-center gap-2"
           >
-            <MaleSign className="h-4 w-4" />
+            <UserRound className="h-4 w-4" />
             Муж
           </Button>
           <Button 
@@ -55,7 +56,7 @@ export const ProfileAtlas: React.FC<ProfileAtlasProps> = ({ calculation, archety
             onClick={() => setSelectedGender('female')}
             className="flex items-center gap-2"
           >
-            <FemaleSign className="h-4 w-4" />
+            <Users className="h-4 w-4" />
             Жен
           </Button>
         </div>
