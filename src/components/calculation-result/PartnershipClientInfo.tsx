@@ -2,7 +2,7 @@
 import React from 'react';
 import { PartnershipCalculation } from '@/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { formatName } from '@/utils/formatters';
+import { formatName, formatDate } from '@/utils/formatters';
 
 interface PartnershipClientInfoProps {
   calculation: (PartnershipCalculation & { id: string; createdAt: string });
@@ -26,7 +26,7 @@ export const PartnershipClientInfo: React.FC<PartnershipClientInfoProps> = ({ ca
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Дата рождения</p>
-                <p>{new Date(calculation.birthDate).toLocaleDateString('ru-RU')}</p>
+                <p>{formatDate(calculation.birthDate)}</p>
               </div>
             </div>
           </div>
@@ -41,7 +41,7 @@ export const PartnershipClientInfo: React.FC<PartnershipClientInfoProps> = ({ ca
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Дата рождения</p>
-                <p>{new Date(calculation.partnerBirthDate).toLocaleDateString('ru-RU')}</p>
+                <p>{formatDate(calculation.partnerBirthDate)}</p>
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -117,39 +116,45 @@ const CalculationResult = () => {
     return calculation?.type === 'partnership';
   }, [calculation]);
   
-  // Memoize the typed calculation to avoid unnecessary re-renders
-  const typedCalculation = useMemo(() => {
-    if (isBasicCalculation) {
+  // Memoized typed calculations to avoid type errors
+  const basicCalculation = useMemo(() => {
+    if (isBasicCalculation && calculation) {
       return calculation as (BasicCalculation & { id: string; createdAt: string });
     }
-    if (isPartnershipCalculation) {
+    return undefined;
+  }, [calculation, isBasicCalculation]);
+
+  const partnershipCalculation = useMemo(() => {
+    if (isPartnershipCalculation && calculation) {
       return calculation as (PartnershipCalculation & { id: string; createdAt: string });
     }
-    if (isTargetCalculation) {
+    return undefined;
+  }, [calculation, isPartnershipCalculation]);
+
+  const targetCalculation = useMemo(() => {
+    if (isTargetCalculation && calculation) {
       return calculation as (TargetCalculation & { id: string; createdAt: string });
     }
     return undefined;
-  }, [calculation, isBasicCalculation, isPartnershipCalculation, isTargetCalculation]);
-
+  }, [calculation, isTargetCalculation]);
+  
   // Memoize the content of these functions to prevent unnecessary re-renders
   const renderPartnershipResults = useMemo(() => {
-    if (!id || !calculation || calculation.type !== 'partnership') return null;
-    
-    const partnershipCalc = calculation as (PartnershipCalculation & { id: string; createdAt: string });
+    if (!id || !partnershipCalculation) return null;
     
     return (
       <PartnershipView 
-        calculation={partnershipCalc} 
+        calculation={partnershipCalculation} 
         clientArchetypes={clientArchetypes} 
         partnerArchetypes={partnerArchetypes} 
       />
     );
-  }, [id, calculation, clientArchetypes, partnerArchetypes]);
+  }, [id, partnershipCalculation, clientArchetypes, partnerArchetypes]);
 
   const renderTargetResults = useMemo(() => {
-    if (!id || !calculation) return null;
+    if (!id || !targetCalculation) return null;
     
-    const targetCalc = calculation as (TargetCalculation & { id: string; createdAt: string });
+    const targetCalc = targetCalculation as (TargetCalculation & { id: string; createdAt: string });
     
     return (
       <div className="space-y-6">
@@ -253,26 +258,26 @@ const CalculationResult = () => {
         )}
       </div>
     );
-  }, [id, calculation, archetypes]);
+  }, [id, targetCalculation, archetypes]);
 
   const renderBasicResults = useMemo(() => {
     // Only render if we have both calculation and ID
-    if (!typedCalculation || !id) {
+    if (!basicCalculation || !id) {
       return null;
     }
     
     return (
       <div className="space-y-6">
         {/* Client Information */}
-        <ClientInfo calculation={typedCalculation} />
+        <ClientInfo calculation={basicCalculation} />
         
         {/* Profile Codes */}
-        <ProfileCodes calculation={typedCalculation} />
+        <ProfileCodes calculation={basicCalculation} />
         
         {/* Profile Atlas - NEW SECTION */}
         {archetypes.length > 0 && (
           <ProfileAtlas 
-            calculation={typedCalculation}
+            calculation={basicCalculation}
             archetypes={archetypes}
           />
         )}
@@ -296,7 +301,7 @@ const CalculationResult = () => {
         )}
         
         {/* Textbook Section */}
-        <TextbookSection calculation={typedCalculation} archetypes={archetypes} />
+        <TextbookSection calculation={basicCalculation} archetypes={archetypes} />
         
         {/* Notes Section - conditionally disabled */}
         {!NOTES_DISABLED && id && (
@@ -306,7 +311,7 @@ const CalculationResult = () => {
         )}
       </div>
     );
-  }, [typedCalculation, id, archetypes]);
+  }, [basicCalculation, id, archetypes]);
 
   if (loading) {
     return (
@@ -349,11 +354,11 @@ const CalculationResult = () => {
         </h1>
       </div>
       
-      {calculation.type === 'basic' ? (
+      {isBasicCalculation ? (
         renderBasicResults
-      ) : calculation.type === 'partnership' ? (
+      ) : isPartnershipCalculation ? (
         renderPartnershipResults
-      ) : calculation.type === 'target' ? (
+      ) : isTargetCalculation ? (
         renderTargetResults
       ) : (
         <div>Неподдерживаемый тип расчета</div>

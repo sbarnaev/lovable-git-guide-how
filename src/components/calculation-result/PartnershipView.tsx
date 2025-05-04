@@ -90,7 +90,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
             type="chat"
             archetypes={combinedArchetypes}
             calculationId={calculation.id}
-            isChat={true}
           />
         </>
       )}
