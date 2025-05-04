@@ -94,16 +94,16 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         // Process HTML heading tags that we converted earlier
         if (line.match(/<h[1-6]>(.+)<\/h[1-6]>/)) {
           return (
-            <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+            <h3 key={index} className="font-medium text-lg mt-5 mb-2 text-numerica">
               {line.replace(/<h[1-6]>(.+)<\/h[1-6]>/, '$1')}
             </h3>
           );
         }
         
         // Check for section headers (lines that end with a colon)
-        if (line.match(/^.+:$/)) {
+        if (line.match(/^.{3,40}:$/)) {
           return (
-            <h3 key={index} className="font-medium text-lg mt-4 mb-2">
+            <h3 key={index} className="font-medium text-lg mt-5 mb-2 text-numerica">
               {line}
             </h3>
           );
@@ -112,7 +112,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         // Check for bullet points
         if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
           return (
-            <li key={index} className="ml-5 mb-2">
+            <li key={index} className="ml-5 mb-2 pl-1">
               {line.substring(1).trim()}
             </li>
           );
@@ -122,9 +122,10 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
         const numberedMatch = line.match(/^(\d+)[\.\)]\s+(.+)$/);
         if (numberedMatch) {
           return (
-            <li key={index} className="ml-5 mb-2 list-decimal">
-              {numberedMatch[2]}
-            </li>
+            <div key={index} className="flex mb-2">
+              <span className="font-medium mr-2">{numberedMatch[1]}.</span>
+              <span>{numberedMatch[2]}</span>
+            </div>
           );
         }
         
@@ -152,7 +153,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
 
   return (
     <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between bg-card border-b">
         <CardTitle className="text-lg">{title}</CardTitle>
         <Button 
           variant="ghost" 
@@ -165,7 +166,7 @@ export const AIContentSection = ({ title, type, archetypes, calculationId }: AIC
           <span className="sr-only">Обновить</span>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         {loading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />

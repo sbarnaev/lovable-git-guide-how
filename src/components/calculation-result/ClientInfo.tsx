@@ -35,7 +35,7 @@ export const ClientInfo: React.FC<ClientInfoProps> = ({ calculation }) => {
           <div className="flex flex-col">
             <div className="flex items-center mb-1">
               <User className="mr-2 h-4 w-4 text-muted-foreground" />
-              <span>{firstMiddleNames}</span>
+              <span className="font-medium">{firstMiddleNames}</span>
             </div>
             {lastName && (
               <div className="ml-6 text-muted-foreground">
