@@ -23,6 +23,28 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const saveTimeoutRef = useRef<number | null>(null);
   
+  // Function to force correct text direction
+  const ensureProperTextDirection = useCallback(() => {
+    if (!editorRef.current) return;
+    
+    // Apply to the editor container
+    editorRef.current.setAttribute('dir', 'ltr');
+    editorRef.current.style.direction = 'ltr';
+    editorRef.current.style.textAlign = 'left';
+    editorRef.current.style.unicodeBidi = 'normal';
+    
+    // Force LTR on all elements within the editor
+    const allElements = editorRef.current.querySelectorAll('*');
+    allElements.forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.setAttribute('dir', 'ltr');
+        el.style.direction = 'ltr';
+        el.style.textAlign = 'left';
+        el.style.unicodeBidi = 'normal';
+      }
+    });
+  }, []);
+  
   useEffect(() => {
     const fetchNote = async () => {
       setLoading(true);
@@ -32,15 +54,14 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           setContent(note.content);
           setNoteId(note.id);
           
-          // Безопасно обновляем содержимое редактора
-          if (editorRef.current) {
-            editorRef.current.innerHTML = note.content;
-            // Ensure proper text direction
-            ensureProperTextDirection();
-          }
-          
-          // Извлекаем блоки из содержимого, если они есть
-          extractBlocksFromContent(note.content);
+          // Update editor content safely and ensure proper direction
+          setTimeout(() => {
+            if (editorRef.current) {
+              editorRef.current.innerHTML = note.content;
+              ensureProperTextDirection();
+              extractBlocksFromContent(note.content);
+            }
+          }, 0);
         }
       } catch (error) {
         console.error('Error fetching note:', error);
@@ -53,24 +74,26 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     if (calculationId) {
       fetchNote();
     }
-  }, [calculationId, getNote]);
-
-  // Ensure text direction is properly set
-  const ensureProperTextDirection = () => {
+    
+    // Initialize editor with proper direction
+    ensureProperTextDirection();
+    
+    // Add MutationObserver to enforce text direction on any DOM changes
     if (editorRef.current) {
-      // Force RTL direction off
-      editorRef.current.setAttribute('dir', 'ltr');
-      editorRef.current.style.direction = 'ltr';
-      editorRef.current.style.textAlign = 'left';
-      
-      // Apply to all child elements as well
-      const allElements = editorRef.current.querySelectorAll('*');
-      allElements.forEach(el => {
-        (el as HTMLElement).style.direction = 'ltr';
-        (el as HTMLElement).style.textAlign = 'left';
+      const observer = new MutationObserver(() => {
+        ensureProperTextDirection();
       });
+      
+      observer.observe(editorRef.current, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true,
+        characterData: true 
+      });
+      
+      return () => observer.disconnect();
     }
-  };
+  }, [calculationId, getNote, ensureProperTextDirection]);
 
   const extractBlocksFromContent = (htmlContent: string) => {
     // Поиск всех блоков по data-block-id
@@ -97,7 +120,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const autoSaveContent = useCallback(async () => {
     if (!editorRef.current) return;
     
-    let htmlContent = editorRef.current.innerHTML;
+    const htmlContent = editorRef.current.innerHTML;
     
     setLoading(true);
     try {
@@ -123,31 +146,40 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   }, [calculationId, noteId, saveNote, updateNote]);
 
-  // Debounced auto-save
-  const debouncedAutoSave = useCallback(() => {
-    if (saveTimeoutRef.current) {
-      window.clearTimeout(saveTimeoutRef.current);
-    }
-    
-    saveTimeoutRef.current = window.setTimeout(() => {
-      autoSaveContent();
-    }, 1500);
-  }, [autoSaveContent]);
-
+  // Immediate auto-save - no debounce
   const updateContentFromEditor = () => {
     if (editorRef.current) {
       setContent(editorRef.current.innerHTML);
       extractBlocksFromContent(editorRef.current.innerHTML);
-      debouncedAutoSave();
       
-      // Ensure proper text direction whenever content changes
+      // Clear any pending timeout
+      if (saveTimeoutRef.current) {
+        window.clearTimeout(saveTimeoutRef.current);
+      }
+      
+      // Save immediately
+      autoSaveContent();
+      
+      // Force proper text direction
       ensureProperTextDirection();
     }
   };
 
   // Handle specific contenteditable events for heading formatting
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    // Only apply heading formatting to selected text, not all content
+    // Fix Enter key behavior for line breaks
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      
+      // Insert proper line break
+      document.execCommand('insertHTML', false, '<br><br>');
+      
+      // Update content and save
+      updateContentFromEditor();
+      return;
+    }
+    
+    // Special handling for heading elements
     if (e.key === 'Enter' && !e.shiftKey) {
       // Get the current selection
       const selection = window.getSelection();
@@ -215,13 +247,6 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   };
 
-  // Initialize the editor when first mounted
-  useEffect(() => {
-    if (editorRef.current) {
-      ensureProperTextDirection();
-    }
-  }, []);
-
   return (
     <Card>
       <CardHeader>
@@ -258,7 +283,11 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           dangerouslySetInnerHTML={{ __html: content }}
           spellCheck={true}
           dir="ltr"
-          style={{ direction: 'ltr', textAlign: 'left', unicodeBidi: 'normal' }}
+          style={{
+            direction: 'ltr',
+            textAlign: 'left',
+            unicodeBidi: 'normal',
+          }}
         />
         
         <div className="flex justify-end">
