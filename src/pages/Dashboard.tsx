@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { calculations } = useCalculations();
   const navigate = useNavigate();
   
@@ -26,7 +26,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Здравствуйте, {user?.name}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Здравствуйте, {profile?.name || user?.email?.split('@')[0]}</h1>
         <p className="text-muted-foreground">
           Добро пожаловать в консультационный портал Numerica
         </p>

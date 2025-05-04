@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,11 +27,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: "Ошибка",
-        description: "Пожалуйста, заполните все поля",
-        variant: "destructive",
-      });
+      toast.error("Пожалуйста, заполните все поля");
       return;
     }
     
@@ -48,11 +43,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password || !name) {
-      toast({
-        title: "Ошибка",
-        description: "Пожалуйста, заполните все поля",
-        variant: "destructive",
-      });
+      toast.error("Пожалуйста, заполните все поля");
       return;
     }
     
