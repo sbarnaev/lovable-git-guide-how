@@ -66,26 +66,26 @@ const TargetCalculationForm = () => {
       const newCalculation = await addCalculation(calculationData);
       
       // Now we have a calculation ID, we can generate and store AI content
-      // We're using a fake archetype as the TargetCalculation doesn't have archetypes
-      // Ideally, you would have proper target calculation archetypes here
-      const fakeArchetypes = [{ 
+      // Add value property to satisfy ArchetypeDescription interface
+      const targetArchetypes = [{ 
         code: "target", 
         title: "Целевой расчет",
-        description: `Запрос клиента: ${targetQuery}`
+        description: `Запрос клиента: ${targetQuery}`,
+        value: 0 // Adding the required value property
       }];
       
       // Generate content for different sections in parallel
       const generatePromises = [
         // Generate and save analysis content
-        generateDeepSeekContent('summary', fakeArchetypes)
+        generateDeepSeekContent('summary', targetArchetypes)
           .then(response => saveGeneratedContent(newCalculation.id, 'summary', response.content)),
         
         // Generate and save recommendations
-        generateDeepSeekContent('practices', fakeArchetypes)
+        generateDeepSeekContent('practices', targetArchetypes)
           .then(response => saveGeneratedContent(newCalculation.id, 'practices', response.content)),
           
         // Generate and save potential problems
-        generateDeepSeekContent('potential-problems', fakeArchetypes)
+        generateDeepSeekContent('potential-problems', targetArchetypes)
           .then(response => saveGeneratedContent(newCalculation.id, 'potential-problems', response.content))
       ];
       

@@ -12,6 +12,7 @@ import { ClientInfo } from '@/components/calculation-result/ClientInfo';
 import { ProfileCodes } from '@/components/calculation-result/ProfileCodes';
 import { ConsultationSection } from '@/components/calculation-result/ConsultationSection';
 import { TextbookSection } from '@/components/calculation-result/TextbookSection';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const CalculationResult = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,7 +52,8 @@ const CalculationResult = () => {
             const simplifiedArchetypes = [{ 
               code: "target", 
               title: "Целевой расчет",
-              description: `Запрос клиента: ${targetCalc.targetQuery}`
+              description: `Запрос клиента: ${targetCalc.targetQuery}`,
+              value: 0  // Adding the required value property
             }] as ArchetypeDescription[];
             
             setArchetypes(simplifiedArchetypes);
