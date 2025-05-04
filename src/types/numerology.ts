@@ -71,3 +71,23 @@ export interface NumerologyResult {
   missionCode: number;
   fullDescriptions: ArchetypeDescription[];
 }
+
+// Adding the NumerologyProfile interface that was missing
+export interface NumerologyProfile {
+  numerology: {
+    lifePath: number;
+    destiny: number;
+    personality: number;
+  };
+  strengths: string[];
+  challenges: string[];
+  recommendations: string[];
+  fullCodes?: {
+    personalityCode: number;
+    connectorCode: number;
+    realizationCode: number;
+    generatorCode: number;
+    missionCode: number;
+  };
+  archetypeDescriptions?: ArchetypeDescription[];
+}
