@@ -24,8 +24,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 
 interface NoteEditorProps {
   calculationId: string;
@@ -43,9 +41,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const [noteId, setNoteId] = useState<string | null>(null);
   const { saveNote, getNote, updateNote } = useCalculations();
   const editorRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<string>('editor');
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
-  const [viewMode, setViewMode] = useState<'editor' | 'blocks'>('editor');
   
   useEffect(() => {
     const fetchNote = async () => {
@@ -61,7 +57,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
             editorRef.current.innerHTML = note.content;
           }
           
-          // Пытаемся извлечь блоки из содержимого, если они есть
+          // Извлекаем блоки из содержимого, если они есть
           extractBlocksFromContent(note.content);
         }
       } catch (error) {
@@ -175,8 +171,10 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     if (editorRef.current) {
       const blockHtml = `
         <div class="p-3 border rounded-md my-3" data-block-id="${blockId}" data-block-title="${blockTitle}">
-          <h3 class="font-medium mb-2 text-primary" id="${blockId}">${blockTitle}</h3>
-          <p>Содержимое блока...</p>
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-primary" id="${blockId}">${blockTitle}</h3>
+          </div>
+          <div class="block-content">Содержимое блока...</div>
         </div>
       `;
       
@@ -193,429 +191,403 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   };
 
+  // Функция для отображения блоков быстрой навигации
+  const renderQuickNav = () => {
+    if (textBlocks.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-2 mb-4">
+        {textBlocks.map(block => (
+          <Button
+            key={block.id}
+            variant="outline"
+            size="sm"
+            onClick={() => scrollToBlock(block.id)}
+            className="text-xs"
+          >
+            {block.title}
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Заметки к расчёту</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Tabs defaultValue="editor" onValueChange={(value) => setActiveTab(value)}>
-          <TabsList className="mb-2">
-            <TabsTrigger value="editor">Редактор</TabsTrigger>
-            <TabsTrigger value="blocks">Блоки и структура</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="editor">
-            <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-md bg-secondary/30">
-              {/* Стандартное форматирование */}
-              <div className="flex gap-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('bold')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Bold size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Жирный</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('italic')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Italic size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Курсив</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('underline')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Underline size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Подчеркнутый</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              <Separator orientation="vertical" className="h-8" />
-              
-              {/* Заголовки */}
-              <div className="flex gap-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => addHeading('1')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Heading1 size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Заголовок 1</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => addHeading('2')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Heading2 size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Заголовок 2</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => addHeading('3')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Heading3 size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Заголовок 3</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              <Separator orientation="vertical" className="h-8" />
-              
-              {/* Списки и цитаты */}
-              <div className="flex gap-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('insertUnorderedList')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <List size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Маркированный список</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('insertOrderedList')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <ListOrdered size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Нумерованный список</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('formatBlock', '<blockquote>')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Quote size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Цитата</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              <Separator orientation="vertical" className="h-8" />
-              
-              {/* Выравнивание */}
-              <div className="flex gap-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('justifyLeft')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <AlignLeft size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>По левому краю</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('justifyCenter')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <AlignCenter size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>По центру</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => formatText('justifyRight')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <AlignRight size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>По правому краю</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              <Separator orientation="vertical" className="h-8" />
-              
-              {/* Цвета */}
-              <div className="flex gap-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => changeTextColor('#6941C6')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0 bg-numerica"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>Фиолетовый</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => changeTextColor('#1E40AF')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0 bg-blue-700"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>Синий</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => changeTextColor('#E11D48')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0 bg-rose-600"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>Красный</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => changeTextColor('#047857')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0 bg-emerald-700"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>Зеленый</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={() => changeTextColor('#000000')} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0 bg-black"
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent>Черный</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              <Separator orientation="vertical" className="h-8" />
-              
-              {/* Дополнительное */}
-              <div className="flex gap-1">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={createLink} 
-                        variant="outline" 
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        <Link size={16} />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Вставить ссылку</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        type="button"
-                        onClick={addTextBlock} 
-                        variant="outline" 
-                        size="sm"
-                        className="p-2 flex gap-1 items-center"
-                      >
-                        <BookOpen size={16} />
-                        <span>Добавить блок</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Создать новый блок</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-            
-            <div 
-              id="note-editor"
-              ref={editorRef}
-              className={cn(
-                "min-h-[250px] max-h-[450px] overflow-y-auto p-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                "bg-white text-left", // Явно устанавливаем направление текста
-                loading && "opacity-50",
-                "[&>blockquote]:border-l-4 [&>blockquote]:border-primary/40 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-3 [&>blockquote]:bg-muted/30 [&>blockquote]:py-2 [&>blockquote]:pr-2 [&>blockquote]:rounded-sm",
-                "[&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5",
-                "[&>p]:my-1.5 [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mt-4 [&>h1]:mb-2",
-                "[&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mt-3 [&>h2]:mb-2",
-                "[&>h3]:text-lg [&>h3]:font-medium [&>h3]:mt-2 [&>h3]:mb-1.5",
-                "[&_a]:text-blue-600 [&_a]:underline hover:[&_a]:text-blue-800",
-                "[&_[data-block-id]]:border [&_[data-block-id]]:p-3 [&_[data-block-id]]:rounded-md [&_[data-block-id]]:my-3"
-              )}
-              contentEditable={!loading}
-              onInput={updateContentFromEditor}
-              dangerouslySetInnerHTML={{ __html: content }}
-              spellCheck={true}
-              dir="ltr"
-            />
-          </TabsContent>
-          
-          <TabsContent value="blocks">
-            <div className="space-y-4">
-              <div className="grid gap-2">
-                <h3 className="text-sm font-medium">Блоки заметок</h3>
-                
-                {textBlocks.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">
-                    Добавьте блоки в редакторе для организации структуры заметок
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto p-2 border rounded-md">
-                    {textBlocks.map(block => (
-                      <Button 
-                        key={block.id} 
-                        variant="outline" 
-                        onClick={() => scrollToBlock(block.id)}
-                        className="justify-start text-left font-normal"
-                      >
-                        {block.title}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <Separator />
-              
-              <div className="grid gap-2">
-                <h3 className="text-sm font-medium">Действия с блоками</h3>
-                <div className="flex gap-2">
+        {/* Блоки быстрой навигации */}
+        {renderQuickNav()}
+
+        {/* Панель форматирования */}
+        <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-md bg-secondary/30">
+          {/* Стандартное форматирование */}
+          <div className="flex gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button 
-                    onClick={addTextBlock} 
+                    type="button"
+                    onClick={() => formatText('bold')} 
+                    variant="outline" 
                     size="sm"
-                    className="flex gap-1 items-center"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Bold size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Жирный</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('italic')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Italic size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Курсив</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('underline')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Underline size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Подчеркнутый</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <Separator orientation="vertical" className="h-8" />
+          
+          {/* Заголовки */}
+          <div className="flex gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => addHeading('1')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Heading1 size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Заголовок 1</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => addHeading('2')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Heading2 size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Заголовок 2</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => addHeading('3')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Heading3 size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Заголовок 3</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <Separator orientation="vertical" className="h-8" />
+          
+          {/* Списки и цитаты */}
+          <div className="flex gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('insertUnorderedList')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <List size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Маркированный список</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('insertOrderedList')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <ListOrdered size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Нумерованный список</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('formatBlock', '<blockquote>')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Quote size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Цитата</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <Separator orientation="vertical" className="h-8" />
+          
+          {/* Выравнивание */}
+          <div className="flex gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('justifyLeft')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <AlignLeft size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>По левому краю</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('justifyCenter')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <AlignCenter size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>По центру</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => formatText('justifyRight')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <AlignRight size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>По правому краю</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <Separator orientation="vertical" className="h-8" />
+          
+          {/* Цвета */}
+          <div className="flex gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => changeTextColor('#6941C6')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0 bg-numerica"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Фиолетовый</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => changeTextColor('#1E40AF')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0 bg-blue-700"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Синий</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => changeTextColor('#E11D48')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0 bg-rose-600"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Красный</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => changeTextColor('#047857')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0 bg-emerald-700"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Зеленый</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={() => changeTextColor('#000000')} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0 bg-black"
+                  />
+                </TooltipTrigger>
+                <TooltipContent>Черный</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          <Separator orientation="vertical" className="h-8" />
+          
+          {/* Дополнительное */}
+          <div className="flex gap-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={createLink} 
+                    variant="outline" 
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                  >
+                    <Link size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Вставить ссылку</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    type="button"
+                    onClick={addTextBlock} 
+                    variant="outline" 
+                    size="sm"
+                    className="p-2 flex gap-1 items-center"
                   >
                     <BookOpen size={16} />
                     <span>Добавить блок</span>
                   </Button>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+                </TooltipTrigger>
+                <TooltipContent>Создать новый блок</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+        
+        {/* Редактор заметок */}
+        <div 
+          id="note-editor"
+          ref={editorRef}
+          className={cn(
+            "min-h-[250px] max-h-[450px] overflow-y-auto p-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+            "bg-white text-left direction-ltr", // Исправлено направление текста
+            loading && "opacity-50",
+            "[&>blockquote]:border-l-4 [&>blockquote]:border-primary/40 [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-3 [&>blockquote]:bg-muted/30 [&>blockquote]:py-2 [&>blockquote]:pr-2 [&>blockquote]:rounded-sm",
+            "[&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5",
+            "[&>p]:my-1.5 [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mt-4 [&>h1]:mb-2",
+            "[&>h2]:text-xl [&>h2]:font-semibold [&>h2]:mt-3 [&>h2]:mb-2",
+            "[&>h3]:text-lg [&>h3]:font-medium [&>h3]:mt-2 [&>h3]:mb-1.5",
+            "[&_a]:text-blue-600 [&_a]:underline hover:[&_a]:text-blue-800",
+            "[&_[data-block-id]]:border [&_[data-block-id]]:p-3 [&_[data-block-id]]:rounded-md [&_[data-block-id]]:my-3"
+          )}
+          contentEditable={!loading}
+          onInput={updateContentFromEditor}
+          dangerouslySetInnerHTML={{ __html: content }}
+          spellCheck={true}
+          style={{ direction: 'ltr' }} // Явное указание направления текста
+        />
         
         <div className="flex justify-end">
           <Button 
