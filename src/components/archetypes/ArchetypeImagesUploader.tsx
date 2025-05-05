@@ -26,17 +26,17 @@ export const ArchetypeImagesUploader = ({ archetypes, onUpload }: ArchetypeImage
   const selectedArchetypes = archetypes.filter(a => a.value === selectedValue);
   
   // For display, we'll use the personality archetype if available
-  const displayArchetype = selectedArchetypes.find(a => a.code === "personality") || selectedArchetypes[0];
+  const displayArchetype = selectedArchetypes.find(a => a.code === "personalityCode") || selectedArchetypes[0];
   
   // Get the image URLs from any archetype with this value
   const getMaleImageUrl = () => {
-    const archWithImage = selectedArchetypes.find(a => a.maleImageUrl);
-    return archWithImage?.maleImageUrl || "";
+    const archWithImage = selectedArchetypes.find(a => a.maleImageUrl || a.male_image_url);
+    return archWithImage?.maleImageUrl || archWithImage?.male_image_url || "";
   };
   
   const getFemaleImageUrl = () => {
-    const archWithImage = selectedArchetypes.find(a => a.femaleImageUrl);
-    return archWithImage?.femaleImageUrl || "";
+    const archWithImage = selectedArchetypes.find(a => a.femaleImageUrl || a.female_image_url);
+    return archWithImage?.femaleImageUrl || archWithImage?.female_image_url || "";
   };
   
   const handleValueChange = (value: number) => {

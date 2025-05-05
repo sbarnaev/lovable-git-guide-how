@@ -1,4 +1,3 @@
-
 // If the file already has content, we need to modify just the NumerologyCodeType
 export type NumerologyCodeType = 
   | 'personalityCode' 
@@ -6,7 +5,8 @@ export type NumerologyCodeType =
   | 'realizationCode' 
   | 'generatorCode' 
   | 'missionCode'
-  | 'target'; // Adding target as a valid code type
+  | 'target'
+  | 'all'; // Adding 'all' as a valid code type
 
 export interface NumerologyProfile {
   lifePath: number;
@@ -27,7 +27,51 @@ export interface ArchetypeDescription {
   title: string;
   description?: string;
   
-  // Personality-specific fields
+  // Personality-specific fields (converted to camelCase)
+  resourceManifestation?: string;
+  distortedManifestation?: string;
+  developmentTask?: string;
+  keyTask?: string;
+  resourceQualities?: string[];
+  keyDistortions?: string[];
+  burnoutSigns?: string[];
+
+  // Connector-specific fields (converted to camelCase)
+  workingAspects?: string[];
+  nonWorkingAspects?: string[];
+  worldContactBasis?: string;
+  
+  // Realization-specific fields (converted to camelCase)
+  formula?: string;
+  potentialRealizationWays?: string[];
+  successSources?: string[];
+  realizationType?: string;
+  realizationObstacles?: string[];
+  recommendations?: string[];
+  
+  // Generator-specific fields (converted to camelCase)
+  generatorFormula?: string;
+  energySources?: string[];
+  energyDrains?: string[];
+  flowSigns?: string[];
+  generatorRecommendation?: string;
+  
+  // Mission-specific fields (converted to camelCase)
+  missionEssence?: string;
+  missionRealizationFactors?: string[];
+  missionChallenges?: string;
+  missionObstacles?: string[];
+  mainTransformation?: string;
+  
+  // Generic fields
+  strengths?: string[];
+  challenges?: string[];
+  
+  // Image URLs
+  maleImageUrl?: string;
+  femaleImageUrl?: string;
+  
+  // Keep backward compatibility with snake_case for any existing data
   resource_manifestation?: string;
   distorted_manifestation?: string;
   development_task?: string;
@@ -35,39 +79,23 @@ export interface ArchetypeDescription {
   resource_qualities?: string[];
   key_distortions?: string[];
   burnout_signs?: string[];
-
-  // Connector-specific fields
   working_aspects?: string[];
   non_working_aspects?: string[];
   world_contact_basis?: string;
-  
-  // Realization-specific fields
-  formula?: string;
   potential_realization_ways?: string[];
   success_sources?: string[];
   realization_type?: string;
   realization_obstacles?: string[];
-  recommendations?: string[];
-  
-  // Generator-specific fields
   generator_formula?: string;
   energy_sources?: string[];
   energy_drains?: string[];
   flow_signs?: string[];
   generator_recommendation?: string;
-  
-  // Mission-specific fields
   mission_essence?: string;
   mission_realization_factors?: string[];
   mission_challenges?: string;
   mission_obstacles?: string[];
   main_transformation?: string;
-  
-  // Generic fields
-  strengths?: string[];
-  challenges?: string[];
-  
-  // Image URLs
   male_image_url?: string;
   female_image_url?: string;
 }
