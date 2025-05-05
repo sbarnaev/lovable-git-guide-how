@@ -39,36 +39,55 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   // Improved findArchetype function
   const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
-      console.log(`No archetypes found for ${codeType} search`);
+      console.log(`No archetypes available for ${codeType} search`);
       return undefined;
     }
     
     // Get the profile we're currently looking at
     const profile = activeTab === 'client' ? clientProfile : partnerProfile;
-    if (!profile || !profile.fullCodes) return undefined;
-    
-    // Get the code value
-    const codeTypeNormalized = codeType.replace(/Code$/, '') as keyof typeof profile.fullCodes;
-    const codeValue = profile.fullCodes[codeTypeNormalized] as number;
-    if (!codeValue) return undefined;
-    
-    console.log(`Looking for archetype with code=${codeType}, value=${codeValue}`);
-    
-    // Try to find with exact match first
-    let found = archetypes.find(arch => {
-      return arch.code === codeType && arch.value === codeValue;
-    });
-    
-    // If not found, try with normalized code
-    if (!found) {
-      const normalizedCodeType = codeType.replace(/Code$/, '');
-      found = archetypes.find(arch => {
-        const archCodeNormalized = arch.code.replace(/Code$/, '');
-        return archCodeNormalized === normalizedCodeType && arch.value === codeValue;
-      });
+    if (!profile || !profile.fullCodes) {
+      console.log(`No profile or fullCodes available for ${activeTab}`);
+      return undefined;
     }
     
-    return found;
+    // Normalize the code type (remove 'Code' suffix if present)
+    const normalizedCode = codeType.replace(/Code$/, '');
+    
+    // Get the code value
+    const codeKey = normalizedCode as keyof typeof profile.fullCodes;
+    const codeValue = profile.fullCodes[codeKey];
+    
+    if (!codeValue) {
+      console.log(`No value found for ${codeType} in profile`);
+      return undefined;
+    }
+    
+    console.log(`Looking for archetype with code=${codeType}, value=${codeValue} among ${archetypes.length} archetypes`);
+    
+    // First try exact match on code and value
+    let match = archetypes.find(arch => 
+      (arch.code === codeType || arch.code === normalizedCode) && 
+      arch.value === codeValue
+    );
+    
+    if (match) {
+      console.log(`Found exact match: ${match.code} (${match.value})`);
+      return match;
+    }
+    
+    // If no exact match, try a more flexible search
+    match = archetypes.find(arch => {
+      const archCodeNormalized = arch.code.replace(/Code$/, '');
+      return archCodeNormalized === normalizedCode && arch.value === codeValue;
+    });
+    
+    if (match) {
+      console.log(`Found normalized match: ${match.code} (${match.value})`);
+      return match;
+    }
+    
+    console.log(`No matching archetype found for ${codeType} with value ${codeValue}`);
+    return undefined;
   };
   
   // Handler for selecting a code type

@@ -33,22 +33,39 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   };
 
   const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
-    console.log("Finding archetype for code:", code);
-    console.log("Available archetypes:", archetypes);
+    // Normalize the code type (remove 'Code' suffix if present)
+    const normalizedCode = code.replace(/Code$/, '');
     
-    // Get the numeric value for this code
-    const codeKey = code.replace(/Code$/, '') as keyof typeof fullCodes;
+    // Get the value from fullCodes using either normalized or original key
+    const codeKey = normalizedCode as keyof typeof fullCodes;
     const codeValue = fullCodes[codeKey];
     
-    console.log(`Looking for ${code} with value ${codeValue}`);
+    console.log(`Looking for ${code} with value ${codeValue} among ${archetypes.length} archetypes`);
     
-    // Try to find the archetype with matching code and value
-    return archetypes.find(arch => {
-      const matchesCode = arch.code === code;
-      const matchesValue = arch.value === codeValue;
-      console.log(`Checking ${arch.code} (${arch.value}): code match=${matchesCode}, value match=${matchesValue}`);
-      return matchesCode && matchesValue;
+    // First try exact match on code and value
+    let match = archetypes.find(arch => 
+      (arch.code === code || arch.code === normalizedCode) && 
+      arch.value === codeValue
+    );
+    
+    if (match) {
+      console.log(`Found exact match: ${match.code} (${match.value})`);
+      return match;
+    }
+    
+    // If no exact match, try a more flexible search
+    match = archetypes.find(arch => {
+      const archCodeNormalized = arch.code.replace(/Code$/, '');
+      return archCodeNormalized === normalizedCode && arch.value === codeValue;
     });
+    
+    if (match) {
+      console.log(`Found normalized match: ${match.code} (${match.value})`);
+      return match;
+    }
+    
+    console.log(`No matching archetype found for ${code} with value ${codeValue}`);
+    return undefined;
   };
   
   // Map code names to their display names
