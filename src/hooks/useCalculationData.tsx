@@ -45,16 +45,56 @@ export const useCalculationData = (id: string | undefined) => {
           }
           
           // For target calculations, we create a simplified archetype for AI content
+          // and also calculate the fullCodes if not already present
           if (fetchedCalculation.type === 'target') {
             const targetCalc = fetchedCalculation as (TargetCalculation & { id: string; createdAt: string });
-            const simplifiedArchetypes = [{ 
-              code: 'target' as NumerologyCodeType, 
-              title: "Целевой расчет",
-              description: `Запрос клиента: ${targetCalc.targetQuery}`,
-              value: 0
-            }];
             
-            setArchetypes(simplifiedArchetypes);
+            // Calculate codes if not already present
+            const fullCodes = calculateAllCodes(targetCalc.birthDate);
+            console.log("Generated codes for target calculation:", fullCodes);
+            
+            // Create a more detailed set of archetypes for the target calculation
+            // including both the target info and the person's codes
+            const targetArchetypes: ArchetypeDescription[] = [
+              { 
+                code: 'target' as NumerologyCodeType, 
+                title: "Целевой расчет",
+                description: `Запрос клиента: ${targetCalc.targetQuery}`,
+                value: 0
+              },
+              { 
+                code: 'personalityCode' as NumerologyCodeType, 
+                title: "Код личности",
+                description: "Основной код личности",
+                value: fullCodes.personalityCode 
+              },
+              { 
+                code: 'connectorCode' as NumerologyCodeType, 
+                title: "Код коммуникации", 
+                description: "Код взаимодействия с окружающим миром",
+                value: fullCodes.connectorCode 
+              },
+              { 
+                code: 'realizationCode' as NumerologyCodeType, 
+                title: "Код реализации", 
+                description: "Код потенциала и самореализации",
+                value: fullCodes.realizationCode 
+              },
+              { 
+                code: 'generatorCode' as NumerologyCodeType, 
+                title: "Код генератора", 
+                description: "Источник энергии и мотивации",
+                value: fullCodes.generatorCode 
+              },
+              { 
+                code: 'missionCode' as NumerologyCodeType, 
+                title: "Код миссии", 
+                description: "Жизненное предназначение",
+                value: fullCodes.missionCode 
+              }
+            ];
+            
+            setArchetypes(targetArchetypes);
           }
 
           // For partnership calculation, set both client and partner archetypes and ensure fullCodes

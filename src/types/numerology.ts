@@ -1,87 +1,17 @@
 
+// If the file already has content, we need to modify just the NumerologyCodeType
 export type NumerologyCodeType = 
-  | 'personality'  // Код личности
-  | 'connector'    // Код коннектора
-  | 'realization'  // Код реализации
-  | 'generator'    // Код генератора
-  | 'mission'      // Код миссии
-  | 'target'       // Целевой расчет
-  | 'all';         // Все коды
+  | 'personalityCode' 
+  | 'connectorCode' 
+  | 'realizationCode' 
+  | 'generatorCode' 
+  | 'missionCode'
+  | 'target'; // Adding target as a valid code type
 
-export interface NumerologyCode {
-  type: NumerologyCodeType;
-  value: number;
-  description: string;
-}
-
-export interface ArchetypeDescription {
-  code: NumerologyCodeType;
-  value: number; // 1-9 or 11 for mission
-  title: string;
-  description: string;
-  maleImageUrl?: string;
-  femaleImageUrl?: string;
-  
-  // Код личности
-  resourceManifestation?: string; // Ресурсное проявление
-  distortedManifestation?: string; // Искаженное проявление
-  developmentTask?: string; // Задача развития
-  resourceQualities?: string[]; // Ключевые качества в ресурсе
-  keyDistortions?: string[]; // Ключевые искажения
-  
-  // Код коннектора
-  keyTask?: string; // Ключевая задача
-  workingAspects?: string[]; // Что работает (в ресурсе)
-  nonWorkingAspects?: string[]; // Что не работает (искажения)
-  worldContactBasis?: string; // Контакт с миром должен строиться на
-  
-  // Код реализации
-  formula?: string; // Формула
-  potentialRealizationWays?: string[]; // Как реализуется потенциал
-  successSources?: string[]; // Где находится источник дохода и успеха
-  realizationType?: string; // Тип реализации
-  realizationObstacles?: string[]; // Искажения (что мешает реализовываться)
-  recommendations?: string[]; // Рекомендации
-  
-  // Код генератора
-  generatorFormula?: string; // Формула
-  energySources?: string[]; // Что дает энергию
-  energyDrains?: string[]; // Что забирает энергию
-  flowSigns?: string[]; // Признаки, что человек в потоке
-  burnoutSigns?: string[]; // Признаки, что человек выгорел
-  generatorRecommendation?: string; // Рекомендация
-  
-  // Код миссии
-  missionEssence?: string; // Суть миссии
-  missionRealizationFactors?: string[]; // Что реализует миссию
-  missionChallenges?: string; // Испытания миссии
-  missionObstacles?: string[]; // Что мешает релизовываться
-  mainTransformation?: string; // Главная трансформация
-  
-  // For backward compatibility
-  strengths?: string[];
-  challenges?: string[];
-}
-
-export interface NumerologyResult {
-  personalityCode: number;
-  connectorCode: number;
-  realizationCode: number;
-  generatorCode: number;
-  missionCode: number;
-  fullDescriptions: ArchetypeDescription[];
-}
-
-// Adding the NumerologyProfile interface that was missing
 export interface NumerologyProfile {
-  numerology: {
-    lifePath: number;
-    destiny: number;
-    personality: number;
-  };
-  strengths: string[];
-  challenges: string[];
-  recommendations: string[];
+  lifePath: number;
+  destiny: number;
+  personality: number;
   fullCodes?: {
     personalityCode: number;
     connectorCode: number;
@@ -89,5 +19,55 @@ export interface NumerologyProfile {
     generatorCode: number;
     missionCode: number;
   };
-  archetypeDescriptions?: ArchetypeDescription[];
+}
+
+export interface ArchetypeDescription {
+  code: NumerologyCodeType;
+  value: number;
+  title: string;
+  description?: string;
+  
+  // Personality-specific fields
+  resource_manifestation?: string;
+  distorted_manifestation?: string;
+  development_task?: string;
+  key_task?: string;
+  resource_qualities?: string[];
+  key_distortions?: string[];
+  burnout_signs?: string[];
+
+  // Connector-specific fields
+  working_aspects?: string[];
+  non_working_aspects?: string[];
+  world_contact_basis?: string;
+  
+  // Realization-specific fields
+  formula?: string;
+  potential_realization_ways?: string[];
+  success_sources?: string[];
+  realization_type?: string;
+  realization_obstacles?: string[];
+  recommendations?: string[];
+  
+  // Generator-specific fields
+  generator_formula?: string;
+  energy_sources?: string[];
+  energy_drains?: string[];
+  flow_signs?: string[];
+  generator_recommendation?: string;
+  
+  // Mission-specific fields
+  mission_essence?: string;
+  mission_realization_factors?: string[];
+  mission_challenges?: string;
+  mission_obstacles?: string[];
+  main_transformation?: string;
+  
+  // Generic fields
+  strengths?: string[];
+  challenges?: string[];
+  
+  // Image URLs
+  male_image_url?: string;
+  female_image_url?: string;
 }

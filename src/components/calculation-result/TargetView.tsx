@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TargetCalculation } from '@/types';
 import { ArchetypeDescription } from '@/types/numerology';
 import { AIContentSection } from '@/components/AIContentSection';
 import { NoteEditor } from '@/components/note-editor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { AIChat } from '@/components/AIChat';
 
 // Note: This is a temporary flag to disable notes
 const NOTES_DISABLED = true;
@@ -16,6 +18,7 @@ interface TargetViewProps {
 
 export const TargetView: React.FC<TargetViewProps> = ({ calculation, archetypes }) => {
   const targetCalc = calculation;
+  const [activeTab, setActiveTab] = useState<string>("client-needs");
   
   return (
     <div className="space-y-6">
@@ -42,8 +45,8 @@ export const TargetView: React.FC<TargetViewProps> = ({ calculation, archetypes 
         </CardContent>
       </Card>
       
-      {/* AI Summary */}
-      {archetypes.length > 0 && (
+      {/* AI Summary - Goal-focused summary */}
+      {archetypes.length > 0 && calculation.id && (
         <AIContentSection 
           title="Саммари" 
           type="summary"
@@ -91,25 +94,93 @@ export const TargetView: React.FC<TargetViewProps> = ({ calculation, archetypes 
         </CardContent>
       </Card>
       
-      {/* Recommendations */}
-      {archetypes.length > 0 && (
-        <AIContentSection 
-          title="Детальные рекомендации" 
-          type="practices"
-          archetypes={archetypes}
-          calculationId={calculation.id}
-        />
-      )}
-      
-      {/* Potential Problems */}
-      {archetypes.length > 0 && (
-        <AIContentSection 
-          title="Потенциальные проблемы и решения" 
-          type="potential-problems"
-          archetypes={archetypes}
-          calculationId={calculation.id}
-        />
-      )}
+      {/* Consultation section with new tabs */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold">Консультация</h2>
+        
+        <Tabs defaultValue="client-needs" onValueChange={setActiveTab} value={activeTab}>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
+            <TabsTrigger value="client-needs">Что хочет клиент</TabsTrigger>
+            <TabsTrigger value="code-synthesis">Синтез кодов</TabsTrigger>
+            <TabsTrigger value="challenges">Сложности</TabsTrigger>
+            <TabsTrigger value="recommendations">Рекомендации</TabsTrigger>
+            <TabsTrigger value="assistant">Помощник</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="client-needs">
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && calculation.id && (
+                  <AIContentSection 
+                    title=""
+                    type="client-needs"
+                    archetypes={archetypes}
+                    calculationId={calculation.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="code-synthesis">
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && calculation.id && (
+                  <AIContentSection 
+                    title=""
+                    type="code-synthesis"
+                    archetypes={archetypes}
+                    calculationId={calculation.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="challenges">
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && calculation.id && (
+                  <AIContentSection 
+                    title=""
+                    type="target-challenges"
+                    archetypes={archetypes}
+                    calculationId={calculation.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="recommendations">
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && calculation.id && (
+                  <AIContentSection 
+                    title=""
+                    type="target-recommendations"
+                    archetypes={archetypes}
+                    calculationId={calculation.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="assistant">
+            <Card>
+              <CardContent className="pt-6">
+                {archetypes.length > 0 && calculation.id && (
+                  <AIChat 
+                    archetypes={archetypes}
+                    calculationId={calculation.id}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
       
       {/* Notes - conditionally disabled */}
       {!NOTES_DISABLED && calculation.id && (
