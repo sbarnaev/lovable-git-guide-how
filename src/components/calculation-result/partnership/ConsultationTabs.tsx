@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AIContentSection } from '@/components/AIContentSection';
 import { AIChat } from '@/components/AIChat';
 import { ArchetypeDescription } from '@/types/numerology';
-import { MessageSquare, MessageCircle, Activity, AlertTriangle, Bulb, Bot } from 'lucide-react';
+import { MessageSquare, MessageCircle, Activity, AlertTriangle, Bot } from 'lucide-react';
 
 interface ConsultationTabsProps {
   calculationId: string;
@@ -36,7 +36,7 @@ export const ConsultationTabs: React.FC<ConsultationTabsProps> = ({ calculationI
             <span className="hidden md:inline">Сложности</span>
           </TabsTrigger>
           <TabsTrigger value="recommendations" className="flex gap-2 items-center">
-            <Bulb className="h-4 w-4" />
+            <Activity className="h-4 w-4" />
             <span className="hidden md:inline">Рекомендации</span>
           </TabsTrigger>
           <TabsTrigger value="assistant" className="flex gap-2 items-center">
