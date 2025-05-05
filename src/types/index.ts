@@ -55,6 +55,14 @@ export interface TargetCalculationResults {
   };
   recommendations: string[];
   timeframe: string;
+  // Add fullCodes property to fix TypeScript errors
+  fullCodes?: {
+    personalityCode: number;
+    connectorCode: number;
+    realizationCode: number;
+    generatorCode: number;
+    missionCode: number;
+  };
 }
 
 export type CalculationResults = 

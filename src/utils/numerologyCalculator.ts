@@ -28,6 +28,12 @@ export function reduceToSingleDigit(num: number): number {
  * Рассчитывает Код Личности (число дня рождения)
  */
 export function calculatePersonalityCode(birthDate: Date): number {
+  // Ensure we're working with a valid date
+  if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
+    console.error("Invalid date provided to calculatePersonalityCode:", birthDate);
+    return 0;
+  }
+  
   const day = birthDate.getDate();
   return reduceToSingleDigit(day);
 }
@@ -36,6 +42,12 @@ export function calculatePersonalityCode(birthDate: Date): number {
  * Рассчитывает Код Коннектора (сумма всех цифр даты рождения)
  */
 export function calculateConnectorCode(birthDate: Date): number {
+  // Ensure we're working with a valid date
+  if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
+    console.error("Invalid date provided to calculateConnectorCode:", birthDate);
+    return 0;
+  }
+  
   const day = birthDate.getDate();
   const month = birthDate.getMonth() + 1;
   const year = birthDate.getFullYear();
@@ -63,6 +75,12 @@ export function calculateConnectorCode(birthDate: Date): number {
  * Рассчитывает Код Реализации (последние 2 цифры года рождения)
  */
 export function calculateRealizationCode(birthDate: Date): number {
+  // Ensure we're working with a valid date
+  if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
+    console.error("Invalid date provided to calculateRealizationCode:", birthDate);
+    return 0;
+  }
+  
   const year = birthDate.getFullYear();
   const lastTwoDigits = year % 100;
   console.log(`Realization calculation: year = ${year}, lastTwoDigits = ${lastTwoDigits}`);
@@ -77,6 +95,12 @@ export function calculateRealizationCode(birthDate: Date): number {
  * Рассчитывает Код Генератора (день × месяц)
  */
 export function calculateGeneratorCode(birthDate: Date): number {
+  // Ensure we're working with a valid date
+  if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
+    console.error("Invalid date provided to calculateGeneratorCode:", birthDate);
+    return 0;
+  }
+  
   const day = birthDate.getDate();
   const month = birthDate.getMonth() + 1;
   
@@ -117,39 +141,64 @@ export function calculateAllCodes(birthDateString: string) {
   // Ensure proper date parsing regardless of format
   let birthDate: Date;
   
-  if (birthDateString.includes('T')) {
-    // ISO format with time
-    birthDate = new Date(birthDateString);
-  } else if (birthDateString.includes('-')) {
-    // YYYY-MM-DD format
-    const [year, month, day] = birthDateString.split('-').map(Number);
-    birthDate = new Date(year, month - 1, day);
-  } else if (birthDateString.includes('.')) {
-    // DD.MM.YYYY format
-    const [day, month, year] = birthDateString.split('.').map(Number);
-    birthDate = new Date(year, month - 1, day);
-  } else {
-    // Fallback
-    birthDate = new Date(birthDateString);
+  try {
+    if (birthDateString.includes('T')) {
+      // ISO format with time
+      birthDate = new Date(birthDateString);
+    } else if (birthDateString.includes('-')) {
+      // YYYY-MM-DD format
+      const [year, month, day] = birthDateString.split('-').map(Number);
+      birthDate = new Date(year, month - 1, day);
+    } else if (birthDateString.includes('.')) {
+      // DD.MM.YYYY format
+      const [day, month, year] = birthDateString.split('.').map(Number);
+      birthDate = new Date(year, month - 1, day);
+    } else {
+      // Fallback
+      birthDate = new Date(birthDateString);
+    }
+  
+    console.log(`Parsed date: ${birthDate.toISOString()}`);
+    
+    // Validate the date is actually valid
+    if (isNaN(birthDate.getTime())) {
+      console.error(`Invalid date after parsing: ${birthDateString}`);
+      // Return default values to prevent further errors
+      return {
+        personalityCode: 0,
+        connectorCode: 0,
+        realizationCode: 0,
+        generatorCode: 0,
+        missionCode: 0
+      };
+    }
+    
+    const personalityCode = calculatePersonalityCode(birthDate);
+    const connectorCode = calculateConnectorCode(birthDate);
+    const realizationCode = calculateRealizationCode(birthDate);
+    const generatorCode = calculateGeneratorCode(birthDate);
+    const missionCode = calculateMissionCode(personalityCode, connectorCode);
+    
+    const result = {
+      personalityCode,
+      connectorCode,
+      realizationCode,
+      generatorCode,
+      missionCode
+    };
+    
+    console.log("Final calculated codes:", result);
+    
+    return result;
+  } catch (error) {
+    console.error(`Error calculating codes: ${error}`);
+    // Return default values in case of error
+    return {
+      personalityCode: 0,
+      connectorCode: 0,
+      realizationCode: 0,
+      generatorCode: 0,
+      missionCode: 0
+    };
   }
-  
-  console.log(`Parsed date: ${birthDate.toISOString()}`);
-  
-  const personalityCode = calculatePersonalityCode(birthDate);
-  const connectorCode = calculateConnectorCode(birthDate);
-  const realizationCode = calculateRealizationCode(birthDate);
-  const generatorCode = calculateGeneratorCode(birthDate);
-  const missionCode = calculateMissionCode(personalityCode, connectorCode);
-  
-  const result = {
-    personalityCode,
-    connectorCode,
-    realizationCode,
-    generatorCode,
-    missionCode
-  };
-  
-  console.log("Final calculated codes:", result);
-  
-  return result;
 }
