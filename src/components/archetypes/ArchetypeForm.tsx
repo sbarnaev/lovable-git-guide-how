@@ -1,16 +1,12 @@
 
-import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React from "react";
 import { Card, CardContent } from '@/components/ui/card';
-import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { toast } from "sonner";
-import { PersonalityTabContent } from './PersonalityTabContent';
-import { ConnectorTabContent } from './ConnectorTabContent';
-import { RealizationTabContent } from './RealizationTabContent';
-import { GeneratorTabContent } from './GeneratorTabContent';
-import { MissionTabContent } from './MissionTabContent';
+import { NumerologyCodeType } from '@/types/numerology';
 import { GeneralTabContent } from './GeneralTabContent';
+import { CodeValueSelector } from './CodeValueSelector';
+import { SaveArchetypeButton } from './SaveArchetypeButton';
+import { CodeContentRenderer } from './CodeContentRenderer';
 
 interface ArchetypeFormProps {
   loading?: boolean;
@@ -101,16 +97,7 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     selectedValue,
     setSelectedValue,
     onSave,
-    
-    // General fields
-    title,
-    setTitle,
-    description,
-    setDescription,
-    maleImageUrl,
-    setMaleImageUrl,
-    femaleImageUrl,
-    setFemaleImageUrl,
+    title
   } = props;
 
   const handleSaveClick = () => {
@@ -121,179 +108,27 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     
     onSave();
   };
-
-  const normalizeCode = (code: NumerologyCodeType): NumerologyCodeType => {
-    const codeMap: Record<string, NumerologyCodeType> = {
-      'personalityCode': 'personality',
-      'connectorCode': 'connector', 
-      'realizationCode': 'realization',
-      'generatorCode': 'generator',
-      'missionCode': 'mission'
-    };
-    
-    return (codeMap[code] as NumerologyCodeType) || code;
-  };
-
-  // Доступные коды
-  const codeOptions = [
-    { value: 'personality', label: 'Код Личности' },
-    { value: 'connector', label: 'Код Коннектора' },
-    { value: 'realization', label: 'Код Реализации' },
-    { value: 'generator', label: 'Код Генератора' },
-    { value: 'mission', label: 'Код Миссии' }
-  ];
-
-  // Генерируем доступные значения в зависимости от кода
-  const normalizedCode = normalizeCode(selectedCode);
-  
-  // Добавляем мастер-число 11 для кода миссии
-  const valueOptions = normalizedCode === 'mission' 
-    ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 11] 
-    : [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    
-  // Показываем соответствующие поля в зависимости от выбранного кода
-  const renderCodeFields = () => {
-    switch (normalizedCode) {
-      case 'personality':
-        return (
-          <PersonalityTabContent
-            resourceManifestation={props.resourceManifestation}
-            setResourceManifestation={props.setResourceManifestation}
-            distortedManifestation={props.distortedManifestation}
-            setDistortedManifestation={props.setDistortedManifestation}
-            developmentTask={props.developmentTask}
-            setDevelopmentTask={props.setDevelopmentTask}
-            resourceQualities={props.resourceQualities}
-            setResourceQualities={props.setResourceQualities}
-            keyDistortions={props.keyDistortions}
-            setKeyDistortions={props.setKeyDistortions}
-          />
-        );
-        
-      case 'connector':
-        return (
-          <ConnectorTabContent
-            keyTask={props.keyTask}
-            setKeyTask={props.setKeyTask}
-            workingAspects={props.workingAspects}
-            setWorkingAspects={props.setWorkingAspects}
-            nonWorkingAspects={props.nonWorkingAspects}
-            setNonWorkingAspects={props.setNonWorkingAspects}
-            worldContactBasis={props.worldContactBasis}
-            setWorldContactBasis={props.setWorldContactBasis}
-          />
-        );
-        
-      case 'realization':
-        return (
-          <RealizationTabContent
-            formula={props.formula}
-            setFormula={props.setFormula}
-            potentialRealizationWays={props.potentialRealizationWays}
-            setPotentialRealizationWays={props.setPotentialRealizationWays}
-            successSources={props.successSources}
-            setSuccessSources={props.setSuccessSources}
-            realizationType={props.realizationType}
-            setRealizationType={props.setRealizationType}
-            realizationObstacles={props.realizationObstacles}
-            setRealizationObstacles={props.setRealizationObstacles}
-            recommendations={props.recommendations}
-            setRecommendations={props.setRecommendations}
-          />
-        );
-        
-      case 'generator':
-        return (
-          <GeneratorTabContent
-            generatorFormula={props.generatorFormula}
-            setGeneratorFormula={props.setGeneratorFormula}
-            energySources={props.energySources}
-            setEnergySources={props.setEnergySources}
-            energyDrains={props.energyDrains}
-            setEnergyDrains={props.setEnergyDrains}
-            flowSigns={props.flowSigns}
-            setFlowSigns={props.setFlowSigns}
-            burnoutSigns={props.burnoutSigns}
-            setBurnoutSigns={props.setBurnoutSigns}
-            generatorRecommendation={props.generatorRecommendation}
-            setGeneratorRecommendation={props.setGeneratorRecommendation}
-          />
-        );
-        
-      case 'mission':
-        return (
-          <MissionTabContent
-            missionEssence={props.missionEssence}
-            setMissionEssence={props.setMissionEssence}
-            missionRealizationFactors={props.missionRealizationFactors}
-            setMissionRealizationFactors={props.setMissionRealizationFactors}
-            missionChallenges={props.missionChallenges}
-            setMissionChallenges={props.setMissionChallenges}
-            missionObstacles={props.missionObstacles}
-            setMissionObstacles={props.setMissionObstacles}
-            mainTransformation={props.mainTransformation}
-            setMainTransformation={props.setMainTransformation}
-          />
-        );
-      
-      default:
-        return null;
-    }
-  };
   
   return (
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <div className="text-sm font-medium mb-2">Код</div>
-              <Select 
-                value={normalizedCode} 
-                onValueChange={(value) => setSelectedCode(value as NumerologyCodeType)}
-                disabled={loading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Выберите код" />
-                </SelectTrigger>
-                <SelectContent>
-                  {codeOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <div className="text-sm font-medium mb-2">Значение</div>
-              <Select 
-                value={String(selectedValue)} 
-                onValueChange={(value) => setSelectedValue(Number(value))}
-                disabled={loading}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Выберите значение" />
-                </SelectTrigger>
-                <SelectContent>
-                  {valueOptions.map(value => (
-                    <SelectItem key={value} value={String(value)}>
-                      {value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="md:col-span-2">
+              <CodeValueSelector 
+                selectedCode={selectedCode}
+                setSelectedCode={setSelectedCode}
+                selectedValue={selectedValue}
+                setSelectedValue={setSelectedValue}
+                loading={loading}
+              />
             </div>
             
             <div className="flex items-end">
-              <Button 
+              <SaveArchetypeButton 
                 onClick={handleSaveClick} 
-                disabled={loading}
-                className="w-full"
-              >
-                {loading ? "Сохранение..." : "Сохранить архетип"}
-              </Button>
+                loading={loading}
+              />
             </div>
           </div>
 
@@ -312,7 +147,70 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
           </div>
           
           {/* Поля в зависимости от выбранного кода */}
-          {renderCodeFields()}
+          <CodeContentRenderer 
+            selectedCode={selectedCode}
+            // Personality Code
+            resourceManifestation={props.resourceManifestation}
+            setResourceManifestation={props.setResourceManifestation}
+            distortedManifestation={props.distortedManifestation}
+            setDistortedManifestation={props.setDistortedManifestation}
+            developmentTask={props.developmentTask}
+            setDevelopmentTask={props.setDevelopmentTask}
+            resourceQualities={props.resourceQualities}
+            setResourceQualities={props.setResourceQualities}
+            keyDistortions={props.keyDistortions}
+            setKeyDistortions={props.setKeyDistortions}
+            
+            // Connector Code
+            keyTask={props.keyTask}
+            setKeyTask={props.setKeyTask}
+            workingAspects={props.workingAspects}
+            setWorkingAspects={props.setWorkingAspects}
+            nonWorkingAspects={props.nonWorkingAspects}
+            setNonWorkingAspects={props.setNonWorkingAspects}
+            worldContactBasis={props.worldContactBasis}
+            setWorldContactBasis={props.setWorldContactBasis}
+            
+            // Realization Code
+            formula={props.formula}
+            setFormula={props.setFormula}
+            potentialRealizationWays={props.potentialRealizationWays}
+            setPotentialRealizationWays={props.setPotentialRealizationWays}
+            successSources={props.successSources}
+            setSuccessSources={props.setSuccessSources}
+            realizationType={props.realizationType}
+            setRealizationType={props.setRealizationType}
+            realizationObstacles={props.realizationObstacles}
+            setRealizationObstacles={props.setRealizationObstacles}
+            recommendations={props.recommendations}
+            setRecommendations={props.setRecommendations}
+            
+            // Generator Code
+            generatorFormula={props.generatorFormula}
+            setGeneratorFormula={props.setGeneratorFormula}
+            energySources={props.energySources}
+            setEnergySources={props.setEnergySources}
+            energyDrains={props.energyDrains}
+            setEnergyDrains={props.setEnergyDrains}
+            flowSigns={props.flowSigns}
+            setFlowSigns={props.setFlowSigns}
+            burnoutSigns={props.burnoutSigns}
+            setBurnoutSigns={props.setBurnoutSigns}
+            generatorRecommendation={props.generatorRecommendation}
+            setGeneratorRecommendation={props.setGeneratorRecommendation}
+            
+            // Mission Code
+            missionEssence={props.missionEssence}
+            setMissionEssence={props.setMissionEssence}
+            missionRealizationFactors={props.missionRealizationFactors}
+            setMissionRealizationFactors={props.setMissionRealizationFactors}
+            missionChallenges={props.missionChallenges}
+            setMissionChallenges={props.setMissionChallenges}
+            missionObstacles={props.missionObstacles}
+            setMissionObstacles={props.setMissionObstacles}
+            mainTransformation={props.mainTransformation}
+            setMainTransformation={props.setMainTransformation}
+          />
         </CardContent>
       </Card>
     </div>
