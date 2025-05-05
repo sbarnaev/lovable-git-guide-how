@@ -16,7 +16,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   calculation,
   archetypes
 }) => {
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<NumerologyCodeType | null>(null);
 
   if (!calculation || calculation.type !== 'basic' || !calculation.results.fullCodes) {
     return null;
@@ -24,7 +24,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
 
   const { fullCodes } = calculation.results;
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: NumerologyCodeType) => {
     if (activeSection === section) {
       setActiveSection(null);
     } else {
@@ -33,14 +33,21 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   };
 
   const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
+    console.log("Finding archetype for code:", code);
+    console.log("Available archetypes:", archetypes);
+    
+    // Get the numeric value for this code
+    const codeKey = code.replace(/Code$/, '') as keyof typeof fullCodes;
+    const codeValue = fullCodes[codeKey];
+    
+    console.log(`Looking for ${code} with value ${codeValue}`);
+    
+    // Try to find the archetype with matching code and value
     return archetypes.find(arch => {
-      // Try exact match first
-      if (arch.code === code) return true;
-      
-      // Try with normalized code (without "Code" suffix)
-      const normalizedCode = code.replace(/Code$/, '');
-      const normalizedArchCode = arch.code.replace(/Code$/, '');
-      return normalizedArchCode === normalizedCode;
+      const matchesCode = arch.code === code;
+      const matchesValue = arch.value === codeValue;
+      console.log(`Checking ${arch.code} (${arch.value}): code match=${matchesCode}, value match=${matchesValue}`);
+      return matchesCode && matchesValue;
     });
   };
   
@@ -54,7 +61,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   };
   
   // Determine which button is active for better styling
-  const isActive = (code: string) => activeSection === code;
+  const isActive = (code: NumerologyCodeType) => activeSection === code;
   
   return (
     <div className="space-y-4">
@@ -109,7 +116,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           <CardContent className="p-6">
             <ScrollArea className="max-h-[600px] pr-4">
               <ArchetypeDetails 
-                archetype={findArchetype(activeSection as NumerologyCodeType)} 
+                archetype={findArchetype(activeSection)} 
               />
             </ScrollArea>
           </CardContent>

@@ -48,9 +48,11 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     if (!profile || !profile.fullCodes) return undefined;
     
     // Get the code value
-    const codeTypeNormalized = codeType.replace(/Code$/, '');
-    const codeValue = profile.fullCodes[codeTypeNormalized as keyof typeof profile.fullCodes] as number;
+    const codeTypeNormalized = codeType.replace(/Code$/, '') as keyof typeof profile.fullCodes;
+    const codeValue = profile.fullCodes[codeTypeNormalized] as number;
     if (!codeValue) return undefined;
+    
+    console.log(`Looking for archetype with code=${codeType}, value=${codeValue}`);
     
     // Try to find with exact match first
     let found = archetypes.find(arch => {
@@ -59,9 +61,10 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     
     // If not found, try with normalized code
     if (!found) {
+      const normalizedCodeType = codeType.replace(/Code$/, '');
       found = archetypes.find(arch => {
         const archCodeNormalized = arch.code.replace(/Code$/, '');
-        return archCodeNormalized === codeTypeNormalized && arch.value === codeValue;
+        return archCodeNormalized === normalizedCodeType && arch.value === codeValue;
       });
     }
     
