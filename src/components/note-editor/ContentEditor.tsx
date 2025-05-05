@@ -48,12 +48,11 @@ export const ContentEditor = ({
       onInput={updateContentFromEditor}
       onKeyDown={handleKeyDown}
       dangerouslySetInnerHTML={{ __html: content }}
-      spellCheck={false} // Отключаем проверку орфографии для улучшения производительности
+      spellCheck={false}
       dir="ltr"
       style={{
         direction: 'ltr',
         textAlign: 'left',
-        unicodeBidi: 'normal',
       }}
       suppressContentEditableWarning={true}
     />

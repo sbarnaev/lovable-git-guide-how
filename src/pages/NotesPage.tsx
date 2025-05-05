@@ -2,7 +2,7 @@
 import React from 'react';
 import { NoteEditor } from '@/components/note-editor';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 
 const NotesPage = () => {
   // Используем тестовый ID для демонстрации
