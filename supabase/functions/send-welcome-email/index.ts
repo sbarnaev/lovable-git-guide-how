@@ -81,11 +81,13 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="margin: 10px 0 0 0; font-size: 14px;"><strong>Доступ:</strong> Активирован на 7 дней</p>
           </div>
           
-          <p style="font-size: 16px; color: #555;">Для входа в систему используйте ваш email. Если вы забыли пароль или это ваш первый вход, пожалуйста, воспользуйтесь функцией <strong>"Забыли пароль?"</strong> на странице входа, чтобы установить или сбросить пароль.</p>
+          <p style="font-size: 16px; color: #555;">Для начала работы с системой, вам необходимо создать пароль для вашей учетной записи:</p>
           
           <div style="margin: 30px 0; text-align: center;">
-            <a href="${Deno.env.get("SITE_URL") || "https://lovable.dev"}/login" style="background-color: #4F46E5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Войти в систему</a>
+            <a href="${Deno.env.get("SITE_URL") || "https://lovable.dev"}/reset-password" style="background-color: #4F46E5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Создать пароль</a>
           </div>
+          
+          <p style="font-size: 16px; color: #555;">Если кнопка выше не работает, перейдите на страницу входа и нажмите <strong>"Забыли пароль?"</strong>, чтобы получить ссылку для создания пароля.</p>
           
           <p style="font-size: 16px; color: #555;">Если у вас возникли вопросы или проблемы с доступом к системе, пожалуйста, свяжитесь с нашей службой поддержки.</p>
           
