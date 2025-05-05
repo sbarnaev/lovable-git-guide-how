@@ -25,6 +25,7 @@ import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import LimitedAccessPage from "./pages/LimitedAccessPage";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="login" element={<Login />} />
+                <Route path="reset-password" element={<ResetPassword />} />
                 
                 <Route path="/" element={<AuthLayout />}>
                   <Route path="/" element={<MainLayout />}>
