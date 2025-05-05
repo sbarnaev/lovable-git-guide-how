@@ -2,7 +2,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+if (!RESEND_API_KEY) {
+  console.error("Ошибка: RESEND_API_KEY не задан. Пожалуйста, установите секрет RESEND_API_KEY.");
+}
+
+const resend = new Resend(RESEND_API_KEY);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,11 +47,14 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
     
+    console.log("Получен запрос на отправку письма");
+    
     // Parse the request body as JSON
     const event: UserSignupEvent = await req.json();
     
     // Verify this is a user signup event
     if (event.type !== "INSERT" || event.table !== "users" || event.schema !== "auth") {
+      console.log("Это не событие регистрации пользователя:", event.type, event.table, event.schema);
       return new Response(
         JSON.stringify({ error: "Not a user signup event" }),
         {
@@ -58,10 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { email } = event.record;
     const name = event.record.raw_user_meta_data?.name || "новый пользователь";
     
-    // We don't have the password in clear text since it's hashed
-    // We'll instruct the user to use the "Forgot Password" feature if needed
-    
-    console.log(`Sending welcome email to ${email}`);
+    console.log(`Отправка приветственного письма на адрес ${email}`);
     
     // Send welcome email with Resend
     const emailResponse = await resend.emails.send({
@@ -106,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error in send-welcome-email function:", error);
+    console.error("Ошибка в функции send-welcome-email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
