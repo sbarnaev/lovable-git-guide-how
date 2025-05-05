@@ -17,37 +17,68 @@ export const ContentEditor = ({
   updateContentFromEditor,
   handleKeyDown
 }: ContentEditorProps) => {
-  // Применение базового форматирования при монтировании
+  // Принудительное установление направления текста слева-направо
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
     
-    // Эта попытка не работала должным образом, поэтому мы используем более прямой подход
+    // Установка HTML атрибутов и стилей на корневой элемент
     editor.setAttribute('dir', 'ltr');
+    editor.style.direction = 'ltr';
+    editor.style.textAlign = 'left';
     editor.style.unicodeBidi = 'plaintext';
     
-    // Добавим обработчик для принудительного применения направления текста после ввода
+    // Функция для применения стилей ко всем текстовым блокам
+    const fixAllTextDirection = () => {
+      // Выбираем все текстовые блоки в редакторе
+      const textBlocks = editor.querySelectorAll('p, h1, h2, h3, div, li, blockquote, span');
+      
+      textBlocks.forEach(block => {
+        block.setAttribute('dir', 'ltr');
+        (block as HTMLElement).style.direction = 'ltr';
+        (block as HTMLElement).style.textAlign = 'left';
+        (block as HTMLElement).style.unicodeBidi = 'plaintext';
+      });
+    };
+    
+    // Применяем сразу после рендеринга контента
+    fixAllTextDirection();
+    
+    // И после каждого ввода
     const handleInput = () => {
+      fixAllTextDirection();
+      
+      // Дополнительно обрабатываем текстовый узел под курсором
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        if (range.startContainer.nodeType === Node.TEXT_NODE) {
-          // Находим родительский элемент текстового узла
-          const parentElement = range.startContainer.parentElement;
-          if (parentElement) {
-            // Применяем стили к родительскому элементу
+        if (range.startContainer) {
+          // Находим ближайший родительский элемент текстового узла
+          let parentElement = range.startContainer;
+          while (parentElement && parentElement.nodeType !== Node.ELEMENT_NODE && parentElement !== editor) {
+            parentElement = parentElement.parentElement;
+          }
+          
+          if (parentElement && parentElement !== editor) {
+            (parentElement as HTMLElement).style.direction = 'ltr';
+            (parentElement as HTMLElement).style.textAlign = 'left';
+            (parentElement as HTMLElement).style.unicodeBidi = 'plaintext';
             parentElement.setAttribute('dir', 'ltr');
-            parentElement.style.direction = 'ltr';
-            parentElement.style.textAlign = 'left';
           }
         }
       }
     };
     
+    // Добавляем обработчики событий
     editor.addEventListener('input', handleInput);
+    editor.addEventListener('paste', () => {
+      // Отложенный вызов для обработки вставленного контента
+      setTimeout(fixAllTextDirection, 0);
+    });
     
     return () => {
       editor.removeEventListener('input', handleInput);
+      editor.removeEventListener('paste', () => {});
     };
   }, [editorRef]);
   
