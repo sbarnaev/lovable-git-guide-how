@@ -187,7 +187,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
       </div>
       
       {/* New Consultation section */}
-      {calculation.id && combinedArchetypes.length > 0 && (
+      {calculation.id && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Консультация</h2>
           <ConsultationTabs 
