@@ -42,8 +42,18 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     // Normalize the code type (remove 'Code' suffix if present)
     const normalizedCode = normalizeCodeType(code);
     
-    // Get the value from fullCodes
-    const codeValue = fullCodes[normalizedCode];
+    // Get the value from fullCodes using the appropriate property name
+    // Map from normalized code to the actual property name in fullCodes
+    const codePropertyMap: Record<string, string> = {
+      'personality': 'personalityCode',
+      'connector': 'connectorCode',
+      'realization': 'realizationCode',
+      'generator': 'generatorCode',
+      'mission': 'missionCode'
+    };
+    
+    const propertyName = codePropertyMap[normalizedCode] || normalizedCode;
+    const codeValue = fullCodes[propertyName as keyof typeof fullCodes];
     
     if (codeValue === undefined) {
       console.log(`No value found for ${code} in fullCodes`);
@@ -102,7 +112,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('personality')}
           className={`rounded-md ${isActive('personality') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['personality']} {fullCodes.personality}
+          Код {codeDisplayNames['personality']} {fullCodes.personalityCode}
         </Button>
         
         <Button 
@@ -110,7 +120,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('connector')}
           className={`rounded-md ${isActive('connector') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['connector']} {fullCodes.connector}
+          Код {codeDisplayNames['connector']} {fullCodes.connectorCode}
         </Button>
         
         <Button 
@@ -118,7 +128,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('realization')}
           className={`rounded-md ${isActive('realization') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['realization']} {fullCodes.realization}
+          Код {codeDisplayNames['realization']} {fullCodes.realizationCode}
         </Button>
         
         <Button 
@@ -126,7 +136,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('generator')}
           className={`rounded-md ${isActive('generator') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['generator']} {fullCodes.generator}
+          Код {codeDisplayNames['generator']} {fullCodes.generatorCode}
         </Button>
         
         <Button 
@@ -134,7 +144,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('mission')}
           className={`rounded-md ${isActive('mission') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['mission']} {fullCodes.mission}
+          Код {codeDisplayNames['mission']} {fullCodes.missionCode}
         </Button>
       </div>
       

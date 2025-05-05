@@ -54,8 +54,17 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     // Normalize the code type (remove 'Code' suffix if present)
     const normalizedCode = normalizeCodeType(codeType);
     
-    // Get the code value from the current profile
-    const codeValue = profile.fullCodes[normalizedCode];
+    // Map from normalized code to the actual property name in fullCodes
+    const codePropertyMap: Record<string, string> = {
+      'personality': 'personalityCode',
+      'connector': 'connectorCode',
+      'realization': 'realizationCode',
+      'generator': 'generatorCode',
+      'mission': 'missionCode'
+    };
+    
+    const propertyName = codePropertyMap[normalizedCode] || normalizedCode;
+    const codeValue = profile.fullCodes[propertyName as keyof typeof profile.fullCodes];
     
     if (codeValue === undefined) {
       console.log(`No value found for ${codeType} in profile`);
@@ -129,7 +138,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           onClick={() => handleSelectCodeType('personality')}
           className={`rounded-md ${isActive('personality') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['personality']} {profile.fullCodes.personality}
+          Код {codeDisplayNames['personality']} {profile.fullCodes.personalityCode}
         </Button>
         
         <Button 
@@ -137,7 +146,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           onClick={() => handleSelectCodeType('connector')}
           className={`rounded-md ${isActive('connector') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['connector']} {profile.fullCodes.connector}
+          Код {codeDisplayNames['connector']} {profile.fullCodes.connectorCode}
         </Button>
         
         <Button 
@@ -145,7 +154,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           onClick={() => handleSelectCodeType('realization')}
           className={`rounded-md ${isActive('realization') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['realization']} {profile.fullCodes.realization}
+          Код {codeDisplayNames['realization']} {profile.fullCodes.realizationCode}
         </Button>
         
         <Button 
@@ -153,7 +162,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           onClick={() => handleSelectCodeType('generator')}
           className={`rounded-md ${isActive('generator') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['generator']} {profile.fullCodes.generator}
+          Код {codeDisplayNames['generator']} {profile.fullCodes.generatorCode}
         </Button>
         
         <Button 
@@ -161,7 +170,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           onClick={() => handleSelectCodeType('mission')}
           className={`rounded-md ${isActive('mission') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['mission']} {profile.fullCodes.mission}
+          Код {codeDisplayNames['mission']} {profile.fullCodes.missionCode}
         </Button>
       </div>
     );

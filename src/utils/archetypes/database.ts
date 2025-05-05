@@ -1,4 +1,3 @@
-
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -68,8 +67,11 @@ export function convertToDbRecord(description: ArchetypeDescription): ArchetypeD
  * Преобразует запись из БД в формат ArchetypeDescription
  */
 export function convertFromDbRecord(data: any): ArchetypeDescription {
+  // Cast the code value to NumerologyCodeType to ensure type safety
+  const codeValue = data.code as NumerologyCodeType;
+  
   return {
-    code: data.code as NumerologyCodeType,
+    code: codeValue,
     value: data.value,
     title: data.title,
     description: data.description || undefined,
@@ -230,9 +232,11 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
       );
       
       if (index >= 0) {
-        archetypeDescriptionsCache[index] = {...description, code: normalizedCode};
+        // Use a type assertion to ensure type safety
+        archetypeDescriptionsCache[index] = {...description, code: normalizedCode as NumerologyCodeType};
       } else {
-        archetypeDescriptionsCache.push({...description, code: normalizedCode});
+        // Use a type assertion to ensure type safety
+        archetypeDescriptionsCache.push({...description, code: normalizedCode as NumerologyCodeType});
       }
       
       return true;
@@ -252,8 +256,8 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
       console.log(`Добавлен новый архетип: ${normalizedCode}-${description.value}`);
       toast.success(`Добавлен новый архетип: ${normalizedCode}-${description.value}`);
       
-      // Добавляем запись в кеш
-      archetypeDescriptionsCache.push({...description, code: normalizedCode});
+      // Добавляем запись в кеш с правильным типом
+      archetypeDescriptionsCache.push({...description, code: normalizedCode as NumerologyCodeType});
       
       return true;
     }
