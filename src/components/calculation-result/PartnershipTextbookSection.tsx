@@ -37,23 +37,31 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const partnerShortName = getShortName(partnerName);
   
   // Improved findArchetype function
-  const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType, code: number): ArchetypeDescription | undefined => {
+  const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes found for ${codeType} search`);
       return undefined;
     }
     
-    // Normalize code type by removing "Code" suffix if present
-    const normalizedCodeType = codeType.replace('Code', '');
+    // Get the profile we're currently looking at
+    const profile = activeTab === 'client' ? clientProfile : partnerProfile;
+    if (!profile || !profile.fullCodes) return undefined;
+    
+    // Get the code value
+    const codeTypeNormalized = codeType.replace(/Code$/, '');
+    const codeValue = profile.fullCodes[codeTypeNormalized as keyof typeof profile.fullCodes] as number;
+    if (!codeValue) return undefined;
     
     // Try to find with exact match first
-    let found = archetypes.find(arch => arch.code === codeType && arch.value === code);
+    let found = archetypes.find(arch => {
+      return arch.code === codeType && arch.value === codeValue;
+    });
     
     // If not found, try with normalized code
     if (!found) {
       found = archetypes.find(arch => {
-        const archCodeNormalized = arch.code.replace('Code', '');
-        return archCodeNormalized === normalizedCodeType && arch.value === code;
+        const archCodeNormalized = arch.code.replace(/Code$/, '');
+        return archCodeNormalized === codeTypeNormalized && arch.value === codeValue;
       });
     }
     
@@ -75,7 +83,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const inactiveButtonClass = "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50";
 
   // Function to render code buttons for a profile
-  const renderCodeButtons = (profile: NumerologyProfile | undefined, archetypes: ArchetypeDescription[]) => {
+  const renderCodeButtons = (profile: NumerologyProfile | undefined) => {
     if (!profile || !profile.fullCodes) {
       return (
         <div className="text-center text-muted-foreground text-sm py-4">
@@ -87,41 +95,41 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         <Button 
-          variant={activeCodeType === 'personalityCode' || activeCodeType === 'personality' ? 'default' : 'outline'}
+          variant={activeCodeType === 'personalityCode' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('personalityCode')}
-          className={`${buttonBaseClass} ${(activeCodeType === 'personalityCode' || activeCodeType === 'personality') ? activeButtonClass : inactiveButtonClass}`}
+          className={`${buttonBaseClass} ${activeCodeType === 'personalityCode' ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Личности {profile.fullCodes.personalityCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'connectorCode' || activeCodeType === 'connector' ? 'default' : 'outline'}
+          variant={activeCodeType === 'connectorCode' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('connectorCode')}
-          className={`${buttonBaseClass} ${(activeCodeType === 'connectorCode' || activeCodeType === 'connector') ? activeButtonClass : inactiveButtonClass}`}
+          className={`${buttonBaseClass} ${activeCodeType === 'connectorCode' ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Коннектора {profile.fullCodes.connectorCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'realizationCode' || activeCodeType === 'realization' ? 'default' : 'outline'}
+          variant={activeCodeType === 'realizationCode' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('realizationCode')}
-          className={`${buttonBaseClass} ${(activeCodeType === 'realizationCode' || activeCodeType === 'realization') ? activeButtonClass : inactiveButtonClass}`}
+          className={`${buttonBaseClass} ${activeCodeType === 'realizationCode' ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Реализации {profile.fullCodes.realizationCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'generatorCode' || activeCodeType === 'generator' ? 'default' : 'outline'}
+          variant={activeCodeType === 'generatorCode' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('generatorCode')}
-          className={`${buttonBaseClass} ${(activeCodeType === 'generatorCode' || activeCodeType === 'generator') ? activeButtonClass : inactiveButtonClass}`}
+          className={`${buttonBaseClass} ${activeCodeType === 'generatorCode' ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Генератора {profile.fullCodes.generatorCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'missionCode' || activeCodeType === 'mission' ? 'default' : 'outline'}
+          variant={activeCodeType === 'missionCode' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('missionCode')}
-          className={`${buttonBaseClass} ${(activeCodeType === 'missionCode' || activeCodeType === 'mission') ? activeButtonClass : inactiveButtonClass}`}
+          className={`${buttonBaseClass} ${activeCodeType === 'missionCode' ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Миссии {profile.fullCodes.missionCode}
         </Button>
@@ -140,19 +148,14 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
         </TabsList>
         
         <TabsContent value="client">
-          {renderCodeButtons(clientProfile, clientArchetypes)}
+          {renderCodeButtons(clientProfile)}
           
           {activeCodeType && clientProfile && clientProfile.fullCodes && (
             <Card className="mt-4 shadow-md border border-gray-200">
               <CardContent className="p-6">
                 <ScrollArea className="max-h-[600px]">
                   <ArchetypeDetails 
-                    archetype={findArchetype(
-                      clientArchetypes, 
-                      activeCodeType, 
-                      clientProfile.fullCodes[activeCodeType.replace(/Code$/, '') as keyof typeof clientProfile.fullCodes] as number || 
-                      clientProfile.fullCodes[`${activeCodeType}Code` as keyof typeof clientProfile.fullCodes] as number
-                    )} 
+                    archetype={findArchetype(clientArchetypes, activeCodeType)}
                   />
                 </ScrollArea>
               </CardContent>
@@ -161,19 +164,14 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
         </TabsContent>
         
         <TabsContent value="partner">
-          {renderCodeButtons(partnerProfile, partnerArchetypes)}
+          {renderCodeButtons(partnerProfile)}
           
           {activeCodeType && partnerProfile && partnerProfile.fullCodes && (
             <Card className="mt-4 shadow-md border border-gray-200">
               <CardContent className="p-6">
                 <ScrollArea className="max-h-[600px]">
                   <ArchetypeDetails 
-                    archetype={findArchetype(
-                      partnerArchetypes, 
-                      activeCodeType, 
-                      partnerProfile.fullCodes[activeCodeType.replace(/Code$/, '') as keyof typeof partnerProfile.fullCodes] as number || 
-                      partnerProfile.fullCodes[`${activeCodeType}Code` as keyof typeof partnerProfile.fullCodes] as number
-                    )} 
+                    archetype={findArchetype(partnerArchetypes, activeCodeType)}
                   />
                 </ScrollArea>
               </CardContent>

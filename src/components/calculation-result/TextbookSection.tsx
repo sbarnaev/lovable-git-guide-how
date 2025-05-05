@@ -33,7 +33,15 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   };
 
   const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
-    return archetypes.find(arch => arch.code === code);
+    return archetypes.find(arch => {
+      // Try exact match first
+      if (arch.code === code) return true;
+      
+      // Try with normalized code (without "Code" suffix)
+      const normalizedCode = code.replace(/Code$/, '');
+      const normalizedArchCode = arch.code.replace(/Code$/, '');
+      return normalizedArchCode === normalizedCode;
+    });
   };
   
   // Стили для кнопок и активного состояния
