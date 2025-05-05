@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -27,6 +27,26 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
 }) => {
   const [activeTab, setActiveTab] = useState<string>("client");
   const [activeCodeType, setActiveCodeType] = useState<NumerologyCodeType | null>(null);
+  
+  // Добавляем эффект для отладки
+  useEffect(() => {
+    console.log("PartnershipTextbookSection rendered with:", {
+      clientProfile,
+      partnerProfile,
+      clientArchetypes: clientArchetypes?.length,
+      partnerArchetypes: partnerArchetypes?.length,
+      activeTab,
+      activeCodeType
+    });
+    
+    if (clientProfile?.fullCodes) {
+      console.log("Client fullCodes:", clientProfile.fullCodes);
+    }
+    
+    if (partnerProfile?.fullCodes) {
+      console.log("Partner fullCodes:", partnerProfile.fullCodes);
+    }
+  }, [clientProfile, partnerProfile, clientArchetypes, partnerArchetypes, activeTab, activeCodeType]);
   
   // Get short names for display
   const getShortName = (fullName: string) => {
@@ -124,7 +144,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   };
   
   // Determine which button is active for better styling
-  const isActive = (code: string) => activeCodeType === code;
+  const isActive = (code: NumerologyCodeType) => activeCodeType === code;
 
   // Function to render code buttons for a profile
   const renderCodeButtons = (profile: NumerologyProfile | undefined) => {

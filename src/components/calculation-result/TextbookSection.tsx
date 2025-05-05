@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArchetypeDetails } from './ArchetypeDetails';
@@ -18,6 +18,20 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   archetypes
 }) => {
   const [activeSection, setActiveSection] = useState<NumerologyCodeType | null>(null);
+
+  // Добавляем эффект для отладки
+  useEffect(() => {
+    console.log("TextbookSection rendered with:", {
+      calculation: calculation?.id,
+      archetypes: archetypes?.length,
+      activeSection,
+      fullCodes: calculation?.results?.fullCodes
+    });
+    
+    if (calculation?.results?.fullCodes) {
+      console.log("fullCodes:", calculation.results.fullCodes);
+    }
+  }, [calculation, archetypes, activeSection]);
 
   if (!calculation || calculation.type !== 'basic' || !calculation.results.fullCodes) {
     return null;

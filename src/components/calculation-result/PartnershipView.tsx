@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PartnershipCalculation } from '@/types';
 import { ArchetypeDescription, NumerologyProfile } from '@/types/numerology';
@@ -22,8 +23,29 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   clientArchetypes,
   partnerArchetypes
 }) => {
+  // Дополнительный лог для отладки
+  console.log("PartnershipView rendered with:", {
+    calculation: calculation?.id,
+    clientArchetypes: clientArchetypes?.length,
+    partnerArchetypes: partnerArchetypes?.length,
+    clientProfile: calculation?.results?.clientProfile,
+    partnerProfile: calculation?.results?.partnerProfile
+  });
+  
   // Convert BasicCalculationResults to NumerologyProfile for compatibility with PartnershipTextbookSection
   const convertToNumerologyProfile = (result: any): NumerologyProfile => {
+    if (!result) {
+      console.log("No result to convert to NumerologyProfile");
+      return {
+        lifePath: 0,
+        destiny: 0,
+        personality: 0,
+        fullCodes: undefined
+      };
+    }
+    
+    console.log("Converting to NumerologyProfile:", result);
+    
     return {
       lifePath: result.numerology?.lifePath || 0,
       destiny: result.numerology?.destiny || 0,
@@ -38,6 +60,8 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   
   const partnerProfile = calculation.results.partnerProfile ?
     convertToNumerologyProfile(calculation.results.partnerProfile) : undefined;
+  
+  console.log("Converted profiles:", { clientProfile, partnerProfile });
   
   // Combine archetypes for AI analysis
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
