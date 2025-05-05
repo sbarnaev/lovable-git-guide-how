@@ -12,48 +12,16 @@ export const useNoteEditor = (calculationId: string) => {
   const [contentChanged, setContentChanged] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<MutationObserver | null>(null);
-  const contentChangeTimer = useRef<NodeJS.Timeout | null>(null);
   const { saveNote, getNote, updateNote } = useCalculations();
-  
-  // Оптимизированная функция для установки правильного направления текста
-  const ensureProperTextDirection = useCallback(() => {
-    if (!editorRef.current) return;
-    
-    // Применяем только к родительскому элементу, а не ко всем потомкам
-    editorRef.current.setAttribute('dir', 'ltr');
-    editorRef.current.style.direction = 'ltr';
-    editorRef.current.style.textAlign = 'left';
-    editorRef.current.style.unicodeBidi = 'normal';
-  }, []);
-  
-  // Извлекаем блоки из содержимого более эффективно
-  const extractBlocksFromContent = useCallback((htmlContent: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    
-    const blockElements = tempDiv.querySelectorAll('[data-block-id]');
-    if (blockElements.length === 0) return;
-    
-    const extractedBlocks: TextBlock[] = [];
-    
-    blockElements.forEach((element) => {
-      const id = element.getAttribute('data-block-id') || '';
-      const title = element.getAttribute('data-block-title') || 'Без названия';
-      
-      extractedBlocks.push({ id, title, content: element.innerHTML });
-    });
-    
-    setTextBlocks(extractedBlocks);
-  }, []);
 
-  // Загрузка заметки
+  // Загрузка заметки при монтировании компонента
   useEffect(() => {
     let isMounted = true;
     
     const fetchNote = async () => {
-      if (!isMounted) return;
-      setLoading(true);
+      if (!calculationId || !isMounted) return;
       
+      setLoading(true);
       try {
         const note = await getNote(calculationId);
         if (note && isMounted) {
@@ -62,7 +30,6 @@ export const useNoteEditor = (calculationId: string) => {
           
           if (editorRef.current) {
             editorRef.current.innerHTML = note.content;
-            ensureProperTextDirection();
             extractBlocksFromContent(note.content);
           }
         }
@@ -85,9 +52,17 @@ export const useNoteEditor = (calculationId: string) => {
     return () => {
       isMounted = false;
     };
-  }, [calculationId, getNote, ensureProperTextDirection, extractBlocksFromContent]);
+  }, [calculationId, getNote]);
   
-  // Упрощенный MutationObserver только на корневом элементе
+  // Устанавливаем правильное направление текста
+  const ensureProperTextDirection = useCallback(() => {
+    if (!editorRef.current) return;
+    editorRef.current.dir = 'ltr';
+    editorRef.current.style.direction = 'ltr';
+    editorRef.current.style.textAlign = 'left';
+  }, []);
+  
+  // Более легкая версия обработчика мутаций, активирующаяся только при необходимости
   useEffect(() => {
     if (!editorRef.current) return;
     
@@ -95,15 +70,13 @@ export const useNoteEditor = (calculationId: string) => {
       observerRef.current.disconnect();
     }
     
-    observerRef.current = new MutationObserver((mutations) => {
-      if (mutations.some(m => m.type === 'attributes' || m.type === 'childList')) {
-        ensureProperTextDirection();
-      }
+    // Создаем упрощенный MutationObserver
+    observerRef.current = new MutationObserver(() => {
+      ensureProperTextDirection();
     });
     
+    // Наблюдаем только за необходимыми атрибутами
     observerRef.current.observe(editorRef.current, { 
-      childList: true,
-      subtree: false,
       attributes: true,
       attributeFilter: ['dir', 'style']
     });
@@ -115,6 +88,29 @@ export const useNoteEditor = (calculationId: string) => {
       }
     };
   }, [ensureProperTextDirection]);
+
+  // Извлекаем блоки из содержимого в оптимизированной форме
+  const extractBlocksFromContent = useCallback((htmlContent: string) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    const blockElements = tempDiv.querySelectorAll('[data-block-id]');
+    if (blockElements.length === 0) {
+      setTextBlocks([]);
+      return;
+    }
+    
+    const extractedBlocks: TextBlock[] = [];
+    
+    blockElements.forEach((element) => {
+      const id = element.getAttribute('data-block-id') || '';
+      const title = element.getAttribute('data-block-title') || 'Без названия';
+      
+      extractedBlocks.push({ id, title, content: '' });
+    });
+    
+    setTextBlocks(extractedBlocks);
+  }, []);
 
   // Сохранение контента
   const saveContent = useCallback(async () => {
@@ -147,72 +143,59 @@ export const useNoteEditor = (calculationId: string) => {
     }
   }, [calculationId, noteId, saveNote, updateNote, loading]);
 
-  // Обработчик ввода
+  // Обработчик ввода с задержкой детектирования изменений
   const updateContentFromEditor = useCallback(() => {
     if (!editorRef.current) return;
     
+    setContentChanged(true);
     const newContent = editorRef.current.innerHTML;
     setContent(newContent);
-    setContentChanged(true);
     
-    if (contentChangeTimer.current) {
-      clearTimeout(contentChangeTimer.current);
-    }
-    
-    contentChangeTimer.current = setTimeout(() => {
+    // Отложенное извлечение блоков для снижения нагрузки
+    setTimeout(() => {
       extractBlocksFromContent(newContent);
-    }, 500);
+    }, 800);
     
     ensureProperTextDirection();
   }, [extractBlocksFromContent, ensureProperTextDirection]);
 
   // Обработка нажатий клавиш
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    // Ctrl+S для сохранения
+    // Ctrl+S или Cmd+S для сохранения
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       saveContent();
       return;
     }
-    
-    // Обработка Enter только если нужно
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      document.execCommand('insertHTML', false, '<br><br>');
-      updateContentFromEditor();
-      return;
-    }
-  }, [updateContentFromEditor, saveContent]);
+  }, [saveContent]);
 
   // Добавление текстового блока
   const addTextBlock = useCallback(() => {
     const blockTitle = prompt('Введите название блока:');
-    if (!blockTitle) return;
+    if (!blockTitle || !editorRef.current) return;
     
     const blockId = `block-${Date.now()}`;
     const newBlock: TextBlock = {
       id: blockId,
       title: blockTitle,
-      content: '<p>Содержимое блока...</p>'
+      content: ''
     };
     
     setTextBlocks(prevBlocks => [...prevBlocks, newBlock]);
     setContentChanged(true);
     
-    if (editorRef.current) {
-      const blockHtml = `
-        <div class="p-3 border rounded-md my-3" data-block-id="${blockId}" data-block-title="${blockTitle}">
-          <div class="flex justify-between items-center mb-2">
-            <h3 class="font-medium text-primary" id="${blockId}">${blockTitle}</h3>
-          </div>
-          <div class="block-content">Содержимое блока...</div>
+    const blockHtml = `
+      <div class="p-3 border rounded-md my-3" data-block-id="${blockId}" data-block-title="${blockTitle}">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="font-medium text-primary" id="${blockId}">${blockTitle}</h3>
         </div>
-      `;
-      
-      editorRef.current.focus();
-      document.execCommand('insertHTML', false, blockHtml);
-      updateContentFromEditor();
-    }
+        <div class="block-content">Содержимое блока...</div>
+      </div>
+    `;
+    
+    editorRef.current.focus();
+    document.execCommand('insertHTML', false, blockHtml);
+    updateContentFromEditor();
   }, [updateContentFromEditor]);
   
   // Прокрутка к блоку
@@ -221,16 +204,6 @@ export const useNoteEditor = (calculationId: string) => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
-
-  // Очистка при размонтировании
-  useEffect(() => {
-    return () => {
-      if (contentChangeTimer.current) {
-        clearTimeout(contentChangeTimer.current);
-        contentChangeTimer.current = null;
-      }
-    };
   }, []);
 
   return {
