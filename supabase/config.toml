@@ -48,6 +48,10 @@ port = 54324
 verify_jwt = false
 env_DEEPSEEK_API_KEY = "sk-c41441aa0398496691ab4276756da8cb"
 
+[functions.send-welcome-email]
+verify_jwt = false
+env_RESEND_API_KEY = ""
+
 [inbucket]
 enabled = true
 port = 54324

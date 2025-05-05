@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -139,6 +140,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (data?.user) {
         toast.success('Регистрация прошла успешно. Проверьте почту для подтверждения.');
+        
+        // Примечание: email теперь будет отправлен через edge функцию автоматически
+        console.log('Пользователь зарегистрирован:', data.user.id);
       }
     } catch (err: any) {
       setError(err.message || 'Произошла ошибка при регистрации');
