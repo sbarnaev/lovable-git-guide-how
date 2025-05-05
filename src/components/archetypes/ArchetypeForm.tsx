@@ -1,7 +1,7 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from '@/components/ui/card';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { toast } from "sonner";
@@ -111,68 +111,6 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     setMaleImageUrl,
     femaleImageUrl,
     setFemaleImageUrl,
-    
-    // Personality Code fields
-    resourceManifestation,
-    setResourceManifestation,
-    distortedManifestation,
-    setDistortedManifestation,
-    developmentTask,
-    setDevelopmentTask,
-    resourceQualities,
-    setResourceQualities,
-    keyDistortions,
-    setKeyDistortions,
-    
-    // Connector Code fields
-    keyTask,
-    setKeyTask,
-    workingAspects,
-    setWorkingAspects,
-    nonWorkingAspects,
-    setNonWorkingAspects,
-    worldContactBasis,
-    setWorldContactBasis,
-    
-    // Realization Code fields
-    formula,
-    setFormula,
-    potentialRealizationWays,
-    setPotentialRealizationWays,
-    successSources,
-    setSuccessSources,
-    realizationType,
-    setRealizationType,
-    realizationObstacles,
-    setRealizationObstacles,
-    recommendations,
-    setRecommendations,
-    
-    // Generator Code fields
-    generatorFormula,
-    setGeneratorFormula,
-    energySources,
-    setEnergySources,
-    energyDrains,
-    setEnergyDrains,
-    flowSigns,
-    setFlowSigns,
-    burnoutSigns,
-    setBurnoutSigns,
-    generatorRecommendation,
-    setGeneratorRecommendation,
-    
-    // Mission Code fields
-    missionEssence,
-    setMissionEssence,
-    missionRealizationFactors,
-    setMissionRealizationFactors,
-    missionChallenges,
-    setMissionChallenges,
-    missionObstacles,
-    setMissionObstacles,
-    mainTransformation,
-    setMainTransformation,
   } = props;
 
   const handleSaveClick = () => {
@@ -205,11 +143,103 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     { value: 'mission', label: 'Код Миссии' }
   ];
 
-  // Доступные значения (числа от 1 до 9)
-  const valueOptions = Array.from({ length: 9 }, (_, i) => i + 1);
-  
-  // Нормализуем код для корректного отображения вкладок
+  // Генерируем доступные значения в зависимости от кода
   const normalizedCode = normalizeCode(selectedCode);
+  
+  // Добавляем мастер-число 11 для кода миссии
+  const valueOptions = normalizedCode === 'mission' 
+    ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 11] 
+    : [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    
+  // Показываем соответствующие поля в зависимости от выбранного кода
+  const renderCodeFields = () => {
+    switch (normalizedCode) {
+      case 'personality':
+        return (
+          <PersonalityTabContent
+            resourceManifestation={props.resourceManifestation}
+            setResourceManifestation={props.setResourceManifestation}
+            distortedManifestation={props.distortedManifestation}
+            setDistortedManifestation={props.setDistortedManifestation}
+            developmentTask={props.developmentTask}
+            setDevelopmentTask={props.setDevelopmentTask}
+            resourceQualities={props.resourceQualities}
+            setResourceQualities={props.setResourceQualities}
+            keyDistortions={props.keyDistortions}
+            setKeyDistortions={props.setKeyDistortions}
+          />
+        );
+        
+      case 'connector':
+        return (
+          <ConnectorTabContent
+            keyTask={props.keyTask}
+            setKeyTask={props.setKeyTask}
+            workingAspects={props.workingAspects}
+            setWorkingAspects={props.setWorkingAspects}
+            nonWorkingAspects={props.nonWorkingAspects}
+            setNonWorkingAspects={props.setNonWorkingAspects}
+            worldContactBasis={props.worldContactBasis}
+            setWorldContactBasis={props.setWorldContactBasis}
+          />
+        );
+        
+      case 'realization':
+        return (
+          <RealizationTabContent
+            formula={props.formula}
+            setFormula={props.setFormula}
+            potentialRealizationWays={props.potentialRealizationWays}
+            setPotentialRealizationWays={props.setPotentialRealizationWays}
+            successSources={props.successSources}
+            setSuccessSources={props.setSuccessSources}
+            realizationType={props.realizationType}
+            setRealizationType={props.setRealizationType}
+            realizationObstacles={props.realizationObstacles}
+            setRealizationObstacles={props.setRealizationObstacles}
+            recommendations={props.recommendations}
+            setRecommendations={props.setRecommendations}
+          />
+        );
+        
+      case 'generator':
+        return (
+          <GeneratorTabContent
+            generatorFormula={props.generatorFormula}
+            setGeneratorFormula={props.setGeneratorFormula}
+            energySources={props.energySources}
+            setEnergySources={props.setEnergySources}
+            energyDrains={props.energyDrains}
+            setEnergyDrains={props.setEnergyDrains}
+            flowSigns={props.flowSigns}
+            setFlowSigns={props.setFlowSigns}
+            burnoutSigns={props.burnoutSigns}
+            setBurnoutSigns={props.setBurnoutSigns}
+            generatorRecommendation={props.generatorRecommendation}
+            setGeneratorRecommendation={props.setGeneratorRecommendation}
+          />
+        );
+        
+      case 'mission':
+        return (
+          <MissionTabContent
+            missionEssence={props.missionEssence}
+            setMissionEssence={props.setMissionEssence}
+            missionRealizationFactors={props.missionRealizationFactors}
+            setMissionRealizationFactors={props.setMissionRealizationFactors}
+            missionChallenges={props.missionChallenges}
+            setMissionChallenges={props.setMissionChallenges}
+            missionObstacles={props.missionObstacles}
+            setMissionObstacles={props.setMissionObstacles}
+            mainTransformation={props.mainTransformation}
+            setMainTransformation={props.setMainTransformation}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -267,106 +297,22 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
             </div>
           </div>
 
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
-              <TabsTrigger value="general">Общее</TabsTrigger>
-              <TabsTrigger value="personality">Личность</TabsTrigger>
-              <TabsTrigger value="connector">Коннектор</TabsTrigger>
-              <TabsTrigger value="realization">Реализация</TabsTrigger>
-              <TabsTrigger value="generator">Генератор</TabsTrigger>
-              <TabsTrigger value="mission">Миссия</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="general">
-              <GeneralTabContent
-                title={props.title}
-                setTitle={props.setTitle}
-                description={props.description}
-                setDescription={props.setDescription}
-                maleImageUrl={props.maleImageUrl}
-                setMaleImageUrl={props.setMaleImageUrl}
-                femaleImageUrl={props.femaleImageUrl}
-                setFemaleImageUrl={props.setFemaleImageUrl}
-              />
-            </TabsContent>
-            
-            <TabsContent value="personality">
-              <PersonalityTabContent
-                resourceManifestation={props.resourceManifestation}
-                setResourceManifestation={props.setResourceManifestation}
-                distortedManifestation={props.distortedManifestation}
-                setDistortedManifestation={props.setDistortedManifestation}
-                developmentTask={props.developmentTask}
-                setDevelopmentTask={props.setDevelopmentTask}
-                resourceQualities={props.resourceQualities}
-                setResourceQualities={props.setResourceQualities}
-                keyDistortions={props.keyDistortions}
-                setKeyDistortions={props.setKeyDistortions}
-              />
-            </TabsContent>
-            
-            <TabsContent value="connector">
-              <ConnectorTabContent
-                keyTask={props.keyTask}
-                setKeyTask={props.setKeyTask}
-                workingAspects={props.workingAspects}
-                setWorkingAspects={props.setWorkingAspects}
-                nonWorkingAspects={props.nonWorkingAspects}
-                setNonWorkingAspects={props.setNonWorkingAspects}
-                worldContactBasis={props.worldContactBasis}
-                setWorldContactBasis={props.setWorldContactBasis}
-              />
-            </TabsContent>
-            
-            <TabsContent value="realization">
-              <RealizationTabContent
-                formula={props.formula}
-                setFormula={props.setFormula}
-                potentialRealizationWays={props.potentialRealizationWays}
-                setPotentialRealizationWays={props.setPotentialRealizationWays}
-                successSources={props.successSources}
-                setSuccessSources={props.setSuccessSources}
-                realizationType={props.realizationType}
-                setRealizationType={props.setRealizationType}
-                realizationObstacles={props.realizationObstacles}
-                setRealizationObstacles={props.setRealizationObstacles}
-                recommendations={props.recommendations}
-                setRecommendations={props.setRecommendations}
-              />
-            </TabsContent>
-            
-            <TabsContent value="generator">
-              <GeneratorTabContent
-                generatorFormula={props.generatorFormula}
-                setGeneratorFormula={props.setGeneratorFormula}
-                energySources={props.energySources}
-                setEnergySources={props.setEnergySources}
-                energyDrains={props.energyDrains}
-                setEnergyDrains={props.setEnergyDrains}
-                flowSigns={props.flowSigns}
-                setFlowSigns={props.setFlowSigns}
-                burnoutSigns={props.burnoutSigns}
-                setBurnoutSigns={props.setBurnoutSigns}
-                generatorRecommendation={props.generatorRecommendation}
-                setGeneratorRecommendation={props.setGeneratorRecommendation}
-              />
-            </TabsContent>
-            
-            <TabsContent value="mission">
-              <MissionTabContent
-                missionEssence={props.missionEssence}
-                setMissionEssence={props.setMissionEssence}
-                missionRealizationFactors={props.missionRealizationFactors}
-                setMissionRealizationFactors={props.setMissionRealizationFactors}
-                missionChallenges={props.missionChallenges}
-                setMissionChallenges={props.setMissionChallenges}
-                missionObstacles={props.missionObstacles}
-                setMissionObstacles={props.setMissionObstacles}
-                mainTransformation={props.mainTransformation}
-                setMainTransformation={props.setMainTransformation}
-              />
-            </TabsContent>
-          </Tabs>
+          {/* Общие поля всегда отображаются */}
+          <div className="mb-6">
+            <GeneralTabContent
+              title={props.title}
+              setTitle={props.setTitle}
+              description={props.description}
+              setDescription={props.setDescription}
+              maleImageUrl={props.maleImageUrl}
+              setMaleImageUrl={props.setMaleImageUrl}
+              femaleImageUrl={props.femaleImageUrl}
+              setFemaleImageUrl={props.setFemaleImageUrl}
+            />
+          </div>
+          
+          {/* Поля в зависимости от выбранного кода */}
+          {renderCodeFields()}
         </CardContent>
       </Card>
     </div>

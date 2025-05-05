@@ -29,6 +29,8 @@ export const MissionTabContent = ({
 }: MissionTabContentProps) => {
   return (
     <div className="space-y-4">
+      <h3 className="text-lg font-medium mb-2">Код миссии</h3>
+      
       <div className="space-y-2">
         <label className="text-sm font-medium">Суть миссии</label>
         <Textarea 
