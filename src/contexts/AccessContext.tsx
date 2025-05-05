@@ -17,11 +17,11 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   console.log("Profile in AccessProvider:", profile);
   console.log("Access status:", accessStatus);
   
-  // Проверяем, является ли пользователь администратором
+  // Безопасно проверяем, является ли пользователь администратором
   const isAdmin = profile?.role === 'admin';
   console.log("Is admin:", isAdmin);
   
-  // Администраторы всегда имеют доступ
+  // Определяем доступ: администраторы всегда имеют доступ, или проверяем по статусу
   const hasAccess = isAdmin || accessStatus.hasAccess;
   console.log("Final access decision:", hasAccess);
 
