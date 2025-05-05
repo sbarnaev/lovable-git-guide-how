@@ -256,7 +256,7 @@ export async function loadArchetypesFromDb(forceRefresh = false): Promise<boolea
     console.error('Error in loadArchetypesFromDb:', error);
     toast.error(`Ошибка загрузки архетипов: ${error instanceof Error ? error.message : String(error)}`);
     
-    // Проверяем наличие данных в localStorage для обратной совместимости
+    // Проверя��м наличие данных в localStorage для обратной совместимости
     loadDescriptionsFromStorage();
     
     return false;
@@ -349,7 +349,7 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
       missionObstacles: data.mission_obstacles || undefined,
       mainTransformation: data.main_transformation || undefined,
       
-      // Для обратной совм��стимости
+      // Для обратной совместимости
       strengths: data.strengths || undefined,
       challenges: data.challenges || undefined,
     };
@@ -440,6 +440,22 @@ export async function getValuesForCodeType(codeType: NumerologyCodeType): Promis
     return [];
   }
 }
+
+// Update the codeTypeToDisplay mapping
+const codeTypeToDisplay: Record<string, string> = {
+  personalityCode: 'Код Личности',
+  personality: 'Код Личности',
+  connectorCode: 'Код Коннектора',
+  connector: 'Код Коннектора',
+  realizationCode: 'Код Реализации',
+  realization: 'Код Реализации',
+  generatorCode: 'Код Генератора',
+  generator: 'Код Генератора',
+  missionCode: 'Код Миссии',
+  mission: 'Код Миссии',
+  target: 'Целевой Расчет',
+  all: 'Все'
+};
 
 // If this file doesn't contain the codeTypeTranslations object, we'll need to add it or update it in the component that uses it
 export const codeTypeTranslations: Record<NumerologyCodeType, string> = {

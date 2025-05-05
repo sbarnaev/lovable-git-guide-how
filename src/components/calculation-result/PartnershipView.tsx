@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { PartnershipCalculation } from '@/types';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { PartnershipClientInfo } from './PartnershipClientInfo';
-import { PartnershipAtlas } from './PartnershipAtlas';
-import { ArchetypeDescription } from '@/types/numerology';
+import { ArchetypeDescription, NumerologyProfile } from '@/types/numerology';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AIContentSection } from '@/components/AIContentSection';
 import { PartnershipTextbookSection } from './PartnershipTextbookSection';
+
+// Note: This is a temporary flag to disable notes
+const NOTES_DISABLED = true;
 
 interface PartnershipViewProps {
   calculation: (PartnershipCalculation & { id: string; createdAt: string });
@@ -13,11 +15,30 @@ interface PartnershipViewProps {
   partnerArchetypes: ArchetypeDescription[];
 }
 
-export const PartnershipView: React.FC<PartnershipViewProps> = ({ 
-  calculation, 
-  clientArchetypes, 
-  partnerArchetypes 
+export const PartnershipView: React.FC<PartnershipViewProps> = ({
+  calculation,
+  clientArchetypes,
+  partnerArchetypes
 }) => {
+  const [activeTab, setActiveTab] = useState<string>("compatibility");
+  
+  // Convert BasicCalculationResults to NumerologyProfile for compatibility with PartnershipTextbookSection
+  const convertToNumerologyProfile = (result: any): NumerologyProfile => {
+    return {
+      lifePath: result.numerology.lifePath,
+      destiny: result.numerology.destiny,
+      personality: result.numerology.personality,
+      fullCodes: result.fullCodes
+    };
+  };
+  
+  // Now use the converted profiles
+  const clientProfile = calculation.results.clientProfile ? 
+    convertToNumerologyProfile(calculation.results.clientProfile) : undefined;
+  
+  const partnerProfile = calculation.results.partnerProfile ?
+    convertToNumerologyProfile(calculation.results.partnerProfile) : undefined;
+  
   // Combine archetypes for AI analysis
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
   

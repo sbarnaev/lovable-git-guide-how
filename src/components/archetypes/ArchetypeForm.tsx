@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -380,11 +379,16 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
     }
   };
 
-  const tabLabels: Record<NumerologyCodeType, string> = {
+  const tabLabels: Record<string, string> = {
+    personalityCode: 'Личность',
     personality: 'Личность',
+    connectorCode: 'Коннектор',
     connector: 'Коннектор',
+    realizationCode: 'Реализация',
     realization: 'Реализация',
+    generatorCode: 'Генератор',
     generator: 'Генератор',
+    missionCode: 'Миссия',
     mission: 'Миссия',
     all: 'Общее',
     target: 'Цель'
@@ -781,4 +785,3 @@ const SectionArrays: React.FC<SectionArraysProps> = ({
     </div>
   );
 };
-

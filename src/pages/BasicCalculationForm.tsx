@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { calculateAllCodes } from "@/utils/numerologyCalculator";
 import { getArchetypeDescriptions } from "@/utils/archetypeDescriptions";
 import { ArchetypePreview } from "@/components/archetypes/ArchetypePreview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NumerologyCodeType } from "@/types/numerology";
 
 const BasicCalculationForm = () => {
   const navigate = useNavigate();
@@ -207,23 +207,23 @@ const BasicCalculationForm = () => {
                     </TabsList>
                     
                     <TabsContent value="personality">
-                      <ArchetypePreview selectedCode="personality" selectedValue={previewCodes.personalityCode} />
+                      <ArchetypePreview selectedCode="personalityCode" selectedValue={previewCodes.personalityCode} />
                     </TabsContent>
                     
                     <TabsContent value="connector">
-                      <ArchetypePreview selectedCode="connector" selectedValue={previewCodes.connectorCode} />
+                      <ArchetypePreview selectedCode="connectorCode" selectedValue={previewCodes.connectorCode} />
                     </TabsContent>
                     
                     <TabsContent value="realization">
-                      <ArchetypePreview selectedCode="realization" selectedValue={previewCodes.realizationCode} />
+                      <ArchetypePreview selectedCode="realizationCode" selectedValue={previewCodes.realizationCode} />
                     </TabsContent>
                     
                     <TabsContent value="generator">
-                      <ArchetypePreview selectedCode="generator" selectedValue={previewCodes.generatorCode} />
+                      <ArchetypePreview selectedCode="generatorCode" selectedValue={previewCodes.generatorCode} />
                     </TabsContent>
                     
                     <TabsContent value="mission">
-                      <ArchetypePreview selectedCode="mission" selectedValue={previewCodes.missionCode} />
+                      <ArchetypePreview selectedCode="missionCode" selectedValue={previewCodes.missionCode} />
                     </TabsContent>
                   </Tabs>
                 </CardContent>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,7 +15,7 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
   const [archetype, setArchetype] = useState<any>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Загружаем архетип при изменении кода или значения
+  // Load archetype when code or value changes
   useEffect(() => {
     const loadArchetype = async () => {
       setLoading(true);
@@ -33,9 +32,11 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
     loadArchetype();
   }, [selectedCode, selectedValue]);
 
-  // Автоматически выбирать таб в зависимости от выбранного кода
+  // Automatically select tab based on selected code
   useEffect(() => {
-    setActiveTab(selectedCode === 'all' ? 'general' : selectedCode);
+    // Convert code to simpler form for tab selection
+    const codeBase = selectedCode.replace('Code', '');
+    setActiveTab(selectedCode === 'all' ? 'general' : codeBase);
   }, [selectedCode]);
 
   if (loading) {
@@ -67,30 +68,31 @@ export const ArchetypePreview = ({ selectedCode, selectedValue }: ArchetypePrevi
     );
   }
 
-  // Определяем доступные вкладки в зависимости от типа кода
+  // Determine available tabs based on code type
   const getTabs = () => {
     const tabs = [
       { value: "general", label: "Общее" }
     ];
     
-    // Добавляем вкладки в зависимости от типа кода
-    if (selectedCode === 'personality' || selectedCode === 'all') {
+    // Use includes check instead of strict equality for compatibility
+    const codeBase = selectedCode.replace('Code', '');
+    if (codeBase === 'personality' || selectedCode === 'all') {
       tabs.push({ value: "personality", label: "Личность" });
     }
     
-    if (selectedCode === 'connector' || selectedCode === 'all') {
+    if (codeBase === 'connector' || selectedCode === 'all') {
       tabs.push({ value: "connector", label: "Коннектор" });
     }
     
-    if (selectedCode === 'realization' || selectedCode === 'all') {
+    if (codeBase === 'realization' || selectedCode === 'all') {
       tabs.push({ value: "realization", label: "Реализация" });
     }
     
-    if (selectedCode === 'generator' || selectedCode === 'all') {
+    if (codeBase === 'generator' || selectedCode === 'all') {
       tabs.push({ value: "generator", label: "Генератор" });
     }
     
-    if (selectedCode === 'mission' || selectedCode === 'all') {
+    if (codeBase === 'mission' || selectedCode === 'all') {
       tabs.push({ value: "mission", label: "Миссия" });
     }
     

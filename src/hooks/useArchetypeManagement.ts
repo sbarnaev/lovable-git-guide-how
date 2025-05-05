@@ -1,12 +1,12 @@
-
-import { useState, useEffect } from "react";
-import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
-import { addArchetypeDescription, getAllArchetypeDescriptions, getArchetypeDescription, loadArchetypesFromDb } from "@/utils/archetypeDescriptions";
+import { useState, useEffect } from 'react';
+import { NumerologyCodeType, ArchetypeDescription } from '@/types/numerology';
+import { getArchetypeDescription, addArchetypeDescription, getAllArchetypeDescriptions, loadArchetypesFromDb } from '@/utils/archetypeDescriptions';
+import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 
 export const useArchetypeManagement = () => {
   const [descriptions, setDescriptions] = useState<ArchetypeDescription[]>([]);
-  const [selectedCode, setSelectedCode] = useState<NumerologyCodeType>('personality');
+  const [selectedCode, setSelectedCode] = useState<NumerologyCodeType>('personalityCode');
   const [selectedValue, setSelectedValue] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -119,7 +119,7 @@ export const useArchetypeManagement = () => {
           setMissionEssence(desc.missionEssence || "");
           setMissionRealizationFactors(desc.missionRealizationFactors?.join('\n') || "");
           setMissionChallenges(desc.missionChallenges || "");
-          setMissionObstacles(desc.missionObstacles?.join('\n') || "");
+          setMissionObstacles(desc.missionObstacles || "");
           setMainTransformation(desc.mainTransformation || "");
         } else {
           // Clear all fields if no description is found
@@ -233,7 +233,7 @@ export const useArchetypeManagement = () => {
         missionEssence,
         missionRealizationFactors: parseTextToArray(missionRealizationFactors),
         missionChallenges,
-        missionObstacles: parseTextToArray(missionObstacles),
+        missionObstacles,
         mainTransformation,
         
         // Backward compatibility

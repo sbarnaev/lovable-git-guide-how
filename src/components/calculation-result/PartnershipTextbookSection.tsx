@@ -44,7 +44,19 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
 
     console.log(`Searching for archetype: ${codeType} with code ${code} in ${archetypes.length} archetypes`);
     
-    const found = archetypes.find(arch => arch.code === codeType && arch.value === code);
+    // Normalize code type by removing "Code" suffix if present
+    const normalizedCodeType = codeType.replace('Code', '');
+    
+    // Try to find with exact match first
+    let found = archetypes.find(arch => arch.code === codeType && arch.value === code);
+    
+    // If not found, try with normalized code
+    if (!found) {
+      found = archetypes.find(arch => {
+        const archCodeNormalized = arch.code.replace('Code', '');
+        return archCodeNormalized === normalizedCodeType && arch.value === code;
+      });
+    }
     
     if (!found) {
       console.log(`No matching archetype found for ${codeType} code ${code}`);
@@ -78,40 +90,40 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     return (
       <div className="flex flex-wrap gap-2">
         <Button 
-          variant={activeCodeType === 'personality' ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('personality')}
+          variant={activeCodeType === 'personalityCode' || activeCodeType === 'personality' ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('personalityCode')}
           className="flex-grow md:flex-grow-0"
         >
           Код Личности {profile.fullCodes.personalityCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'connector' ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('connector')}
+          variant={activeCodeType === 'connectorCode' || activeCodeType === 'connector' ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('connectorCode')}
           className="flex-grow md:flex-grow-0"
         >
           Код Коннектора {profile.fullCodes.connectorCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'realization' ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('realization')}
+          variant={activeCodeType === 'realizationCode' || activeCodeType === 'realization' ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('realizationCode')}
           className="flex-grow md:flex-grow-0"
         >
           Код Реализации {profile.fullCodes.realizationCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'generator' ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('generator')}
+          variant={activeCodeType === 'generatorCode' || activeCodeType === 'generator' ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('generatorCode')}
           className="flex-grow md:flex-grow-0"
         >
           Код Генератора {profile.fullCodes.generatorCode}
         </Button>
         
         <Button 
-          variant={activeCodeType === 'mission' ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('mission')}
+          variant={activeCodeType === 'missionCode' || activeCodeType === 'mission' ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('missionCode')}
           className="flex-grow md:flex-grow-0"
         >
           Код Миссии {profile.fullCodes.missionCode}
@@ -182,4 +194,3 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     </div>
   );
 };
-
