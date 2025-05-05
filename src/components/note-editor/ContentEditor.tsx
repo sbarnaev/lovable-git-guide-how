@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ContentEditorProps {
@@ -17,88 +17,117 @@ export const ContentEditor = ({
   updateContentFromEditor,
   handleKeyDown
 }: ContentEditorProps) => {
-  // Полное исправление направления текста
+  // Observer reference to watch for DOM changes
+  const observerRef = useRef<MutationObserver | null>(null);
+  
+  // Force all text direction universally with a more aggressive approach
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
     
-    // Установка HTML атрибутов и стилей на корневой элемент
+    // Set base direction on root element
     editor.setAttribute('dir', 'ltr');
     editor.style.direction = 'ltr';
     editor.style.textAlign = 'left';
     editor.style.unicodeBidi = 'plaintext';
     
-    // Функция для принудительного форматирования всего текста
-    const forceTextDirection = () => {
-      // Применение стилей ко всем элементам в редакторе
-      const applyToElement = (element: HTMLElement) => {
-        element.setAttribute('dir', 'ltr');
-        element.style.direction = 'ltr';
-        element.style.textAlign = 'left';
-        element.style.unicodeBidi = 'plaintext';
-        
-        // Рекурсивно применяем стили ко всем дочерним элементам
-        Array.from(element.children).forEach(child => {
-          applyToElement(child as HTMLElement);
-        });
-      };
+    // Helper to force direction on an element and all its children
+    const forceTextDirection = (rootElement: HTMLElement) => {
+      // Apply to root first
+      rootElement.setAttribute('dir', 'ltr');
+      rootElement.style.direction = 'ltr';
+      rootElement.style.textAlign = 'left';
+      rootElement.style.unicodeBidi = 'plaintext';
       
-      applyToElement(editor);
-      
-      // Дополнительно обрабатываем текстовый узел под курсором
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        if (range.startContainer) {
-          let currentNode = range.startContainer;
-          // Поднимаемся по дереву DOM и применяем стиль к каждому элементу
-          while (currentNode && currentNode !== editor) {
-            if (currentNode.nodeType === Node.ELEMENT_NODE) {
-              const element = currentNode as HTMLElement;
-              element.setAttribute('dir', 'ltr');
-              element.style.direction = 'ltr';
-              element.style.textAlign = 'left';
-              element.style.unicodeBidi = 'plaintext';
-            }
-            currentNode = currentNode.parentNode;
-          }
+      // Force all text nodes to use LTR
+      const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
+      let node;
+      while (node = walker.nextNode()) {
+        const parentElement = node.parentElement;
+        if (parentElement && parentElement !== editor) {
+          parentElement.setAttribute('dir', 'ltr');
+          parentElement.style.direction = 'ltr';
+          parentElement.style.textAlign = 'left';
+          parentElement.style.unicodeBidi = 'plaintext';
         }
       }
+      
+      // Apply to all elements recursively
+      const elements = rootElement.querySelectorAll('*');
+      elements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.setAttribute('dir', 'ltr');
+          el.style.direction = 'ltr';
+          el.style.textAlign = 'left';
+          el.style.unicodeBidi = 'plaintext';
+        }
+      });
     };
+
+    // Create MutationObserver to watch for DOM changes
+    observerRef.current = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+          forceTextDirection(editor);
+        }
+      });
+    });
     
-    // Применяем форматирование сразу при рендеринге
-    setTimeout(forceTextDirection, 0);
+    // Start observing
+    observerRef.current.observe(editor, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true
+    });
     
-    // Обработчик ввода для поддержания направления текста
-    const handleInput = () => {
-      // Отложенный вызов для предотвращения возможных конфликтов с другими обработчиками
-      setTimeout(forceTextDirection, 0);
-    };
+    // Apply immediately
+    forceTextDirection(editor);
     
-    // Обработчик события вставки текста
-    const handlePaste = () => {
-      setTimeout(forceTextDirection, 10);
-    };
+    // Apply on every input event (real-time)
+    const applyOnInput = () => setTimeout(() => forceTextDirection(editor), 0);
+    editor.addEventListener('input', applyOnInput);
     
-    // Добавляем обработчики для всех событий, которые могут изменить текст
-    editor.addEventListener('input', handleInput);
-    editor.addEventListener('paste', handlePaste);
-    editor.addEventListener('keydown', () => setTimeout(forceTextDirection, 0));
-    editor.addEventListener('focus', forceTextDirection);
-    editor.addEventListener('blur', forceTextDirection);
+    // Apply on paste with longer delay for processing
+    const applyOnPaste = () => setTimeout(() => forceTextDirection(editor), 10);
+    editor.addEventListener('paste', applyOnPaste);
     
-    // Регулярно применяем форматирование (каждые 500 мс)
-    const interval = setInterval(forceTextDirection, 500);
+    // Apply on focus/blur
+    editor.addEventListener('focus', () => forceTextDirection(editor));
+    editor.addEventListener('blur', () => forceTextDirection(editor));
+    
+    // Continual enforcement every 300ms
+    const interval = setInterval(() => forceTextDirection(editor), 300);
     
     return () => {
-      editor.removeEventListener('input', handleInput);
-      editor.removeEventListener('paste', handlePaste);
-      editor.removeEventListener('keydown', () => {});
-      editor.removeEventListener('focus', forceTextDirection);
-      editor.removeEventListener('blur', forceTextDirection);
+      // Clean up all listeners
+      editor.removeEventListener('input', applyOnInput);
+      editor.removeEventListener('paste', applyOnPaste);
+      editor.removeEventListener('focus', () => {});
+      editor.removeEventListener('blur', () => {});
       clearInterval(interval);
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
   }, [editorRef]);
+
+  // Handle content changes after editor has been modified
+  const handleUpdate = () => {
+    if (editorRef.current) {
+      // Force text direction before updating content
+      const elements = editorRef.current.querySelectorAll('*');
+      elements.forEach((el) => {
+        if (el instanceof HTMLElement) {
+          el.setAttribute('dir', 'ltr');
+          el.style.direction = 'ltr';
+          el.style.textAlign = 'left';
+          el.style.unicodeBidi = 'plaintext';
+        }
+      });
+      updateContentFromEditor();
+    }
+  };
   
   return (
     <div 
@@ -117,7 +146,7 @@ export const ContentEditor = ({
         "[&_[data-block-id]]:border [&_[data-block-id]]:p-3 [&_[data-block-id]]:rounded-md [&_[data-block-id]]:my-3"
       )}
       contentEditable={!loading}
-      onInput={updateContentFromEditor}
+      onInput={handleUpdate}
       onKeyDown={handleKeyDown}
       dangerouslySetInnerHTML={{ __html: content }}
       spellCheck={false}
@@ -125,7 +154,8 @@ export const ContentEditor = ({
       style={{
         direction: 'ltr',
         textAlign: 'left',
-        unicodeBidi: 'plaintext'
+        unicodeBidi: 'plaintext',
+        fontFamily: 'Arial, sans-serif' // Use a standard LTR-friendly font
       }}
       suppressContentEditableWarning={true}
     />
