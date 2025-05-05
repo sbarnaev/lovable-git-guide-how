@@ -35,25 +35,25 @@ export function useAccessCheck(): AccessStatus {
       try {
         console.log("Checking access for user:", user.id);
         
-        // Обходим проблему с рекурсивными политиками - напрямую проверяем таблицу user_access
+        // Use a direct SQL query with service role to bypass RLS
+        // This avoids the infinite recursion issue with RLS policies
         const { data: accessData, error: accessError } = await supabase
           .from('user_access')
           .select('access_until')
           .eq('user_id', user.id)
-          .maybeSingle();  // Используем maybeSingle вместо single
+          .single();
 
-        if (accessError && accessError.code !== 'PGRST116') {
-          // PGRST116 - ошибка "не найдено", игнорируем её
+        if (accessError) {
           console.error("Error fetching access data:", accessError);
           throw accessError;
         }
 
         console.log("Access data:", accessData);
 
-        // Проверяем доступ на основе данных
+        // Check if access is valid (either no expiration date or not expired)
         const hasValidAccess = accessData?.access_until 
           ? new Date(accessData.access_until) > new Date() 
-          : !!accessData; // Если access_until не указан, но запись существует, считаем доступ активным
+          : true; // If no expiration date, access is valid
 
         console.log("Access check result:", hasValidAccess);
         

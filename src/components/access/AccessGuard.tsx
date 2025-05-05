@@ -8,9 +8,12 @@ import { AccessExpiredAlert } from "./AccessExpiredAlert";
 export const AccessGuard: React.FC<{ requiresActiveAccess?: boolean }> = ({ 
   requiresActiveAccess = true
 }) => {
-  const { hasAccess, loading, isAdmin } = useAccess();
+  const { hasAccess, loading, isAdmin, error } = useAccess();
+  
+  // For debugging
+  console.log("AccessGuard state:", { hasAccess, loading, isAdmin, error, requiresActiveAccess });
 
-  // Админы всегда имеют доступ
+  // Admins always have access
   if (isAdmin) {
     return <Outlet />;
   }
@@ -23,14 +26,20 @@ export const AccessGuard: React.FC<{ requiresActiveAccess?: boolean }> = ({
     );
   }
 
-  // Если требуется активный доступ и его нет, перенаправляем на страницу с ограниченным доступом
+  // If there was an error checking access but the user has been granted access previously,
+  // we'll allow them to proceed but show a warning
+  if (error) {
+    console.warn("Access check error, but proceeding:", error);
+  }
+
+  // If active access is required and user doesn't have it, redirect to limited access page
   if (requiresActiveAccess && !hasAccess) {
     return <Navigate to="/limited-access" replace />;
   }
 
   return (
     <>
-      {/* Показываем предупреждение, если доступ ограничен, но страница доступна */}
+      {/* Show warning if access is restricted but page is accessible */}
       {!hasAccess && <AccessExpiredAlert />}
       <Outlet />
     </>

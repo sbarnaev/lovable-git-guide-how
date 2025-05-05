@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,16 +30,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Установка слушателя изменений состояния авторизации
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Если пользователь авторизован, загружаем его профиль
+        // If user is authenticated, load their profile
         if (currentSession?.user) {
           const userId = currentSession.user.id;
-          // Используем setTimeout для предотвращения блокировки Supabase
+          // Use setTimeout to prevent blocking Supabase
           setTimeout(() => {
             fetchUserProfile(userId);
           }, 0);
@@ -50,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Проверка существующей сессии
+    // Check existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -68,17 +67,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      // Вместо прямого запроса, использовать service role для обхода RLS
-      // или прямой запрос к базе данных
+      // Use Service Role client or direct SQL query to bypass RLS
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, role')
         .eq('id', userId)
-        .maybeSingle();  // Используем maybeSingle вместо single для предотвращения ошибки
+        .single();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching user profile:', error);
-        // Создаём временный профиль, чтобы не блокировать работу приложения
+        // Create a temporary profile to prevent blocking the application
         setProfile({ id: userId, name: null, role: null });
         return;
       }
@@ -87,13 +85,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log("Profile data loaded:", data);
         setProfile(data as UserProfile);
       } else {
-        console.log("No profile data found, using default profile");
-        setProfile({ id: userId, name: null, role: null });
+        console.log("No profile data found, creating default profile");
+        // Insert a default profile if none exists
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: userId, name: null, role: 'consultant' });
+          
+        if (insertError) {
+          console.error('Error creating default profile:', insertError);
+        }
+        
+        setProfile({ id: userId, name: null, role: 'consultant' });
       }
     } catch (err) {
       console.error('Exception when fetching profile:', err);
-      // Создаём временный профиль, чтобы не блокировать работу приложения
-      setProfile({ id: userId, name: null, role: null });
+      // Create a temporary profile to prevent blocking the application
+      setProfile({ id: userId, name: null, role: 'consultant' });
     }
   };
 
