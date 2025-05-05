@@ -44,63 +44,70 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     });
   };
   
-  // Стили для кнопок и активного состояния
-  const buttonBaseClass = "flex-grow md:flex-grow-0 font-medium transition-all";
-  const activeButtonClass = "bg-indigo-600 text-white hover:bg-indigo-700";
-  const inactiveButtonClass = "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50";
-
+  // Map code names to their display names
+  const codeDisplayNames: Record<string, string> = {
+    'personality': 'Личности',
+    'connector': 'Коннектора',
+    'realization': 'Реализации',
+    'generator': 'Генератора',
+    'mission': 'Миссии'
+  };
+  
+  // Determine which button is active for better styling
+  const isActive = (code: string) => activeSection === code;
+  
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Учебник</h2>
       
-      {/* Buttons in a horizontal row with improved styling */}
+      {/* Buttons in a horizontal row with proper styling */}
       <div className="flex flex-wrap gap-2">
         <Button 
-          variant={activeSection === 'personality' ? 'default' : 'outline'}
+          variant={isActive('personality') ? 'default' : 'outline'}
           onClick={() => toggleSection('personality')}
-          className={`${buttonBaseClass} ${activeSection === 'personality' ? activeButtonClass : inactiveButtonClass}`}
+          className={`rounded-md ${isActive('personality') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код Личности {fullCodes.personalityCode}
+          Код {codeDisplayNames['personality']} {fullCodes.personalityCode}
         </Button>
         
         <Button 
-          variant={activeSection === 'connector' ? 'default' : 'outline'}
+          variant={isActive('connector') ? 'default' : 'outline'}
           onClick={() => toggleSection('connector')}
-          className={`${buttonBaseClass} ${activeSection === 'connector' ? activeButtonClass : inactiveButtonClass}`}
+          className={`rounded-md ${isActive('connector') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код Коннектора {fullCodes.connectorCode}
+          Код {codeDisplayNames['connector']} {fullCodes.connectorCode}
         </Button>
         
         <Button 
-          variant={activeSection === 'realization' ? 'default' : 'outline'}
+          variant={isActive('realization') ? 'default' : 'outline'}
           onClick={() => toggleSection('realization')}
-          className={`${buttonBaseClass} ${activeSection === 'realization' ? activeButtonClass : inactiveButtonClass}`}
+          className={`rounded-md ${isActive('realization') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код Реализации {fullCodes.realizationCode}
+          Код {codeDisplayNames['realization']} {fullCodes.realizationCode}
         </Button>
         
         <Button 
-          variant={activeSection === 'generator' ? 'default' : 'outline'}
+          variant={isActive('generator') ? 'default' : 'outline'}
           onClick={() => toggleSection('generator')}
-          className={`${buttonBaseClass} ${activeSection === 'generator' ? activeButtonClass : inactiveButtonClass}`}
+          className={`rounded-md ${isActive('generator') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код Генератора {fullCodes.generatorCode}
+          Код {codeDisplayNames['generator']} {fullCodes.generatorCode}
         </Button>
         
         <Button 
-          variant={activeSection === 'mission' ? 'default' : 'outline'}
+          variant={isActive('mission') ? 'default' : 'outline'}
           onClick={() => toggleSection('mission')}
-          className={`${buttonBaseClass} ${activeSection === 'mission' ? activeButtonClass : inactiveButtonClass}`}
+          className={`rounded-md ${isActive('mission') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код Миссии {fullCodes.missionCode}
+          Код {codeDisplayNames['mission']} {fullCodes.missionCode}
         </Button>
       </div>
       
-      {/* Content panel with better formatting */}
+      {/* Content panel */}
       {activeSection && (
-        <Card className="shadow-md border border-gray-200">
+        <Card className="border rounded-lg overflow-hidden">
           <CardContent className="p-6">
-            <ScrollArea className="max-h-[600px]">
+            <ScrollArea className="max-h-[600px] pr-4">
               <ArchetypeDetails 
                 archetype={findArchetype(activeSection as NumerologyCodeType)} 
               />
