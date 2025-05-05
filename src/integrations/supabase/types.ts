@@ -265,6 +265,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_access: {
+        Row: {
+          access_until: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_until?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_until?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -273,6 +297,10 @@ export type Database = {
       get_user_role: {
         Args: { user_uuid: string }
         Returns: string
+      }
+      has_active_access: {
+        Args: { user_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {

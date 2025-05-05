@@ -1,249 +1,226 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAccess } from "@/contexts/AccessContext";
 import { toast } from "sonner";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { updateEmail, updatePassword } from "@/utils/authUtils";
-
-const emailSchema = z.object({
-  email: z.string().email("Введите корректный email"),
-});
-
-const passwordSchema = z.object({
-  currentPassword: z.string().min(6, "Минимальная длина пароля 6 символов"),
-  newPassword: z.string().min(6, "Минимальная длина пароля 6 символов"),
-  confirmPassword: z.string().min(6, "Минимальная длина пароля 6 символов"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Пароли не совпадают",
-  path: ["confirmPassword"],
-});
+import { AlertCircle, Clock } from "lucide-react";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 
 const ProfilePage = () => {
   const { user, profile } = useAuth();
-  const [isEmailLoading, setEmailLoading] = useState(false);
-  const [isPasswordLoading, setPasswordLoading] = useState(false);
+  const { hasAccess, accessUntil, isAdmin } = useAccess();
+  
+  const [newEmail, setNewEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
-  const emailForm = useForm<z.infer<typeof emailSchema>>({
-    resolver: zodResolver(emailSchema),
-    defaultValues: {
-      email: user?.email || "",
-    },
-  });
-
-  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
-
-  const handleEmailUpdate = async (values: z.infer<typeof emailSchema>) => {
+  const handleEmailUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmail) return;
+    
     setEmailLoading(true);
     try {
-      await updateEmail(values.email);
-      toast.success("Email успешно обновлен", {
-        description: "На ваш новый email отправлено письмо для подтверждения",
-      });
+      await updateEmail(newEmail);
+      toast.success("Email успешно обновлен. Проверьте почту для подтверждения.");
+      setNewEmail("");
     } catch (error: any) {
-      toast.error("Ошибка при обновлении email", {
-        description: error.message || "Попробуйте еще раз или обратитесь в поддержку",
-      });
+      toast.error(error.message || "Ошибка при обновлении email");
     } finally {
       setEmailLoading(false);
     }
   };
 
-  const handlePasswordUpdate = async (values: z.infer<typeof passwordSchema>) => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentPassword || !newPassword) return;
+    if (newPassword !== confirmPassword) {
+      toast.error("Пароли не совпадают");
+      return;
+    }
+    
     setPasswordLoading(true);
     try {
-      await updatePassword(values.currentPassword, values.newPassword);
-      passwordForm.reset();
+      await updatePassword(currentPassword, newPassword);
       toast.success("Пароль успешно обновлен");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error: any) {
-      toast.error("Ошибка при обновлении пароля", {
-        description: error.message || "Проверьте правильность текущего пароля",
-      });
+      toast.error(error.message || "Ошибка при обновлении пароля");
     } finally {
       setPasswordLoading(false);
     }
   };
 
-  return (
-    <div className="container max-w-3xl py-10">
-      <h1 className="text-3xl font-bold mb-6">Настройки профиля</h1>
-      
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Информация о профиле</CardTitle>
-          <CardDescription>
-            Ваша текущая информация о профиле
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <div className="text-sm font-medium text-muted-foreground mb-1">Имя</div>
-            <div className="text-lg font-medium">{profile?.name || "Не указано"}</div>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-muted-foreground mb-1">Email</div>
-            <div className="text-lg font-medium">{user?.email}</div>
-          </div>
-        </CardContent>
-      </Card>
+  // Форматируем дату доступа для отображения
+  const formattedAccessUntil = accessUntil 
+    ? format(accessUntil, 'd MMMM yyyy г.', { locale: ru })
+    : "Не установлена";
 
-      <Tabs defaultValue="email" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="email">Изменить email</TabsTrigger>
-          <TabsTrigger value="password">Изменить пароль</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="email">
+  const accessStatus = isAdmin 
+    ? "Полный (администратор)"
+    : hasAccess 
+      ? "Активен" 
+      : "Ограничен";
+
+  const accessStatusColor = isAdmin 
+    ? "text-indigo-600" 
+    : hasAccess 
+      ? "text-green-600" 
+      : "text-red-600";
+
+  return (
+    <div className="space-y-6 animate-fadeIn">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Профиль пользователя</h1>
+        <p className="text-muted-foreground">
+          Управление настройками вашего аккаунта
+        </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Информация о профиле</CardTitle>
+            <CardDescription>
+              Основная информация о вашем аккаунте
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1">
+              <Label>Email</Label>
+              <div className="p-2 border rounded-md bg-muted/30">
+                {user?.email}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Имя</Label>
+              <div className="p-2 border rounded-md bg-muted/30">
+                {profile?.name || "Не указано"}
+              </div>
+            </div>
+
+            {/* Информация о доступе */}
+            <div className="space-y-2 pt-4 border-t">
+              <Label>Статус доступа</Label>
+              <div className="flex items-center">
+                <span className={`font-medium ${accessStatusColor}`}>
+                  {accessStatus}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Срок доступа: {formattedAccessUntil}</span>
+              </div>
+
+              {!hasAccess && !isAdmin && (
+                <div className="flex items-start p-2 mt-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
+                  <AlertCircle className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium text-yellow-800">Доступ ограничен</p>
+                    <p className="mt-1">Для продления доступа свяжитесь с администратором.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Изменить email</CardTitle>
+              <CardTitle>Обновить Email</CardTitle>
               <CardDescription>
-                Введите новый email. На него будет отправлено письмо для подтверждения.
+                Введите новый email для вашего аккаунта
               </CardDescription>
             </CardHeader>
-            <Form {...emailForm}>
-              <form onSubmit={emailForm.handleSubmit(handleEmailUpdate)}>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={emailForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Новый email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="example@mail.com" 
-                            {...field} 
-                            disabled={isEmailLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+            <CardContent>
+              <form onSubmit={handleEmailUpdate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-email">Новый Email</Label>
+                  <Input 
+                    id="new-email" 
+                    type="email" 
+                    placeholder="your@email.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
                   />
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    type="submit" 
-                    disabled={isEmailLoading}
-                  >
-                    {isEmailLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Обновление...
-                      </>
-                    ) : (
-                      "Обновить email"
-                    )}
-                  </Button>
-                </CardFooter>
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={!newEmail || emailLoading}
+                  className="w-full"
+                >
+                  {emailLoading ? "Обновление..." : "Обновить Email"}
+                </Button>
               </form>
-            </Form>
+            </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="password">
+
           <Card>
             <CardHeader>
               <CardTitle>Изменить пароль</CardTitle>
               <CardDescription>
-                Для смены пароля необходимо указать текущий пароль.
+                Обновите пароль вашего аккаунта
               </CardDescription>
             </CardHeader>
-            <Form {...passwordForm}>
-              <form onSubmit={passwordForm.handleSubmit(handlePasswordUpdate)}>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={passwordForm.control}
-                    name="currentPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Текущий пароль</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            {...field} 
-                            disabled={isPasswordLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+            <CardContent>
+              <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password">Текущий пароль</Label>
+                  <Input 
+                    id="current-password" 
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
                   />
-                  
-                  <FormField
-                    control={passwordForm.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Новый пароль</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            {...field} 
-                            disabled={isPasswordLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Новый пароль</Label>
+                  <Input 
+                    id="new-password" 
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
                   />
-                  
-                  <FormField
-                    control={passwordForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Подтвердите новый пароль</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            {...field} 
-                            disabled={isPasswordLoading}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Подтвердите пароль</Label>
+                  <Input 
+                    id="confirm-password" 
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
                   />
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    type="submit" 
-                    disabled={isPasswordLoading}
-                  >
-                    {isPasswordLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Обновление...
-                      </>
-                    ) : (
-                      "Обновить пароль"
-                    )}
-                  </Button>
-                </CardFooter>
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={!currentPassword || !newPassword || newPassword !== confirmPassword || passwordLoading}
+                  className="w-full"
+                >
+                  {passwordLoading ? "Обновление..." : "Обновить пароль"}
+                </Button>
               </form>
-            </Form>
+            </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
