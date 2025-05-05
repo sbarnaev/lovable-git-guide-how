@@ -65,25 +65,31 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Send welcome email with Resend
     const emailResponse = await resend.emails.send({
-      from: "Numerica <onboarding@resend.dev>",
+      from: "SALISTICA <onboarding@resend.dev>",
       to: [email],
-      subject: "Добро пожаловать в Numerica!",
+      subject: "Добро пожаловать в SALISTICA!",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Добро пожаловать в Numerica!</h1>
+          <h1 style="color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Добро пожаловать в SALISTICA!</h1>
           
           <p style="font-size: 16px; color: #555;">Здравствуйте${name ? ", " + name : ""}!</p>
           
-          <p style="font-size: 16px; color: #555;">Мы рады приветствовать вас в нашей платформе Numerica. Ваша учетная запись была успешно создана.</p>
+          <p style="font-size: 16px; color: #555;">Мы рады приветствовать вас в нашей платформе SALISTICA. Ваша учетная запись была успешно создана.</p>
           
           <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p style="margin: 0; font-size: 14px;"><strong>Email:</strong> ${email}</p>
             <p style="margin: 10px 0 0 0; font-size: 14px;"><strong>Доступ:</strong> Активирован на 7 дней</p>
           </div>
           
-          <p style="font-size: 16px; color: #555;">Для входа в систему используйте ваш email и пароль, который вы указали при регистрации. Если вы забыли пароль, воспользуйтесь функцией восстановления пароля на странице входа.</p>
+          <p style="font-size: 16px; color: #555;">Для входа в систему используйте ваш email. Если вы забыли пароль или это ваш первый вход, пожалуйста, воспользуйтесь функцией <strong>"Забыли пароль?"</strong> на странице входа, чтобы установить или сбросить пароль.</p>
           
-          <p style="font-size: 16px; color: #555;">С уважением,<br>Команда Numerica</p>
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="${Deno.env.get("SITE_URL") || "https://lovable.dev"}/login" style="background-color: #4F46E5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Войти в систему</a>
+          </div>
+          
+          <p style="font-size: 16px; color: #555;">Если у вас возникли вопросы или проблемы с доступом к системе, пожалуйста, свяжитесь с нашей службой поддержки.</p>
+          
+          <p style="font-size: 16px; color: #555;">С уважением,<br>Команда SALISTICA</p>
         </div>
       `,
     });
