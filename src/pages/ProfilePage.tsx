@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,7 @@ const ProfilePage = () => {
   };
 
   // Форматируем дату доступа для отображения
-  const formattedAccessUntil = accessUntil 
+  const formattedAccessUntil = accessUntil && accessUntil instanceof Date && !isNaN(accessUntil.getTime())
     ? format(accessUntil, 'd MMMM yyyy г.', { locale: ru })
     : "Не установлена";
 

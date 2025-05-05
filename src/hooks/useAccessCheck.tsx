@@ -60,9 +60,16 @@ export function useAccessCheck(): AccessStatus {
         
         console.log("Access data:", accessData);
         
+        // Convert the date string to a proper Date object if it exists
+        let accessDate = null;
+        if (accessData?.access_until) {
+          accessDate = new Date(accessData.access_until);
+          console.log("Parsed access date:", accessDate);
+        }
+        
         setAccessStatus({
           hasAccess: !!hasAccess,
-          accessUntil: accessData?.access_until ? new Date(accessData.access_until) : null,
+          accessUntil: accessDate,
           loading: false,
           error: null
         });
