@@ -10,6 +10,7 @@ import {
   Menu,
   X,
   Calculator,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -50,6 +51,11 @@ const MainLayout = () => {
     }
     return user?.email?.substring(0, 2).toUpperCase() || 'ГП';
   };
+  
+  const goToProfile = () => {
+    navigate('/profile');
+    if (mobileMenuOpen) closeMobileMenu();
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -89,13 +95,17 @@ const MainLayout = () => {
               </NavLink>
             ))}
             <div className="ml-4 flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>{getUserInitials()}</AvatarFallback>
-              </Avatar>
-              <div className="hidden md:block">
-                <div className="text-sm font-medium">{profile?.name || user?.email}</div>
-                <div className="text-xs text-muted-foreground">{profile?.role === 'admin' ? 'Администратор' : 'Консультант'}</div>
-              </div>
+              <button 
+                onClick={goToProfile}
+                className="flex items-center gap-2 hover:bg-accent/50 px-2 py-1 rounded transition-colors"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                </Avatar>
+                <div className="hidden md:block text-left">
+                  <div className="text-sm font-medium">{profile?.name || user?.email}</div>
+                </div>
+              </button>
               <Button
                 variant="outline"
                 size="sm"
@@ -114,15 +124,17 @@ const MainLayout = () => {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-16 z-30 bg-background/95 backdrop-blur-sm animate-fadeIn">
           <nav className="container py-4 flex flex-col">
-            <div className="flex items-center gap-4 mb-4 p-4 bg-accent/50 rounded-md">
+            <button
+              onClick={goToProfile}
+              className="flex items-center gap-4 mb-4 p-4 bg-accent/50 rounded-md w-full text-left"
+            >
               <Avatar className="h-10 w-10">
                 <AvatarFallback>{getUserInitials()}</AvatarFallback>
               </Avatar>
               <div>
                 <div className="font-medium">{profile?.name || user?.email}</div>
-                <div className="text-xs text-muted-foreground">{profile?.role === 'admin' ? 'Администратор' : 'Консультант'}</div>
               </div>
-            </div>
+            </button>
             
             {navItems.map((item, index) => (
               <NavLink

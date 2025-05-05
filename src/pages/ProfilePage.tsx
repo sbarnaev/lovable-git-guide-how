@@ -1,10 +1,8 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,7 +28,6 @@ const passwordSchema = z.object({
 
 const ProfilePage = () => {
   const { user, profile } = useAuth();
-  const navigate = useNavigate();
   const [isEmailLoading, setEmailLoading] = useState(false);
   const [isPasswordLoading, setPasswordLoading] = useState(false);
 
@@ -94,16 +91,12 @@ const ProfilePage = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Имя</Label>
+            <div className="text-sm font-medium text-muted-foreground mb-1">Имя</div>
             <div className="text-lg font-medium">{profile?.name || "Не указано"}</div>
           </div>
           <div>
-            <Label>Email</Label>
+            <div className="text-sm font-medium text-muted-foreground mb-1">Email</div>
             <div className="text-lg font-medium">{user?.email}</div>
-          </div>
-          <div>
-            <Label>Роль</Label>
-            <div className="text-lg font-medium">{profile?.role || "Не указана"}</div>
           </div>
         </CardContent>
       </Card>
