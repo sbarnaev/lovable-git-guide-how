@@ -22,6 +22,8 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const observerRef = useRef<MutationObserver | null>(null);
+  const contentChangeTimer = useRef<NodeJS.Timeout | null>(null);
+  const [contentChanged, setContentChanged] = useState(false);
   
   // Оптимизированная функция для установки правильного направления текста
   const ensureProperTextDirection = useCallback(() => {
@@ -34,12 +36,14 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     editorRef.current.style.unicodeBidi = 'normal';
   }, []);
   
-  // Извлекаем блоки из содержимого
+  // Извлекаем блоки из содержимого более эффективно
   const extractBlocksFromContent = useCallback((htmlContent: string) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
     const blockElements = tempDiv.querySelectorAll('[data-block-id]');
+    if (blockElements.length === 0) return;
+    
     const extractedBlocks: TextBlock[] = [];
     
     blockElements.forEach((element) => {
@@ -50,9 +54,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       extractedBlocks.push({ id, title, content });
     });
     
-    if (extractedBlocks.length > 0) {
-      setTextBlocks(extractedBlocks);
-    }
+    setTextBlocks(extractedBlocks);
   }, []);
 
   // Загрузка заметки с дебаунсом и мемоизацией
@@ -97,7 +99,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     };
   }, [calculationId, getNote, ensureProperTextDirection, extractBlocksFromContent]);
   
-  // Настраиваем MutationObserver только один раз
+  // Упрощенный MutationObserver только на корневом элементе
   useEffect(() => {
     if (!editorRef.current) return;
     
@@ -106,19 +108,22 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       observerRef.current.disconnect();
     }
     
-    // Создаем новый observer с оптимизированной конфигурацией
-    observerRef.current = new MutationObserver(() => {
-      ensureProperTextDirection();
+    // Создаем новый observer с минимальной конфигурацией
+    observerRef.current = new MutationObserver((mutations) => {
+      // Проверяем, только если есть изменения в атрибутах или дочерних элементах
+      if (mutations.some(m => m.type === 'attributes' || m.type === 'childList')) {
+        ensureProperTextDirection();
+      }
     });
     
-    // Наблюдаем только за изменениями атрибутов и добавлением/удалением узлов
+    // Наблюдаем только за необходимыми изменениями
     observerRef.current.observe(editorRef.current, { 
       childList: true,
       subtree: false,
-      attributes: true
+      attributes: true,
+      attributeFilter: ['dir', 'style']
     });
     
-    // Очистка при размонтировании
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
@@ -127,9 +132,9 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     };
   }, [ensureProperTextDirection]);
 
-  // Оптимизированное автосохранение с дебаунсом
-  const autoSaveContent = useCallback(async () => {
-    if (!editorRef.current) return;
+  // Оптимизированное сохранение без автосохранения
+  const saveContent = useCallback(async () => {
+    if (!editorRef.current || loading) return;
     
     const htmlContent = editorRef.current.innerHTML;
     
@@ -144,6 +149,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       
       if (result) {
         setNoteId(result.id);
+        setContentChanged(false);
         toast.success('Заметка сохранена', { 
           position: 'bottom-right',
           duration: 2000
@@ -155,34 +161,38 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     } finally {
       setLoading(false);
     }
-  }, [calculationId, noteId, saveNote, updateNote]);
+  }, [calculationId, noteId, saveNote, updateNote, loading]);
 
-  // Используем useRef и useCallback для оптимизации обработчика ввода
-  const updateContentTimerRef = useRef<number | null>(null);
-  
+  // Обработчик ввода без автосохранения
   const updateContentFromEditor = useCallback(() => {
     if (!editorRef.current) return;
     
     const newContent = editorRef.current.innerHTML;
     setContent(newContent);
+    setContentChanged(true);
     extractBlocksFromContent(newContent);
     
-    // Отменяем предыдущий таймер, если он существует
-    if (updateContentTimerRef.current) {
-      window.clearTimeout(updateContentTimerRef.current);
+    // Отложенное обновление блоков без сохранения
+    if (contentChangeTimer.current) {
+      clearTimeout(contentChangeTimer.current);
     }
     
-    // Создаем новый таймер для автосохранения через 1 секунду после последнего изменения
-    updateContentTimerRef.current = window.setTimeout(() => {
-      autoSaveContent();
-      updateContentTimerRef.current = null;
-    }, 1000);
+    contentChangeTimer.current = setTimeout(() => {
+      extractBlocksFromContent(newContent);
+    }, 500);
     
     ensureProperTextDirection();
-  }, [extractBlocksFromContent, autoSaveContent, ensureProperTextDirection]);
+  }, [extractBlocksFromContent, ensureProperTextDirection]);
 
   // Оптимизированная обработка нажатий клавиш
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Ctrl+S для сохранения
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      saveContent();
+      return;
+    }
+    
     // Обработка Enter только если нужно
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -190,7 +200,17 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       updateContentFromEditor();
       return;
     }
-  }, [updateContentFromEditor]);
+  }, [updateContentFromEditor, saveContent]);
+
+  // Очистка при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (contentChangeTimer.current) {
+        clearTimeout(contentChangeTimer.current);
+        contentChangeTimer.current = null;
+      }
+    };
+  }, []);
 
   // Добавление текстового блока
   const addTextBlock = useCallback(() => {
@@ -205,6 +225,7 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     };
     
     setTextBlocks(prevBlocks => [...prevBlocks, newBlock]);
+    setContentChanged(true);
     
     if (editorRef.current) {
       const blockHtml = `
@@ -279,10 +300,13 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
           suppressContentEditableWarning={true}
         />
         
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
+            {contentChanged ? 'Есть несохраненные изменения' : 'Все изменения сохранены'}
+          </div>
           <Button 
-            onClick={autoSaveContent} 
-            disabled={loading}
+            onClick={saveContent} 
+            disabled={loading || !contentChanged}
             className="flex items-center gap-2"
           >
             <Save size={16} />
@@ -293,4 +317,3 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     </Card>
   );
 };
-
