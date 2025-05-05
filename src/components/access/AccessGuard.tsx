@@ -45,4 +45,4 @@ export const AccessGuard: React.FC<{ requiresActiveAccess?: boolean }> = ({
       <Outlet />
     </>
   );
-};
+}

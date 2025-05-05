@@ -36,44 +36,36 @@ export function useAccessCheck(): AccessStatus {
         console.log("Checking access for user:", user.id);
         
         // Use a direct SQL query with RPC call to the security definer function
-        // This avoids the infinite recursion issue with RLS policies
-        const { data, error } = await supabase
+        const { data: hasAccess, error: accessError } = await supabase
           .rpc('has_active_access', { user_uuid: user.id });
 
-        if (error) {
-          console.error("Error checking access via RPC:", error);
-          throw error;
+        if (accessError) {
+          console.error("Error checking access via RPC:", accessError);
+          throw accessError;
         }
 
-        console.log("Access check via RPC result:", data);
+        console.log("Access check via RPC result:", hasAccess);
         
-        // Get the access expiration date if access is granted
-        if (data) {
-          const { data: accessData, error: accessError } = await supabase
-            .from('user_access')
-            .select('access_until')
-            .eq('user_id', user.id)
-            .single();
+        // Now fetch the actual access_until date
+        const { data: accessData, error: dateError } = await supabase
+          .from('user_access')
+          .select('access_until')
+          .eq('user_id', user.id)
+          .single();
             
-          if (accessError) {
-            console.error("Error fetching access expiration:", accessError);
-            // We don't throw here since we already know access is granted
-          }
-          
-          setAccessStatus({
-            hasAccess: true,
-            accessUntil: accessData?.access_until ? new Date(accessData.access_until) : null,
-            loading: false,
-            error: null
-          });
-        } else {
-          setAccessStatus({
-            hasAccess: false,
-            accessUntil: null,
-            loading: false,
-            error: null
-          });
+        if (dateError) {
+          console.error("Error fetching access expiration:", dateError);
+          // Continue as we already know access status
         }
+        
+        console.log("Access data:", accessData);
+        
+        setAccessStatus({
+          hasAccess: !!hasAccess,
+          accessUntil: accessData?.access_until ? new Date(accessData.access_until) : null,
+          loading: false,
+          error: null
+        });
       } catch (error: any) {
         console.error('Error checking access:', error);
         setAccessStatus({

@@ -17,12 +17,20 @@ export const fetchUserCalculations = async (userId?: string): Promise<Calculatio
   if (!userId) return [];
   
   try {
+    console.log("Fetching calculations for user:", userId);
+    
     const { data: storedCalculations, error } = await supabase
       .from('calculations')
       .select('*')
+      .eq('user_id', userId)  // Explicitly filter by user_id to ensure we only get user's own calculations
       .order('created_at', { ascending: false });
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching calculations:", error);
+      throw error;
+    }
+    
+    console.log("Retrieved calculations:", storedCalculations?.length || 0);
     
     return storedCalculations?.map((item: StoredCalculation): Calculation => {
       return {

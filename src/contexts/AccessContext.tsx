@@ -25,6 +25,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   // Define access: administrators always have access, or check by status
   const hasAccess = isAdmin || accessStatus.hasAccess;
   console.log("Final access decision:", hasAccess);
+  console.log("Access expiration date:", accessStatus.accessUntil);
 
   return (
     <AccessContext.Provider value={{

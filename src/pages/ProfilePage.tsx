@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,9 @@ const ProfilePage = () => {
   
   const [emailLoading, setEmailLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // Added debugging logs for access information
+  console.log("Profile page access info:", { hasAccess, accessUntil, isAdmin });
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
