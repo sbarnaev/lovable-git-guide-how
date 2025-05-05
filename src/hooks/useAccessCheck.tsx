@@ -40,7 +40,7 @@ export function useAccessCheck(): AccessStatus {
           .from('user_access')
           .select('access_until')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();  // Используем maybeSingle вместо single
 
         if (accessError && accessError.code !== 'PGRST116') {
           // PGRST116 - ошибка "не найдено", игнорируем её
@@ -56,6 +56,12 @@ export function useAccessCheck(): AccessStatus {
           : !!accessData; // Если access_until не указан, но запись существует, считаем доступ активным
 
         console.log("Access check result:", hasValidAccess);
+        
+        if (accessData) {
+          console.log("Access until date:", new Date(accessData.access_until));
+          console.log("Current date:", new Date());
+          console.log("Date comparison:", new Date(accessData.access_until) > new Date());
+        }
 
         setAccessStatus({
           hasAccess: hasValidAccess,

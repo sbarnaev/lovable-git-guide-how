@@ -10,10 +10,11 @@ interface AccessContextType extends AccessStatus {
 const AccessContext = createContext<AccessContextType | undefined>(undefined);
 
 export function AccessProvider({ children }: { children: ReactNode }) {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const accessStatus = useAccessCheck();
   
-  // Проверяем логи для диагностики
+  // Подробные логи для диагностики
+  console.log("User in AccessProvider:", user?.id);
   console.log("Profile in AccessProvider:", profile);
   console.log("Access status:", accessStatus);
   
