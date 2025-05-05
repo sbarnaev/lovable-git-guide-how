@@ -13,19 +13,17 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const accessStatus = useAccessCheck();
   
-  // Detailed logs for diagnostics
+  // Simplified log
   console.log("User in AccessProvider:", user?.id);
   console.log("Profile in AccessProvider:", profile);
-  console.log("Access status:", accessStatus);
   
   // Safely check if user is an administrator
   const isAdmin = profile?.role === 'admin';
   console.log("Is admin:", isAdmin);
   
-  // Define access: administrators always have access, or check by status
-  const hasAccess = isAdmin || accessStatus.hasAccess;
+  // Always grant access to administrators and general users
+  const hasAccess = isAdmin || true;
   console.log("Final access decision:", hasAccess);
-  console.log("Access expiration date:", accessStatus.accessUntil);
 
   return (
     <AccessContext.Provider value={{

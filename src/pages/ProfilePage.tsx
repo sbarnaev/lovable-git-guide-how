@@ -8,13 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAccess } from "@/contexts/AccessContext";
 import { toast } from "sonner";
 import { updateEmail, updatePassword } from "@/utils/authUtils";
-import { AlertCircle, Clock } from "lucide-react";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
 
 const ProfilePage = () => {
   const { user, profile } = useAuth();
-  const { hasAccess, accessUntil, isAdmin } = useAccess();
+  const { isAdmin } = useAccess();
   
   const [newEmail, setNewEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -23,9 +20,6 @@ const ProfilePage = () => {
   
   const [emailLoading, setEmailLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-
-  // Added debugging logs for access information
-  console.log("Profile page access info:", { hasAccess, accessUntil, isAdmin });
 
   const handleEmailUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,22 +60,8 @@ const ProfilePage = () => {
     }
   };
 
-  // Форматируем дату доступа для отображения
-  const formattedAccessUntil = accessUntil && accessUntil instanceof Date && !isNaN(accessUntil.getTime())
-    ? format(accessUntil, 'd MMMM yyyy г.', { locale: ru })
-    : "Не установлена";
-
-  const accessStatus = isAdmin 
-    ? "Полный (администратор)"
-    : hasAccess 
-      ? "Активен" 
-      : "Ограничен";
-
-  const accessStatusColor = isAdmin 
-    ? "text-indigo-600" 
-    : hasAccess 
-      ? "text-green-600" 
-      : "text-red-600";
+  const accessStatus = isAdmin ? "Администратор" : "Пользователь";
+  const accessStatusColor = isAdmin ? "text-indigo-600" : "text-green-600";
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -114,29 +94,14 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            {/* Информация о доступе */}
+            {/* Информация о роли пользователя */}
             <div className="space-y-2 pt-4 border-t">
-              <Label>Статус доступа</Label>
+              <Label>Статус</Label>
               <div className="flex items-center">
                 <span className={`font-medium ${accessStatusColor}`}>
                   {accessStatus}
                 </span>
               </div>
-              
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Срок доступа: {formattedAccessUntil}</span>
-              </div>
-
-              {!hasAccess && !isAdmin && (
-                <div className="flex items-start p-2 mt-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
-                  <AlertCircle className="h-4 w-4 text-yellow-600 mr-2 mt-0.5 shrink-0" />
-                  <div>
-                    <p className="font-medium text-yellow-800">Доступ ограничен</p>
-                    <p className="mt-1">Для продления доступа свяжитесь с администратором.</p>
-                  </div>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>

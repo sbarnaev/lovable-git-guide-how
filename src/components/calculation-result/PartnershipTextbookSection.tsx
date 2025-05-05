@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArchetypeDetails } from './ArchetypeDetails';
 import { ArchetypeDescription, NumerologyProfile, NumerologyCodeType } from '@/types/numerology';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface PartnershipTextbookSectionProps {
   clientProfile: NumerologyProfile | undefined;
@@ -35,14 +36,12 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const clientShortName = getShortName(clientName);
   const partnerShortName = getShortName(partnerName);
   
-  // Improved findArchetype function with better logging
+  // Improved findArchetype function
   const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType, code: number): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes found for ${codeType} search`);
       return undefined;
     }
-
-    console.log(`Searching for archetype: ${codeType} with code ${code} in ${archetypes.length} archetypes`);
     
     // Normalize code type by removing "Code" suffix if present
     const normalizedCodeType = codeType.replace('Code', '');
@@ -58,11 +57,6 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
       });
     }
     
-    if (!found) {
-      console.log(`No matching archetype found for ${codeType} code ${code}`);
-      console.log("Available archetypes:", archetypes.map(a => `${a.code}:${a.value}`).join(', '));
-    }
-    
     return found;
   };
   
@@ -72,27 +66,30 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
       setActiveCodeType(null);
     } else {
       setActiveCodeType(codeType);
-      // Log the selection for debugging
-      console.log(`Selected code type: ${codeType}`);
     }
   };
+
+  // Стили для кнопок и активного состояния
+  const buttonBaseClass = "flex-grow md:flex-grow-0 font-medium transition-all";
+  const activeButtonClass = "bg-indigo-600 text-white hover:bg-indigo-700";
+  const inactiveButtonClass = "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50";
 
   // Function to render code buttons for a profile
   const renderCodeButtons = (profile: NumerologyProfile | undefined, archetypes: ArchetypeDescription[]) => {
     if (!profile || !profile.fullCodes) {
       return (
-        <div className="text-center text-muted-foreground text-sm py-2">
+        <div className="text-center text-muted-foreground text-sm py-4">
           Данные кодов отсутствуют
         </div>
       );
     }
     
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mt-2">
         <Button 
           variant={activeCodeType === 'personalityCode' || activeCodeType === 'personality' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('personalityCode')}
-          className="flex-grow md:flex-grow-0"
+          className={`${buttonBaseClass} ${(activeCodeType === 'personalityCode' || activeCodeType === 'personality') ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Личности {profile.fullCodes.personalityCode}
         </Button>
@@ -100,7 +97,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
         <Button 
           variant={activeCodeType === 'connectorCode' || activeCodeType === 'connector' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('connectorCode')}
-          className="flex-grow md:flex-grow-0"
+          className={`${buttonBaseClass} ${(activeCodeType === 'connectorCode' || activeCodeType === 'connector') ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Коннектора {profile.fullCodes.connectorCode}
         </Button>
@@ -108,7 +105,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
         <Button 
           variant={activeCodeType === 'realizationCode' || activeCodeType === 'realization' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('realizationCode')}
-          className="flex-grow md:flex-grow-0"
+          className={`${buttonBaseClass} ${(activeCodeType === 'realizationCode' || activeCodeType === 'realization') ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Реализации {profile.fullCodes.realizationCode}
         </Button>
@@ -116,7 +113,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
         <Button 
           variant={activeCodeType === 'generatorCode' || activeCodeType === 'generator' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('generatorCode')}
-          className="flex-grow md:flex-grow-0"
+          className={`${buttonBaseClass} ${(activeCodeType === 'generatorCode' || activeCodeType === 'generator') ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Генератора {profile.fullCodes.generatorCode}
         </Button>
@@ -124,7 +121,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
         <Button 
           variant={activeCodeType === 'missionCode' || activeCodeType === 'mission' ? 'default' : 'outline'}
           onClick={() => handleSelectCodeType('missionCode')}
-          className="flex-grow md:flex-grow-0"
+          className={`${buttonBaseClass} ${(activeCodeType === 'missionCode' || activeCodeType === 'mission') ? activeButtonClass : inactiveButtonClass}`}
         >
           Код Миссии {profile.fullCodes.missionCode}
         </Button>
@@ -132,25 +129,12 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     );
   };
 
-  // Debug archetypes when component renders
-  React.useEffect(() => {
-    console.log("Client archetypes count:", clientArchetypes?.length || 0);
-    console.log("Partner archetypes count:", partnerArchetypes?.length || 0);
-    
-    if (clientProfile?.fullCodes) {
-      console.log("Client codes:", clientProfile.fullCodes);
-    }
-    if (partnerProfile?.fullCodes) {
-      console.log("Partner codes:", partnerProfile.fullCodes);
-    }
-  }, [clientArchetypes, partnerArchetypes, clientProfile, partnerProfile]);
-
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Учебник</h2>
       
-      <Tabs defaultValue="client" onValueChange={setActiveTab} value={activeTab}>
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="client" onValueChange={setActiveTab} value={activeTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="client">{clientShortName}</TabsTrigger>
           <TabsTrigger value="partner">{partnerShortName}</TabsTrigger>
         </TabsList>
@@ -159,15 +143,18 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           {renderCodeButtons(clientProfile, clientArchetypes)}
           
           {activeCodeType && clientProfile && clientProfile.fullCodes && (
-            <Card className="mt-4">
-              <CardContent className="pt-6">
-                <ArchetypeDetails 
-                  archetype={findArchetype(
-                    clientArchetypes, 
-                    activeCodeType, 
-                    clientProfile.fullCodes[`${activeCodeType}Code` as keyof typeof clientProfile.fullCodes] as number
-                  )} 
-                />
+            <Card className="mt-4 shadow-md border border-gray-200">
+              <CardContent className="p-6">
+                <ScrollArea className="max-h-[600px]">
+                  <ArchetypeDetails 
+                    archetype={findArchetype(
+                      clientArchetypes, 
+                      activeCodeType, 
+                      clientProfile.fullCodes[activeCodeType.replace(/Code$/, '') as keyof typeof clientProfile.fullCodes] as number || 
+                      clientProfile.fullCodes[`${activeCodeType}Code` as keyof typeof clientProfile.fullCodes] as number
+                    )} 
+                  />
+                </ScrollArea>
               </CardContent>
             </Card>
           )}
@@ -177,15 +164,18 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
           {renderCodeButtons(partnerProfile, partnerArchetypes)}
           
           {activeCodeType && partnerProfile && partnerProfile.fullCodes && (
-            <Card className="mt-4">
-              <CardContent className="pt-6">
-                <ArchetypeDetails 
-                  archetype={findArchetype(
-                    partnerArchetypes, 
-                    activeCodeType, 
-                    partnerProfile.fullCodes[`${activeCodeType}Code` as keyof typeof partnerProfile.fullCodes] as number
-                  )} 
-                />
+            <Card className="mt-4 shadow-md border border-gray-200">
+              <CardContent className="p-6">
+                <ScrollArea className="max-h-[600px]">
+                  <ArchetypeDetails 
+                    archetype={findArchetype(
+                      partnerArchetypes, 
+                      activeCodeType, 
+                      partnerProfile.fullCodes[activeCodeType.replace(/Code$/, '') as keyof typeof partnerProfile.fullCodes] as number || 
+                      partnerProfile.fullCodes[`${activeCodeType}Code` as keyof typeof partnerProfile.fullCodes] as number
+                    )} 
+                  />
+                </ScrollArea>
               </CardContent>
             </Card>
           )}
