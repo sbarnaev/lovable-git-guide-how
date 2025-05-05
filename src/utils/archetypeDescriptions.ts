@@ -1,4 +1,3 @@
-
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -6,18 +5,34 @@ import { toast } from "sonner";
 // Локальный кеш для архетипов, чтобы минимизировать запросы к БД
 let archetypeDescriptionsCache: ArchetypeDescription[] = [];
 
+// Helper function to normalize code types
+function normalizeCodeType(code: NumerologyCodeType | string): NumerologyCodeType {
+  // Map old format to new format
+  const codeMap: Record<string, NumerologyCodeType> = {
+    'personalityCode': 'personality',
+    'connectorCode': 'connector',
+    'realizationCode': 'realization',
+    'generatorCode': 'generator',
+    'missionCode': 'mission'
+  };
+  
+  return (codeMap[code] as NumerologyCodeType) || code as NumerologyCodeType;
+}
+
 /**
  * Добавляет описание архетипа в базу данных
  */
 export async function addArchetypeDescription(description: ArchetypeDescription): Promise<boolean> {
   try {
-    console.log('Сохранение архетипа:', description.code, description.value);
+    // Normalize the code type to ensure consistency
+    const normalizedCode = normalizeCodeType(description.code);
+    console.log('Сохранение архетипа:', normalizedCode, description.value);
     
     // Проверяем, есть ли уже такой архетип в базе
     const { data: existingRecord, error: fetchError } = await supabase
       .from('archetype_descriptions')
       .select('id')
-      .eq('code', description.code)
+      .eq('code', normalizedCode)
       .eq('value', description.value)
       .maybeSingle();
     
@@ -29,7 +44,7 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
     
     // Преобразуем описание архетипа в формат для БД
     const dbRecord = {
-      code: description.code,
+      code: normalizedCode,
       value: description.value,
       title: description.title || `Архетип ${description.value}`,
       description: description.description || null,
@@ -92,18 +107,18 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
         throw new Error(`Ошибка при обновлении архетипа: ${result.error.message}`);
       }
       
-      console.log(`Архетип обновлен: ${description.code}-${description.value}`);
-      toast.success(`Архетип ${description.code}-${description.value} обновлен`);
+      console.log(`Архетип обновлен: ${normalizedCode}-${description.value}`);
+      toast.success(`Архетип ${normalizedCode}-${description.value} обновлен`);
       
       // Обновляем запись в кеше
       const index = archetypeDescriptionsCache.findIndex(
-        desc => desc.code === description.code && desc.value === description.value
+        desc => normalizeCodeType(desc.code) === normalizedCode && desc.value === description.value
       );
       
       if (index >= 0) {
-        archetypeDescriptionsCache[index] = description;
+        archetypeDescriptionsCache[index] = {...description, code: normalizedCode};
       } else {
-        archetypeDescriptionsCache.push(description);
+        archetypeDescriptionsCache.push({...description, code: normalizedCode});
       }
       
       return true;
@@ -120,11 +135,11 @@ export async function addArchetypeDescription(description: ArchetypeDescription)
         throw new Error(`Ошибка при добавлении архетипа: ${result.error.message}`);
       }
       
-      console.log(`Добавлен новый архетип: ${description.code}-${description.value}`);
-      toast.success(`Добавлен новый архетип: ${description.code}-${description.value}`);
+      console.log(`Добавлен новый архетип: ${normalizedCode}-${description.value}`);
+      toast.success(`Добавлен новый архетип: ${normalizedCode}-${description.value}`);
       
       // Добавляем запись в кеш
-      archetypeDescriptionsCache.push(description);
+      archetypeDescriptionsCache.push({...description, code: normalizedCode});
       
       return true;
     }
@@ -269,6 +284,9 @@ export async function loadArchetypesFromDb(forceRefresh = false): Promise<boolea
  */
 export async function getArchetypeDescription(code: NumerologyCodeType, value: number): Promise<ArchetypeDescription | undefined> {
   try {
+    // Normalize the code type
+    const normalizedCode = normalizeCodeType(code);
+    
     // Сначала проверяем кеш
     if (archetypeDescriptionsCache.length === 0) {
       // Если кеш пуст, загружаем данные из базы данных
@@ -276,7 +294,7 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
     }
     
     // Если код 'all', то попробуем найти любое описание с данным значением
-    if (code === 'all') {
+    if (normalizedCode === 'all') {
       const result = archetypeDescriptionsCache.find(desc => desc.value === value);
       if (result) return result;
       
@@ -285,23 +303,25 @@ export async function getArchetypeDescription(code: NumerologyCodeType, value: n
     }
     
     // Обычный поиск по коду и значению в кеше
-    const result = archetypeDescriptionsCache.find(desc => desc.code === code && desc.value === value);
+    const result = archetypeDescriptionsCache.find(
+      desc => normalizeCodeType(desc.code) === normalizedCode && desc.value === value
+    );
     
     if (result) {
       return result;
     }
     
     // Если не найдено в кеше, пробуем запросить из базы данных
-    console.log(`Archetype not found in cache, querying DB: ${code}-${value}`);
+    console.log(`Archetype not found in cache, querying DB: ${normalizedCode}-${value}`);
     const { data, error } = await supabase
       .from('archetype_descriptions')
       .select('*')
-      .eq('code', code)
+      .eq('code', normalizedCode)
       .eq('value', value)
       .single();
     
     if (error || !data) {
-      console.log(`Archetype not found in DB: ${code}-${value}`);
+      console.log(`Archetype not found in DB: ${normalizedCode}-${value}`);
       return undefined;
     }
     

@@ -39,10 +39,16 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
   descriptions.forEach(desc => {
     if (!desc) return; // Игнорируем пустые значения
     
-    if (!groupedDescriptions[desc.code]) {
-      groupedDescriptions[desc.code] = [];
+    const normalizedCode = normalizeCodeType(desc.code);
+    if (!groupedDescriptions[normalizedCode]) {
+      groupedDescriptions[normalizedCode] = [];
     }
-    groupedDescriptions[desc.code].push(desc);
+    
+    // Check if this value already exists in the array to prevent duplicates
+    const exists = groupedDescriptions[normalizedCode].some(item => item.value === desc.value);
+    if (!exists) {
+      groupedDescriptions[normalizedCode].push(desc);
+    }
   });
 
   return (
@@ -51,11 +57,7 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
         {Object.entries(groupedDescriptions).map(([code, codeDescriptions]) => (
           <div key={code} className="space-y-2">
             <h3 className="font-medium text-sm uppercase tracking-wider text-muted-foreground">
-              {code === 'personality' ? 'Код Личности' : 
-               code === 'connector' ? 'Код Коннектора' : 
-               code === 'realization' ? 'Код Реализации' : 
-               code === 'generator' ? 'Код Генератора' : 
-               code === 'mission' ? 'Код Миссии' : code}
+              {getCodeDisplayName(code)}
             </h3>
             
             <div className="flex flex-wrap gap-2">
@@ -64,7 +66,7 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
                 .sort((a, b) => a.value - b.value)
                 .map(desc => (
                   <Button
-                    key={`${desc.code}-${desc.value}`}
+                    key={`${code}-${desc.value}`}
                     variant="outline"
                     size="sm"
                     onClick={() => onSelect(desc.code as NumerologyCodeType, desc.value)}
@@ -87,3 +89,32 @@ export const ArchetypesList = ({ descriptions, onSelect, loading = false }: Arch
     </ScrollArea>
   );
 };
+
+// Helper function to normalize code types
+function normalizeCodeType(code: NumerologyCodeType | string): string {
+  // Map old format to new format
+  const codeMap: Record<string, string> = {
+    'personalityCode': 'personality',
+    'connectorCode': 'connector',
+    'realizationCode': 'realization',
+    'generatorCode': 'generator',
+    'missionCode': 'mission'
+  };
+  
+  return codeMap[code] || code;
+}
+
+// Helper function to get display name for code
+function getCodeDisplayName(code: string): string {
+  const displayNames: Record<string, string> = {
+    'personality': 'Код Личности',
+    'connector': 'Код Коннектора',
+    'realization': 'Код Реализации',
+    'generator': 'Код Генератора',
+    'mission': 'Код Миссии',
+    'target': 'Целевой Расчет',
+    'all': 'Все Коды'
+  };
+  
+  return displayNames[code] || code;
+}

@@ -1,11 +1,11 @@
 
 // If the file already has content, we need to modify just the NumerologyCodeType
 export type NumerologyCodeType = 
-  | 'personalityCode' | 'personality'
-  | 'connectorCode' | 'connector'
-  | 'realizationCode' | 'realization'
-  | 'generatorCode' | 'generator'
-  | 'missionCode' | 'mission'
+  | 'personality' | 'personalityCode'
+  | 'connector' | 'connectorCode'
+  | 'realization' | 'realizationCode'
+  | 'generator' | 'generatorCode'
+  | 'mission' | 'missionCode'
   | 'target'
   | 'all'; // Adding 'all' as a valid code type
 

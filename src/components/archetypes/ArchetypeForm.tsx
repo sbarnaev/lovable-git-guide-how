@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner";
 
 interface ArchetypeFormProps {
   loading?: boolean;
@@ -172,7 +171,7 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
 }) => {
   const [localTitle, setLocalTitle] = useState(propTitle || archetype?.title || '');
   const [localDescription, setLocalDescription] = useState(propDescription || archetype?.description || '');
-  const [code, setCode] = useState<NumerologyCodeType>(selectedCode || archetype?.code || 'all');
+  const [code, setCode] = useState<NumerologyCodeType>(normalizeCodeType(selectedCode || archetype?.code || 'all'));
   const [value, setValue] = useState(selectedValue?.toString() || archetype?.value?.toString() || '');
   const [localResourceManifestation, setLocalResourceManifestation] = useState(propResourceManifestation || archetype?.resourceManifestation || '');
   const [localDistortedManifestation, setLocalDistortedManifestation] = useState(propDistortedManifestation || archetype?.distortedManifestation || '');
@@ -279,7 +278,7 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
   useEffect(() => {
     if (propTitle !== undefined) setLocalTitle(propTitle);
     if (propDescription !== undefined) setLocalDescription(propDescription);
-    if (selectedCode !== undefined) setCode(selectedCode);
+    if (selectedCode !== undefined) setCode(normalizeCodeType(selectedCode));
     if (selectedValue !== undefined) setValue(selectedValue.toString());
     if (propResourceManifestation !== undefined) setLocalResourceManifestation(propResourceManifestation);
     if (propDistortedManifestation !== undefined) setLocalDistortedManifestation(propDistortedManifestation);
@@ -319,11 +318,7 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
 
   const handleSave = () => {
     if (!localTitle || !code || !value) {
-      toast({
-        title: "Ошибка",
-        description: "Пожалуйста, заполните все обязательные поля (Название, Код, Значение).",
-        variant: "destructive",
-      });
+      toast.error("Пожалуйста, заполните все обязательные поля (Название, Код, Значение).");
       return;
     }
 
@@ -331,13 +326,13 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
     if (setTitle && setDescription && setSelectedCode && setSelectedValue && onSave) {
       setTitle(localTitle);
       setDescription(localDescription);
-      setSelectedCode(code);
+      setSelectedCode(normalizeCodeType(code) as NumerologyCodeType);
       setSelectedValue(parseInt(value, 10));
       onSave();
       return;
     }
 
-    // Original update logic
+    // Original update logic for onChange
     if (onChange) {
       const updatedArchetype: ArchetypeDescription = {
         code,
@@ -379,19 +374,28 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
     }
   };
 
+  // Helper function to normalize code types
+  function normalizeCodeType(code: NumerologyCodeType | string): NumerologyCodeType {
+    // Map old format to new format
+    const codeMap: Record<string, NumerologyCodeType> = {
+      'personalityCode': 'personality',
+      'connectorCode': 'connector',
+      'realizationCode': 'realization',
+      'generatorCode': 'generator',
+      'missionCode': 'mission'
+    };
+    
+    return (codeMap[code] as NumerologyCodeType) || code as NumerologyCodeType;
+  }
+
   const tabLabels: Record<string, string> = {
-    personalityCode: 'Личность',
-    personality: 'Личность',
-    connectorCode: 'Коннектор',
-    connector: 'Коннектор',
-    realizationCode: 'Реализация',
-    realization: 'Реализация',
-    generatorCode: 'Генератор',
-    generator: 'Генератор',
-    missionCode: 'Миссия',
-    mission: 'Миссия',
-    all: 'Общее',
-    target: 'Цель'
+    'personality': 'Личность',
+    'connector': 'Коннектор',
+    'realization': 'Реализация',
+    'generator': 'Генератор',
+    'mission': 'Миссия',
+    'all': 'Общее',
+    'target': 'Цель'
   };
 
   return (
