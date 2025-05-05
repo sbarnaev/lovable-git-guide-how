@@ -1,7 +1,5 @@
-
 import React from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArchetypeDescription } from '@/types/numerology';
+import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 
 interface ArchetypeDetailsProps {
   archetype: ArchetypeDescription | undefined;
@@ -9,200 +7,335 @@ interface ArchetypeDetailsProps {
 
 export const ArchetypeDetails: React.FC<ArchetypeDetailsProps> = ({ archetype }) => {
   if (!archetype) {
-    return (
-      <div className="space-y-4">
-        <p className="text-muted-foreground text-center py-8">
-          Информация по данному коду отсутствует
-        </p>
-      </div>
-    );
+    return <div className="text-muted-foreground">Информация отсутствует.</div>;
   }
   
-  // Функция для форматирования текста с учетом списков и заголовков
-  const formatText = (text: string | undefined | number) => {
-    // If text is undefined or null, return null
-    if (text === undefined || text === null) return null;
-    
-    // Convert to string if it's not already a string (e.g., if it's a number)
-    const textStr = typeof text === 'string' ? text : String(text);
-    
-    // Split by newline and process each line
-    const lines = textStr.split('\n');
-    const formattedContent = [];
-    let currentList: JSX.Element[] = [];
-    let inList = false;
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Empty line - add spacing
-      if (!line) {
-        if (inList) {
-          // End the current list if we were in one
-          formattedContent.push(<ul key={`list-${i}`} className="list-disc pl-6 space-y-1 my-3">{currentList}</ul>);
-          currentList = [];
-          inList = false;
-        }
-        formattedContent.push(<div key={`empty-${i}`} className="h-2"></div>);
-        continue;
-      }
-      
-      // Section header (line ending with colon)
-      if (/^.{3,50}:$/.test(line)) {
-        if (inList) {
-          // End the current list if we were in one
-          formattedContent.push(<ul key={`list-${i}`} className="list-disc pl-6 space-y-1 my-3">{currentList}</ul>);
-          currentList = [];
-          inList = false;
-        }
-        formattedContent.push(
-          <h3 key={`header-${i}`} className="font-medium text-lg mt-5 mb-3">
-            {line}
-          </h3>
-        );
-        continue;
-      }
-      
-      // Bullet point lists (starting with -, •, or *)
-      if (line.startsWith('-') || line.startsWith('•') || line.startsWith('*')) {
-        const content = line.substring(1).trim();
-        const isNegative = /^Что (не работает|мешает|забирает|искажения)/i.test(formattedContent[formattedContent.length - 1]?.props?.children || '');
-        
-        currentList.push(
-          <li key={`bullet-${i}`} className="flex items-start mb-1">
-            <span className={`mt-1.5 h-2 w-2 rounded-full flex-shrink-0 ${isNegative ? 'bg-red-500' : 'bg-green-500'}`}></span>
-            <span className="ml-2">{content}</span>
-          </li>
-        );
-        inList = true;
-        continue;
-      }
-      
-      // Numbered lists (1., 2., etc.)
-      const numberedMatch = line.match(/^(\d+)[\.)\]]\s+(.+)$/);
-      if (numberedMatch) {
-        if (inList && currentList.length > 0) {
-          // If previous items were bullet points, end that list
-          formattedContent.push(<ul key={`list-${i}`} className="list-disc pl-6 space-y-1 my-3">{currentList}</ul>);
-          currentList = [];
-        }
-        
-        formattedContent.push(
-          <div key={`numbered-${i}`} className="flex mb-2 pl-2 gap-2">
-            <span className="font-medium text-indigo-600 min-w-[1.5rem]">{numberedMatch[1]}.</span>
-            <span>{numberedMatch[2]}</span>
-          </div>
-        );
-        continue;
-      }
-      
-      // Regular paragraph
-      if (inList) {
-        // End the current list if we were in one
-        formattedContent.push(<ul key={`list-${i}`} className="list-disc pl-6 space-y-1 my-3">{currentList}</ul>);
-        currentList = [];
-        inList = false;
-      }
-      
-      formattedContent.push(
-        <p key={`para-${i}`} className="mb-3 leading-relaxed">
-          {line}
-        </p>
-      );
-    }
-    
-    // Don't forget to add the last list if we were still in one
-    if (inList && currentList.length > 0) {
-      formattedContent.push(<ul key="final-list" className="list-disc pl-6 space-y-1 my-3">{currentList}</ul>);
-    }
-    
-    return formattedContent;
-  };
-
-  // Generate key-background color pairs based on common section names
-  const getSectionBackground = (key: string): string => {
-    const keyLower = key.toLowerCase();
-    
-    if (keyLower.includes('суть') || keyLower.includes('формула') || keyLower.includes('ресурс') || 
-        keyLower.includes('миссия') || keyLower.includes('key') || keyLower.includes('основа')) {
-      return 'bg-purple-50';
-    }
-    
-    if (keyLower.includes('трансформац') || keyLower.includes('задача') || keyLower.includes('контакт') || 
-        keyLower.includes('проявлен') || keyLower.includes('тип')) {
-      return 'bg-blue-50';
-    }
-    
-    if (keyLower.includes('реализ') || keyLower.includes('потенциал') || keyLower.includes('работ')) {
-      return 'bg-green-50/60';  
-    }
-    
-    if (keyLower.includes('испытан') || keyLower.includes('искажен') || keyLower.includes('сложн')) {
-      return 'bg-yellow-50';
-    }
-    
-    if (keyLower.includes('рекоменд') || keyLower.includes('совет')) {
-      return 'bg-blue-50/70';
-    }
-    
-    return '';
-  };
-
   return (
     <div className="space-y-4">
-      {/* Title display with code value */}
-      <div className="flex flex-col mb-6">
-        <h2 className="text-2xl font-bold">
-          {archetype.title || `${archetype.code?.toString().replace(/Code$/, '')} ${archetype.value}`}
-        </h2>
-      </div>
+      <h3 className="text-xl font-semibold">{archetype.title}</h3>
       
-      {/* Main content with formatting */}
       {archetype.description && (
-        <div className="prose max-w-none">
-          {formatText(archetype.description)}
+        <div className="prose prose-slate max-w-none text-sm">
+          <p>{archetype.description}</p>
         </div>
       )}
       
-      {/* Additional sections with appropriate styling */}
-      {Object.entries(archetype).map(([key, value]) => {
-        // Skip already displayed or service fields
-        if (['code', 'value', 'title', 'description', 'id'].includes(key) || !value) {
-          return null;
-        }
-        
-        // Translate common English keys to Russian
-        const keyTranslations: Record<string, string> = {
-          'meaning': 'Значение',
-          'strengths': 'Сильные стороны',
-          'weaknesses': 'Слабые стороны',
-          'recommendations': 'Рекомендации',
-          'characteristics': 'Характеристики',
-          'challenges': 'Вызовы',
-          'potentialIssues': 'Потенциальные проблемы',
-          'insights': 'Инсайты',
-          'keyFeatures': 'Ключевые особенности',
-          'summary': 'Краткое описание'
-        };
-        
-        // Format the key for display
-        const displayKey = keyTranslations[key] || 
-          key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
-        
-        // Determine background color
-        const bgColor = getSectionBackground(key);
-        
-        return (
-          <div key={key} className="mt-5">
-            <h3 className="text-lg font-medium mb-3">
-              {displayKey}
-            </h3>
-            <div className={`prose max-w-none p-4 rounded-md border ${bgColor}`}>
-              {formatText(value as string)}
+      {/* Personality specific fields */}
+      {archetype.code === 'personality' && (
+        <>
+          {archetype.resourceManifestation && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Ресурсное проявление:</h4>
+              <p className="text-sm bg-green-50 p-3 rounded-md border border-green-200">{archetype.resourceManifestation}</p>
             </div>
-          </div>
-        );
-      })}
+          )}
+          
+          {archetype.distortedManifestation && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Искаженное проявление:</h4>
+              <p className="text-sm bg-red-50 p-3 rounded-md border border-red-200">{archetype.distortedManifestation}</p>
+            </div>
+          )}
+          
+          {archetype.developmentTask && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Задача развития:</h4>
+              <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.developmentTask}</p>
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Connector specific fields */}
+      {archetype.code === 'connector' && (
+        <>
+          {archetype.keyTask && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Ключевая задача:</h4>
+              <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.keyTask}</p>
+            </div>
+          )}
+          
+          {archetype.worldContactBasis && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Контакт с миром должен строиться на:</h4>
+              <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.worldContactBasis}</p>
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Realization specific fields */}
+      {archetype.code === 'realization' && (
+        <>
+          {archetype.formula && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Формула:</h4>
+              <p className="text-sm bg-purple-50 p-3 rounded-md border border-purple-200">{archetype.formula}</p>
+            </div>
+          )}
+          
+          {archetype.realizationType && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Тип реализации:</h4>
+              <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.realizationType}</p>
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Generator specific fields */}
+      {archetype.code === 'generator' && (
+        <>
+          {archetype.generatorFormula && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Формула:</h4>
+              <p className="text-sm bg-purple-50 p-3 rounded-md border border-purple-200">{archetype.generatorFormula}</p>
+            </div>
+          )}
+          
+          {archetype.generatorRecommendation && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Рекомендация:</h4>
+              <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.generatorRecommendation}</p>
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Mission specific fields */}
+      {archetype.code === 'mission' && (
+        <>
+          {archetype.missionEssence && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Суть миссии:</h4>
+              <p className="text-sm bg-purple-50 p-3 rounded-md border border-purple-200">{archetype.missionEssence}</p>
+            </div>
+          )}
+          
+          {archetype.mainTransformation && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Главная трансформация:</h4>
+              <p className="text-sm bg-blue-50 p-3 rounded-md border border-blue-200">{archetype.mainTransformation}</p>
+            </div>
+          )}
+          
+          {archetype.missionChallenges && (
+            <div className="space-y-1">
+              <h4 className="text-md font-semibold">Испытания миссии:</h4>
+              <p className="text-sm bg-yellow-50 p-3 rounded-md border border-yellow-200">{archetype.missionChallenges}</p>
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Common fields - split into columns for better layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        {/* Left column - positive aspects */}
+        <div className="space-y-4">
+          {archetype.resourceQualities && archetype.resourceQualities.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Ресурсные качества:</h4>
+              <ul className="space-y-2">
+                {archetype.resourceQualities.map((quality, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{quality}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {/* Other positive aspects - similarly structured */}
+          {archetype.workingAspects && archetype.workingAspects.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Что работает (в ресурсе):</h4>
+              <ul className="space-y-2">
+                {archetype.workingAspects.map((aspect, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{aspect}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.potentialRealizationWays && archetype.potentialRealizationWays.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Как реализуется потенциал:</h4>
+              <ul className="space-y-2">
+                {archetype.potentialRealizationWays.map((way, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{way}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.successSources && archetype.successSources.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Источники успеха:</h4>
+              <ul className="space-y-2">
+                {archetype.successSources.map((source, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{source}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.energySources && archetype.energySources.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Что дает энергию:</h4>
+              <ul className="space-y-2">
+                {archetype.energySources.map((source, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{source}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.flowSigns && archetype.flowSigns.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Признаки, что человек в потоке:</h4>
+              <ul className="space-y-2">
+                {archetype.flowSigns.map((sign, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{sign}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.missionRealizationFactors && archetype.missionRealizationFactors.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Что реализует миссию:</h4>
+              <ul className="space-y-2">
+                {archetype.missionRealizationFactors.map((factor, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                    <span>{factor}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+        
+        {/* Right column - challenges and issues */}
+        <div className="space-y-4">
+          {archetype.keyDistortions && archetype.keyDistortions.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Ключевые искажения:</h4>
+              <ul className="space-y-2">
+                {archetype.keyDistortions.map((distortion, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                    <span>{distortion}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {/* Other negative aspects - similarly structured */}
+          {archetype.nonWorkingAspects && archetype.nonWorkingAspects.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Что не работает (искажения):</h4>
+              <ul className="space-y-2">
+                {archetype.nonWorkingAspects.map((aspect, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                    <span>{aspect}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.realizationObstacles && archetype.realizationObstacles.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Искажения (что мешает реализовываться):</h4>
+              <ul className="space-y-2">
+                {archetype.realizationObstacles.map((obstacle, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                    <span>{obstacle}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.energyDrains && archetype.energyDrains.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Что забирает энергию:</h4>
+              <ul className="space-y-2">
+                {archetype.energyDrains.map((drain, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                    <span>{drain}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.burnoutSigns && archetype.burnoutSigns.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Признаки, что человек выгорел:</h4>
+              <ul className="space-y-2">
+                {archetype.burnoutSigns.map((sign, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                    <span>{sign}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {archetype.missionObstacles && archetype.missionObstacles.length > 0 && (
+            <div>
+              <h4 className="text-md font-semibold mb-2">Что мешает реализовываться:</h4>
+              <ul className="space-y-2">
+                {archetype.missionObstacles.map((obstacle, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="inline-block h-2 w-2 rounded-full bg-red-500 mt-1.5 mr-2"></span>
+                    <span>{obstacle}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Recommendations at the bottom */}
+      {archetype.recommendations && archetype.recommendations.length > 0 && (
+        <div className="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="text-md font-semibold mb-2">Рекомендации:</h4>
+          <ul className="space-y-2">
+            {archetype.recommendations.map((recommendation, index) => (
+              <li key={index} className="flex items-start">
+                <span className="inline-block h-5 w-5 text-blue-600 mr-2">✓</span>
+                <span>{recommendation}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
