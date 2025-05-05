@@ -42,7 +42,7 @@ export const MissionTabContent = ({
       </div>
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Что реализует миссию (каждый пункт с новой строки)</label>
+        <label className="text-sm font-medium">Факторы реализации миссии (каждый пункт с новой строки)</label>
         <Textarea 
           value={missionRealizationFactors} 
           onChange={(e) => setMissionRealizationFactors(e.target.value)}
@@ -62,7 +62,7 @@ export const MissionTabContent = ({
       </div>
       
       <div className="space-y-2">
-        <label className="text-sm font-medium">Что мешает релизовываться (каждый пункт с новой строки)</label>
+        <label className="text-sm font-medium">Препятствия реализации (каждый пункт с новой строки)</label>
         <Textarea 
           value={missionObstacles} 
           onChange={(e) => setMissionObstacles(e.target.value)}
