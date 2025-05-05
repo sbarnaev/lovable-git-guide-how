@@ -1,8 +1,10 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { supabaseClient } from 'npm:@supabase/supabase-js@2.39.8';
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SITE_URL = Deno.env.get("SITE_URL") || "https://lovable.dev";
 
 if (!RESEND_API_KEY) {
   console.error("Ошибка: RESEND_API_KEY не задан. Пожалуйста, установите секрет RESEND_API_KEY.");
@@ -38,9 +40,11 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log("Функция send-welcome-email вызвана");
+    
     // If this is a manual test request, we can return success
     if (req.headers.get("x-test-call") === "true") {
-      console.log("This is a test call, returning success");
+      console.log("Это тестовый вызов, возвращаем успех");
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -50,13 +54,47 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Получен запрос на отправку письма");
     
     // Parse the request body as JSON
-    const event: UserSignupEvent = await req.json();
+    const body = await req.text();
+    console.log("Получены данные:", body);
+    
+    let event: UserSignupEvent;
+    try {
+      event = JSON.parse(body);
+      console.log("Распарсенные данные события:", JSON.stringify(event, null, 2));
+    } catch (parseError) {
+      console.error("Ошибка при парсинге JSON:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON payload", details: parseError.message }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
     
     // Verify this is a user signup event
-    if (event.type !== "INSERT" || event.table !== "users" || event.schema !== "auth") {
+    if (!event.type || event.type !== "INSERT" || event.table !== "users" || event.schema !== "auth") {
       console.log("Это не событие регистрации пользователя:", event.type, event.table, event.schema);
       return new Response(
-        JSON.stringify({ error: "Not a user signup event" }),
+        JSON.stringify({ 
+          error: "Not a user signup event",
+          receivedEvent: {
+            type: event.type,
+            table: event.table,
+            schema: event.schema
+          }
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
+    if (!event.record || !event.record.email) {
+      console.error("Email отсутствует в данных пользователя");
+      return new Response(
+        JSON.stringify({ error: "Email is missing in user data" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -68,6 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
     const name = event.record.raw_user_meta_data?.name || "новый пользователь";
     
     console.log(`Отправка приветственного письма на адрес ${email}`);
+    console.log(`Ссылка на сайт: ${SITE_URL}`);
     
     // Send welcome email with Resend
     const emailResponse = await resend.emails.send({
@@ -90,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p style="font-size: 16px; color: #555;">Для начала работы с системой, вам необходимо создать пароль для вашей учетной записи:</p>
           
           <div style="margin: 30px 0; text-align: center;">
-            <a href="${Deno.env.get("SITE_URL") || "https://lovable.dev"}/reset-password" style="background-color: #4F46E5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold;">Создать пароль</a>
+            <a href="${SITE_URL}/reset-password" style="background-color: #4F46E5; color: white; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Создать пароль</a>
           </div>
           
           <p style="font-size: 16px; color: #555;">Если кнопка выше не работает, перейдите на страницу входа и нажмите <strong>"Забыли пароль?"</strong>, чтобы получить ссылку для создания пароля.</p>
@@ -102,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Email отправлен успешно:", emailResponse);
 
     return new Response(JSON.stringify(emailResponse), {
       status: 200,

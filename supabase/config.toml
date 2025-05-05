@@ -55,4 +55,3 @@ env_SITE_URL = "https://lovable.dev"
 [inbucket]
 enabled = true
 port = 54324
-
