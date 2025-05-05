@@ -32,6 +32,14 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     partnerProfile: calculation?.results?.partnerProfile
   });
   
+  // Log all the full codes
+  if (calculation?.results?.clientProfile?.fullCodes) {
+    console.log("Secondary archetypes codes:", calculation.results.clientProfile.fullCodes);
+  }
+  if (calculation?.results?.partnerProfile?.fullCodes) {
+    console.log("Secondary archetypes codes:", calculation.results.partnerProfile.fullCodes);
+  }
+  
   // Улучшенная функция преобразования результатов в NumerologyProfile
   const convertToNumerologyProfile = (result: any): NumerologyProfile => {
     if (!result) {

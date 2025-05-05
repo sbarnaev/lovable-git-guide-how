@@ -3,12 +3,22 @@
  * Сводит число к однозначному числу (1-9)
  */
 export function reduceToSingleDigit(num: number): number {
+  // Special handling for master numbers 11 and 22
+  if (num === 11 || num === 22) {
+    return num;
+  }
+
   if (num <= 9) return num;
   
   let sum = 0;
   while (num > 0) {
     sum += num % 10;
     num = Math.floor(num / 10);
+  }
+  
+  // Check again for master numbers after reduction
+  if (sum === 11 || sum === 22) {
+    return sum;
   }
   
   return sum <= 9 ? sum : reduceToSingleDigit(sum);
@@ -30,14 +40,23 @@ export function calculateConnectorCode(birthDate: Date): number {
   const month = birthDate.getMonth() + 1;
   const year = birthDate.getFullYear();
   
-  const dateString = `${day}${month}${year}`;
-  let sum = 0;
+  // Format with padding to ensure proper parsing
+  const formattedDay = day < 10 ? `0${day}` : `${day}`;
+  const formattedMonth = month < 10 ? `0${month}` : `${month}`;
   
+  const dateString = `${formattedDay}${formattedMonth}${year}`;
+  console.log(`Connector calculation: dateString = ${dateString}`);
+  
+  let sum = 0;
   for (let i = 0; i < dateString.length; i++) {
     sum += parseInt(dateString[i]);
   }
   
-  return reduceToSingleDigit(sum);
+  console.log(`Connector calculation: sum before reduction = ${sum}`);
+  const result = reduceToSingleDigit(sum);
+  console.log(`Connector calculation: final result = ${result}`);
+  
+  return result;
 }
 
 /**
@@ -46,8 +65,12 @@ export function calculateConnectorCode(birthDate: Date): number {
 export function calculateRealizationCode(birthDate: Date): number {
   const year = birthDate.getFullYear();
   const lastTwoDigits = year % 100;
+  console.log(`Realization calculation: year = ${year}, lastTwoDigits = ${lastTwoDigits}`);
   
-  return reduceToSingleDigit(lastTwoDigits);
+  const result = reduceToSingleDigit(lastTwoDigits);
+  console.log(`Realization calculation: final result = ${result}`);
+  
+  return result;
 }
 
 /**
@@ -57,26 +80,62 @@ export function calculateGeneratorCode(birthDate: Date): number {
   const day = birthDate.getDate();
   const month = birthDate.getMonth() + 1;
   
-  const daySum = reduceToSingleDigit(day);
-  const monthSum = reduceToSingleDigit(month);
+  console.log(`Generator calculation: day = ${day}, month = ${month}, product = ${day * month}`);
   
-  return reduceToSingleDigit(daySum * monthSum);
+  const result = reduceToSingleDigit(day * month);
+  console.log(`Generator calculation: final result = ${result}`);
+  
+  return result;
 }
 
 /**
  * Рассчитывает Код Миссии (Личность + Коннектор)
- * Если получается 11, то оставляем 11
+ * Если получается 11, то оставляем 11 (мастер-число)
  */
 export function calculateMissionCode(personalityCode: number, connectorCode: number): number {
   const sum = personalityCode + connectorCode;
-  return sum === 11 ? 11 : reduceToSingleDigit(sum);
+  console.log(`Mission calculation: personalityCode = ${personalityCode}, connectorCode = ${connectorCode}, sum = ${sum}`);
+  
+  // Preserve master numbers
+  if (sum === 11 || sum === 22) {
+    console.log(`Mission calculation: Keeping master number ${sum}`);
+    return sum;
+  }
+  
+  const result = reduceToSingleDigit(sum);
+  console.log(`Mission calculation: final result = ${result}`);
+  
+  return result;
 }
 
 /**
  * Рассчитывает все коды для заданной даты рождения
  */
 export function calculateAllCodes(birthDateString: string) {
-  const birthDate = new Date(birthDateString);
+  console.log(`Calculating codes for birthDate: ${birthDateString}`);
+  
+  // Ensure proper date parsing regardless of format
+  const parts = birthDateString.split(/[-T.]/);
+  let birthDate: Date;
+  
+  if (parts.length >= 3) {
+    // Handle ISO format (YYYY-MM-DD) or DD.MM.YYYY format
+    if (parts[0].length === 4) {
+      // ISO format: YYYY-MM-DD
+      birthDate = new Date(birthDateString);
+    } else {
+      // DD.MM.YYYY format
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1; // JavaScript months are 0-indexed
+      const year = parseInt(parts[2]);
+      birthDate = new Date(year, month, day);
+    }
+  } else {
+    // Fallback to direct parsing
+    birthDate = new Date(birthDateString);
+  }
+  
+  console.log(`Parsed date: ${birthDate.toISOString()}`);
   
   const personalityCode = calculatePersonalityCode(birthDate);
   const connectorCode = calculateConnectorCode(birthDate);
@@ -84,11 +143,15 @@ export function calculateAllCodes(birthDateString: string) {
   const generatorCode = calculateGeneratorCode(birthDate);
   const missionCode = calculateMissionCode(personalityCode, connectorCode);
   
-  return {
+  const result = {
     personalityCode,
     connectorCode,
     realizationCode,
     generatorCode,
     missionCode
   };
+  
+  console.log("Final calculated codes:", result);
+  
+  return result;
 }

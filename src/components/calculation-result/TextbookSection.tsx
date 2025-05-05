@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,7 +28,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     });
     
     if (calculation?.results?.fullCodes) {
-      console.log("fullCodes:", calculation.results.fullCodes);
+      console.log("fullCodes in TextbookSection:", calculation.results.fullCodes);
     }
   }, [calculation, archetypes, activeSection]);
 
@@ -86,10 +85,9 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
       return undefined;
     }
     
-    console.log(`Looking for archetype with code=${code}, normalizedCode=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
+    console.log(`Looking for archetype with code=${code}, normalized=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
     
     // Ищем архетип по коду и значению
-    // Пробуем разные варианты поиска
     let match = archetypes.find(arch => {
       // Точное совпадение кода и значения
       return arch.code === code && arch.value === codeValue;

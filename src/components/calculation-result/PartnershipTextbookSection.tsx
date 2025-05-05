@@ -58,16 +58,14 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const partnerShortName = getShortName(partnerName);
   
   // Полностью переработанная функция поиска архетипа
-  const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType): ArchetypeDescription | undefined => {
+  const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType, profile: NumerologyProfile | undefined): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes available for ${codeType} search`);
       return undefined;
     }
     
-    // Получаем профиль для текущей вкладки
-    const profile = activeTab === 'client' ? clientProfile : partnerProfile;
     if (!profile || !profile.fullCodes) {
-      console.log(`No profile or fullCodes available for ${activeTab}`);
+      console.log(`No profile or fullCodes available for archetype search`);
       return undefined;
     }
     
@@ -220,6 +218,16 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     );
   };
 
+  // Get the current profile based on active tab
+  const getCurrentProfile = () => {
+    return activeTab === "client" ? clientProfile : partnerProfile;
+  };
+
+  // Get the current archetypes based on active tab
+  const getCurrentArchetypes = () => {
+    return activeTab === "client" ? clientArchetypes : partnerArchetypes;
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Учебник</h2>
@@ -238,7 +246,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
               <CardContent className="p-6">
                 <ScrollArea className="max-h-[600px] pr-4">
                   <ArchetypeDetails 
-                    archetype={findArchetype(clientArchetypes, activeCodeType)}
+                    archetype={findArchetype(clientArchetypes, activeCodeType, clientProfile)}
                   />
                 </ScrollArea>
               </CardContent>
@@ -254,7 +262,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
               <CardContent className="p-6">
                 <ScrollArea className="max-h-[600px] pr-4">
                   <ArchetypeDetails 
-                    archetype={findArchetype(partnerArchetypes, activeCodeType)}
+                    archetype={findArchetype(partnerArchetypes, activeCodeType, partnerProfile)}
                   />
                 </ScrollArea>
               </CardContent>

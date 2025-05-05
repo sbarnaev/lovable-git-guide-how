@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useCalculations } from '@/contexts/calculations';
 import { Calculation, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
@@ -125,21 +124,16 @@ export const useCalculationData = (id: string | undefined) => {
                 };
               }
               
-              // Calculate codes if missing for client
-              if (!partnershipCalc.results.clientProfile.fullCodes) {
-                console.log("Calculating client codes for", partnershipCalc.birthDate);
-                const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
-                partnershipCalc.results.clientProfile.fullCodes = clientCodes;
-                console.log("Generated client codes:", clientCodes);
-              }
+              // Always recalculate codes for client and partner to ensure accuracy
+              console.log("Calculating client codes for", partnershipCalc.birthDate);
+              const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
+              partnershipCalc.results.clientProfile.fullCodes = clientCodes;
+              console.log("Generated client codes:", clientCodes);
               
-              // Calculate codes if missing for partner
-              if (!partnershipCalc.results.partnerProfile.fullCodes) {
-                console.log("Calculating partner codes for", partnershipCalc.partnerBirthDate);
-                const partnerCodes = calculateAllCodes(partnershipCalc.partnerBirthDate);
-                partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
-                console.log("Generated partner codes:", partnerCodes);
-              }
+              console.log("Calculating partner codes for", partnershipCalc.partnerBirthDate);
+              const partnerCodes = calculateAllCodes(partnershipCalc.partnerBirthDate);
+              partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
+              console.log("Generated partner codes:", partnerCodes);
             }
             
             // Set archetypes for client and partner
