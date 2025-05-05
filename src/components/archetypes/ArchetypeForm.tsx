@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast"; // Correct import path for toast
 
 interface ArchetypeFormProps {
   loading?: boolean;
@@ -236,8 +236,6 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
     parseStringOrArray(archetype?.missionObstacles || propMissionObstacles)
   );
 
-  const { toast } = useToast()
-
   useEffect(() => {
     if (archetype) {
       setLocalTitle(archetype.title || '');
@@ -318,7 +316,11 @@ export const ArchetypeForm: React.FC<ArchetypeFormProps> = ({
 
   const handleSave = () => {
     if (!localTitle || !code || !value) {
-      toast.error("Пожалуйста, заполните все обязательные поля (Название, Код, Значение).");
+      toast({
+        title: "Ошибка",
+        description: "Пожалуйста, заполните все обязательные поля (Название, Код, Значение).",
+        variant: "destructive"
+      });
       return;
     }
 
