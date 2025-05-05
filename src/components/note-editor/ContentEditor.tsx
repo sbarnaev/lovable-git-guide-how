@@ -20,91 +20,77 @@ export const ContentEditor = ({
   // Observer reference to watch for DOM changes
   const observerRef = useRef<MutationObserver | null>(null);
   
-  // Force all text direction universally with a more aggressive approach
+  // Force text normalization for Cyrillic and Latin text
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
     
-    // Set base direction on root element
-    editor.setAttribute('dir', 'ltr');
-    editor.style.direction = 'ltr';
-    editor.style.textAlign = 'left';
-    editor.style.unicodeBidi = 'plaintext';
-    
-    // Helper to force direction on an element and all its children
-    const forceTextDirection = (rootElement: HTMLElement) => {
-      // Apply to root first
-      rootElement.setAttribute('dir', 'ltr');
-      rootElement.style.direction = 'ltr';
-      rootElement.style.textAlign = 'left';
-      rootElement.style.unicodeBidi = 'plaintext';
-      
-      // Force all text nodes to use LTR
+    // Function to normalize text in content
+    const normalizeText = (rootElement: HTMLElement) => {
+      // Get all text nodes
       const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
-      let node;
-      while (node = walker.nextNode()) {
-        const parentElement = node.parentElement;
-        if (parentElement && parentElement !== editor) {
-          parentElement.setAttribute('dir', 'ltr');
-          parentElement.style.direction = 'ltr';
-          parentElement.style.textAlign = 'left';
-          parentElement.style.unicodeBidi = 'plaintext';
+      let textNode;
+      
+      // Process each text node
+      while (textNode = walker.nextNode()) {
+        const parent = textNode.parentElement;
+        if (parent && textNode.nodeValue) {
+          // Set explicit styles for text direction
+          parent.style.direction = 'ltr';
+          parent.style.textAlign = 'left';
+          parent.setAttribute('dir', 'ltr');
+          
+          // Apply specific CSS writing mode for Cyrillic/Latin text
+          parent.style.writingMode = 'horizontal-tb';
         }
       }
       
-      // Apply to all elements recursively
-      const elements = rootElement.querySelectorAll('*');
-      elements.forEach((el) => {
+      // Apply to all elements
+      const allElements = rootElement.querySelectorAll('*');
+      allElements.forEach(el => {
         if (el instanceof HTMLElement) {
-          el.setAttribute('dir', 'ltr');
           el.style.direction = 'ltr';
           el.style.textAlign = 'left';
-          el.style.unicodeBidi = 'plaintext';
+          el.setAttribute('dir', 'ltr');
+          el.style.writingMode = 'horizontal-tb';
         }
       });
     };
-
-    // Create MutationObserver to watch for DOM changes
-    observerRef.current = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList' || mutation.type === 'characterData') {
-          forceTextDirection(editor);
-        }
-      });
+    
+    // Apply on initial load
+    normalizeText(editor);
+    
+    // Set up MutationObserver to handle dynamic content
+    observerRef.current = new MutationObserver(() => {
+      normalizeText(editor);
     });
     
-    // Start observing
+    // Start observing with all possible mutation types
     observerRef.current.observe(editor, {
       childList: true,
-      subtree: true,
+      subtree: true, 
       characterData: true,
       attributes: true
     });
     
-    // Apply immediately
-    forceTextDirection(editor);
+    // Normalize text on these events
+    const handleInput = () => setTimeout(() => normalizeText(editor), 0);
+    const handlePaste = () => setTimeout(() => normalizeText(editor), 10);
+    const handleFocus = () => normalizeText(editor);
     
-    // Apply on every input event (real-time)
-    const applyOnInput = () => setTimeout(() => forceTextDirection(editor), 0);
-    editor.addEventListener('input', applyOnInput);
+    // Add event listeners
+    editor.addEventListener('input', handleInput);
+    editor.addEventListener('paste', handlePaste);
+    editor.addEventListener('focus', handleFocus);
     
-    // Apply on paste with longer delay for processing
-    const applyOnPaste = () => setTimeout(() => forceTextDirection(editor), 10);
-    editor.addEventListener('paste', applyOnPaste);
-    
-    // Apply on focus/blur
-    editor.addEventListener('focus', () => forceTextDirection(editor));
-    editor.addEventListener('blur', () => forceTextDirection(editor));
-    
-    // Continual enforcement every 300ms
-    const interval = setInterval(() => forceTextDirection(editor), 300);
+    // Periodic normalization as a fallback
+    const interval = setInterval(() => normalizeText(editor), 300);
     
     return () => {
-      // Clean up all listeners
-      editor.removeEventListener('input', applyOnInput);
-      editor.removeEventListener('paste', applyOnPaste);
-      editor.removeEventListener('focus', () => {});
-      editor.removeEventListener('blur', () => {});
+      // Clean up
+      editor.removeEventListener('input', handleInput);
+      editor.removeEventListener('paste', handlePaste);
+      editor.removeEventListener('focus', handleFocus);
       clearInterval(interval);
       if (observerRef.current) {
         observerRef.current.disconnect();
@@ -112,19 +98,9 @@ export const ContentEditor = ({
     };
   }, [editorRef]);
 
-  // Handle content changes after editor has been modified
+  // Handle content updates
   const handleUpdate = () => {
     if (editorRef.current) {
-      // Force text direction before updating content
-      const elements = editorRef.current.querySelectorAll('*');
-      elements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          el.setAttribute('dir', 'ltr');
-          el.style.direction = 'ltr';
-          el.style.textAlign = 'left';
-          el.style.unicodeBidi = 'plaintext';
-        }
-      });
       updateContentFromEditor();
     }
   };
@@ -154,8 +130,8 @@ export const ContentEditor = ({
       style={{
         direction: 'ltr',
         textAlign: 'left',
-        unicodeBidi: 'plaintext',
-        fontFamily: 'Arial, sans-serif' // Use a standard LTR-friendly font
+        writingMode: 'horizontal-tb',
+        fontFamily: "'Arial', 'Helvetica', sans-serif" // Standard font with good Cyrillic support
       }}
       suppressContentEditableWarning={true}
     />
