@@ -19,10 +19,14 @@ export const ArchetypeDetails: React.FC<ArchetypeDetailsProps> = ({ archetype })
   }
   
   // Функция для форматирования текста с учетом списков и заголовков
-  const formatText = (text: string | undefined) => {
-    if (!text) return null;
+  const formatText = (text: string | undefined | number) => {
+    // If text is undefined or null, return null
+    if (text === undefined || text === null) return null;
     
-    return text.split('\n').map((line, index) => {
+    // Convert to string if it's not already a string (e.g., if it's a number)
+    const textStr = typeof text === 'string' ? text : String(text);
+    
+    return textStr.split('\n').map((line, index) => {
       line = line.trim();
       
       // Пустая строка
