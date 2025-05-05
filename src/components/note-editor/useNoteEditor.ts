@@ -11,7 +11,6 @@ export const useNoteEditor = (calculationId: string) => {
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [contentChanged, setContentChanged] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<MutationObserver | null>(null);
   const { saveNote, getNote, updateNote } = useCalculations();
 
   // Загрузка заметки при монтировании компонента
@@ -25,12 +24,17 @@ export const useNoteEditor = (calculationId: string) => {
       try {
         const note = await getNote(calculationId);
         if (note && isMounted) {
-          setContent(note.content);
+          setContent(note.content || '');
           setNoteId(note.id);
           
           if (editorRef.current) {
-            editorRef.current.innerHTML = note.content;
-            extractBlocksFromContent(note.content);
+            editorRef.current.innerHTML = note.content || '';
+            // Отложенное извлечение блоков для снижения нагрузки
+            setTimeout(() => {
+              if (isMounted && note.content) {
+                extractBlocksFromContent(note.content);
+              }
+            }, 100);
           }
         }
       } catch (error) {
@@ -54,62 +58,25 @@ export const useNoteEditor = (calculationId: string) => {
     };
   }, [calculationId, getNote]);
   
-  // Устанавливаем правильное направление текста
-  const ensureProperTextDirection = useCallback(() => {
-    if (!editorRef.current) return;
-    editorRef.current.dir = 'ltr';
-    editorRef.current.style.direction = 'ltr';
-    editorRef.current.style.textAlign = 'left';
-  }, []);
-  
-  // Более легкая версия обработчика мутаций, активирующаяся только при необходимости
-  useEffect(() => {
-    if (!editorRef.current) return;
-    
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-    
-    // Создаем упрощенный MutationObserver
-    observerRef.current = new MutationObserver(() => {
-      ensureProperTextDirection();
-    });
-    
-    // Наблюдаем только за необходимыми атрибутами
-    observerRef.current.observe(editorRef.current, { 
-      attributes: true,
-      attributeFilter: ['dir', 'style']
-    });
-    
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
-    };
-  }, [ensureProperTextDirection]);
-
   // Извлекаем блоки из содержимого в оптимизированной форме
   const extractBlocksFromContent = useCallback((htmlContent: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    
-    const blockElements = tempDiv.querySelectorAll('[data-block-id]');
-    if (blockElements.length === 0) {
-      setTextBlocks([]);
-      return;
-    }
-    
-    const extractedBlocks: TextBlock[] = [];
-    
-    blockElements.forEach((element) => {
-      const id = element.getAttribute('data-block-id') || '';
-      const title = element.getAttribute('data-block-title') || 'Без названия';
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, 'text/html');
+      const blockElements = doc.querySelectorAll('[data-block-id]');
       
-      extractedBlocks.push({ id, title, content: '' });
-    });
-    
-    setTextBlocks(extractedBlocks);
+      const extractedBlocks: TextBlock[] = Array.from(blockElements).map(element => ({
+        id: element.getAttribute('data-block-id') || '',
+        title: element.getAttribute('data-block-title') || 'Без названия',
+        content: ''
+      }));
+      
+      setTextBlocks(extractedBlocks);
+    } catch (error) {
+      console.error('Error extracting blocks:', error);
+      // В случае ошибки просто сбрасываем блоки
+      setTextBlocks([]);
+    }
   }, []);
 
   // Сохранение контента
@@ -143,21 +110,14 @@ export const useNoteEditor = (calculationId: string) => {
     }
   }, [calculationId, noteId, saveNote, updateNote, loading]);
 
-  // Обработчик ввода с задержкой детектирования изменений
+  // Упрощенный обработчик ввода
   const updateContentFromEditor = useCallback(() => {
     if (!editorRef.current) return;
     
     setContentChanged(true);
     const newContent = editorRef.current.innerHTML;
     setContent(newContent);
-    
-    // Отложенное извлечение блоков для снижения нагрузки
-    setTimeout(() => {
-      extractBlocksFromContent(newContent);
-    }, 800);
-    
-    ensureProperTextDirection();
-  }, [extractBlocksFromContent, ensureProperTextDirection]);
+  }, []);
 
   // Обработка нажатий клавиш
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {

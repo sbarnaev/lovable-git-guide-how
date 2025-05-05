@@ -5,15 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
 
 const NotesPage = () => {
-  // Use a test ID for now, we'll later integrate it properly with calculations
+  // Используем тестовый ID для демонстрации
   const testCalculationId = "test-calculation-id";
   
   return (
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold">Заметки</h1>
-      <p className="text-muted-foreground">
-        Тестовая страница для редактора заметок. В дальнейшем функционал будет встроен в расчеты.
-      </p>
       
       <Card className="bg-yellow-50 border-yellow-200">
         <CardContent className="pt-6 flex items-start gap-2">
@@ -21,7 +18,7 @@ const NotesPage = () => {
           <div>
             <p className="text-yellow-800">
               Для сохранения заметок нажмите кнопку "Сохранить заметку" или комбинацию клавиш Ctrl+S (Cmd+S на Mac).
-              Автосохранение отключено для обеспечения стабильной работы.
+              Автосохранение отключено для обеспечения стабильной работы редактора.
             </p>
           </div>
         </CardContent>

@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Bold, Italic, Underline, List, Heading1, Heading2, Heading3,
-  Quote, LucideIcon, ListOrdered, PlusCircle
+  Quote, List as ListIcon, ListOrdered, PlusCircle
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { FormatAction } from './types';
@@ -21,64 +21,32 @@ export const FormatToolbar = ({
   editorRef
 }: FormatToolbarProps) => {
   const formatDoc = (command: string, value: string = '') => {
+    // Простой механизм форматирования
     document.execCommand(command, false, value);
-    
-    if (editorRef.current) {
-      // Ensure proper text direction after formatting
-      const allElements = editorRef.current.querySelectorAll('*');
-      allElements.forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.setAttribute('dir', 'ltr');
-          el.style.direction = 'ltr';
-          el.style.textAlign = 'left';
-          el.style.unicodeBidi = 'normal';
-        }
-      });
-    }
-    
     updateContentFromEditor();
   };
 
-  const createFormatAction = (
-    icon: LucideIcon, 
-    tooltip: string, 
-    command: string, 
-    value: string = ''
-  ): FormatAction => {
-    const Icon = icon;
-    return {
-      icon: <Icon className="h-4 w-4" />,
-      tooltip,
-      action: () => formatDoc(command, value)
-    };
-  };
-
-  // Format actions
-  const textFormatActions: FormatAction[] = [
-    createFormatAction(Bold, 'Полужирный', 'bold'),
-    createFormatAction(Italic, 'Курсив', 'italic'),
-    createFormatAction(Underline, 'Подчеркнутый', 'underline')
+  // Основные действия форматирования
+  const textActions = [
+    { icon: <Bold className="h-4 w-4" />, tooltip: 'Полужирный', action: () => formatDoc('bold') },
+    { icon: <Italic className="h-4 w-4" />, tooltip: 'Курсив', action: () => formatDoc('italic') },
+    { icon: <Underline className="h-4 w-4" />, tooltip: 'Подчеркнутый', action: () => formatDoc('underline') }
+  ];
+  
+  const headingActions = [
+    { icon: <Heading1 className="h-4 w-4" />, tooltip: 'Заголовок 1', action: () => formatDoc('formatBlock', 'h1') },
+    { icon: <Heading2 className="h-4 w-4" />, tooltip: 'Заголовок 2', action: () => formatDoc('formatBlock', 'h2') },
+    { icon: <Heading3 className="h-4 w-4" />, tooltip: 'Заголовок 3', action: () => formatDoc('formatBlock', 'h3') }
+  ];
+  
+  const listActions = [
+    { icon: <ListIcon className="h-4 w-4" />, tooltip: 'Маркированный список', action: () => formatDoc('insertUnorderedList') },
+    { icon: <ListOrdered className="h-4 w-4" />, tooltip: 'Нумерованный список', action: () => formatDoc('insertOrderedList') },
+    { icon: <Quote className="h-4 w-4" />, tooltip: 'Цитата', action: () => formatDoc('formatBlock', 'blockquote') }
   ];
 
-  const headingFormatActions: FormatAction[] = [
-    createFormatAction(Heading1, 'Заголовок 1', 'formatBlock', 'h1'),
-    createFormatAction(Heading2, 'Заголовок 2', 'formatBlock', 'h2'),
-    createFormatAction(Heading3, 'Заголовок 3', 'formatBlock', 'h3')
-  ];
-
-  const listFormatActions: FormatAction[] = [
-    createFormatAction(List, 'Маркированный список', 'insertUnorderedList'),
-    createFormatAction(ListOrdered, 'Нумерованный список', 'insertOrderedList')
-  ];
-
-  const quoteFormatAction: FormatAction = createFormatAction(
-    Quote, 
-    'Цитата', 
-    'formatBlock', 
-    'blockquote'
-  );
-
-  const renderFormatButton = (action: FormatAction, index: number) => (
+  // Рендер кнопки форматирования
+  const renderButton = (action: any, index: number) => (
     <TooltipProvider key={index}>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -101,26 +69,21 @@ export const FormatToolbar = ({
     </TooltipProvider>
   );
 
-  // Handle paragraph conversion
-  const convertToParagraph = () => {
-    formatDoc('formatBlock', 'p');
-  };
-
   return (
     <div className="flex flex-wrap gap-2 p-1 border rounded-md bg-muted/30">
       <FormattingGroup>
-        {textFormatActions.map(renderFormatButton)}
+        {textActions.map(renderButton)}
       </FormattingGroup>
 
       <FormattingGroup>
-        {headingFormatActions.map(renderFormatButton)}
+        {headingActions.map(renderButton)}
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={convertToParagraph}
+                onClick={() => formatDoc('formatBlock', 'p')}
                 className="h-8 px-2 text-xs"
               >
                 Абзац
@@ -134,8 +97,7 @@ export const FormatToolbar = ({
       </FormattingGroup>
 
       <FormattingGroup>
-        {listFormatActions.map(renderFormatButton)}
-        {renderFormatButton(quoteFormatAction, 0)}
+        {listActions.map(renderButton)}
       </FormattingGroup>
 
       <FormattingGroup>
