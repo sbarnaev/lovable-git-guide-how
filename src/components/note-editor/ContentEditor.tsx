@@ -22,10 +22,33 @@ export const ContentEditor = ({
     const editor = editorRef.current;
     if (!editor) return;
     
-    // Установка базовых свойств для правильной работы редактора
-    editor.dir = 'ltr';
-    editor.style.direction = 'ltr';
-    editor.style.textAlign = 'left';
+    // Эта попытка не работала должным образом, поэтому мы используем более прямой подход
+    editor.setAttribute('dir', 'ltr');
+    editor.style.unicodeBidi = 'plaintext';
+    
+    // Добавим обработчик для принудительного применения направления текста после ввода
+    const handleInput = () => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (range.startContainer.nodeType === Node.TEXT_NODE) {
+          // Находим родительский элемент текстового узла
+          const parentElement = range.startContainer.parentElement;
+          if (parentElement) {
+            // Применяем стили к родительскому элементу
+            parentElement.setAttribute('dir', 'ltr');
+            parentElement.style.direction = 'ltr';
+            parentElement.style.textAlign = 'left';
+          }
+        }
+      }
+    };
+    
+    editor.addEventListener('input', handleInput);
+    
+    return () => {
+      editor.removeEventListener('input', handleInput);
+    };
   }, [editorRef]);
   
   return (
@@ -53,6 +76,7 @@ export const ContentEditor = ({
       style={{
         direction: 'ltr',
         textAlign: 'left',
+        unicodeBidi: 'plaintext'
       }}
       suppressContentEditableWarning={true}
     />
