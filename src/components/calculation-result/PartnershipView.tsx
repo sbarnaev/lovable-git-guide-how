@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PartnershipCalculation } from '@/types';
 import { ArchetypeDescription, NumerologyProfile } from '@/types/numerology';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AIContentSection } from '@/components/AIContentSection';
 import { PartnershipTextbookSection } from './PartnershipTextbookSection';
+import { PartnershipClientInfo } from './PartnershipClientInfo';
+import { PartnershipAtlas } from './PartnershipAtlas';
 
 // Note: This is a temporary flag to disable notes
 const NOTES_DISABLED = true;
@@ -25,9 +27,9 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   // Convert BasicCalculationResults to NumerologyProfile for compatibility with PartnershipTextbookSection
   const convertToNumerologyProfile = (result: any): NumerologyProfile => {
     return {
-      lifePath: result.numerology.lifePath,
-      destiny: result.numerology.destiny,
-      personality: result.numerology.personality,
+      lifePath: result.numerology?.lifePath || 0,
+      destiny: result.numerology?.destiny || 0,
+      personality: result.numerology?.personality || 0,
       fullCodes: result.fullCodes
     };
   };
@@ -99,9 +101,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     );
   }
   
-  // Extract client and partner profiles for clarity
-  const { clientProfile, partnerProfile } = calculation.results;
-  
   // Get short names for display
   const getShortName = (fullName: string) => {
     const nameParts = fullName.trim().split(' ');
@@ -124,27 +123,27 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
             <CardTitle className="text-lg">Профиль: {clientShortName}</CardTitle>
           </CardHeader>
           <CardContent>
-            {clientProfile && clientProfile.fullCodes ? (
+            {calculation.results.clientProfile && calculation.results.clientProfile.fullCodes ? (
               <div className="space-y-1">
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.personalityCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.clientProfile.fullCodes.personalityCode}</div>
                     <div className="text-sm text-muted-foreground">Код Личности</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.connectorCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.clientProfile.fullCodes.connectorCode}</div>
                     <div className="text-sm text-muted-foreground">Код Коннектора</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.realizationCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.clientProfile.fullCodes.realizationCode}</div>
                     <div className="text-sm text-muted-foreground">Код Реализации</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.generatorCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.clientProfile.fullCodes.generatorCode}</div>
                     <div className="text-sm text-muted-foreground">Код Генератора</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{clientProfile.fullCodes.missionCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.clientProfile.fullCodes.missionCode}</div>
                     <div className="text-sm text-muted-foreground">Код Миссии</div>
                   </div>
                 </div>
@@ -163,27 +162,27 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
             <CardTitle className="text-lg">Профиль: {partnerShortName}</CardTitle>
           </CardHeader>
           <CardContent>
-            {partnerProfile && partnerProfile.fullCodes ? (
+            {calculation.results.partnerProfile && calculation.results.partnerProfile.fullCodes ? (
               <div className="space-y-1">
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-4 text-center">
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.personalityCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.partnerProfile.fullCodes.personalityCode}</div>
                     <div className="text-sm text-muted-foreground">Код Личности</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.connectorCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.partnerProfile.fullCodes.connectorCode}</div>
                     <div className="text-sm text-muted-foreground">Код Коннектора</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.realizationCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.partnerProfile.fullCodes.realizationCode}</div>
                     <div className="text-sm text-muted-foreground">Код Реализации</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.generatorCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.partnerProfile.fullCodes.generatorCode}</div>
                     <div className="text-sm text-muted-foreground">Код Генератора</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold text-numerica">{partnerProfile.fullCodes.missionCode}</div>
+                    <div className="text-2xl font-bold text-numerica">{calculation.results.partnerProfile.fullCodes.missionCode}</div>
                     <div className="text-sm text-muted-foreground">Код Миссии</div>
                   </div>
                 </div>

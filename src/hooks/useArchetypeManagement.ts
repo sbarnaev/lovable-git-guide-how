@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { NumerologyCodeType, ArchetypeDescription } from '@/types/numerology';
 import { getArchetypeDescription, addArchetypeDescription, getAllArchetypeDescriptions, loadArchetypesFromDb } from '@/utils/archetypeDescriptions';
@@ -119,7 +120,7 @@ export const useArchetypeManagement = () => {
           setMissionEssence(desc.missionEssence || "");
           setMissionRealizationFactors(desc.missionRealizationFactors?.join('\n') || "");
           setMissionChallenges(desc.missionChallenges || "");
-          setMissionObstacles(desc.missionObstacles || "");
+          setMissionObstacles(desc.missionObstacles?.join('\n') || "");
           setMainTransformation(desc.mainTransformation || "");
         } else {
           // Clear all fields if no description is found
@@ -185,7 +186,7 @@ export const useArchetypeManagement = () => {
     try {
       setIsSaving(true);
       
-      const parseTextToArray = (text: string) => {
+      const parseTextToArray = (text: string): string[] => {
         return text
           .split('\n')
           .map(str => str.trim())
@@ -233,7 +234,7 @@ export const useArchetypeManagement = () => {
         missionEssence,
         missionRealizationFactors: parseTextToArray(missionRealizationFactors),
         missionChallenges,
-        missionObstacles,
+        missionObstacles: parseTextToArray(missionObstacles),
         mainTransformation,
         
         // Backward compatibility

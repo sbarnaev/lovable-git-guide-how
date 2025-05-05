@@ -1,3 +1,4 @@
+
 import { ArchetypeDescription, NumerologyCodeType } from "@/types/numerology";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -458,11 +459,16 @@ const codeTypeToDisplay: Record<string, string> = {
 };
 
 // If this file doesn't contain the codeTypeTranslations object, we'll need to add it or update it in the component that uses it
-export const codeTypeTranslations: Record<NumerologyCodeType, string> = {
-  personality: 'Код личности',
+export const codeTypeTranslations: Record<string, string> = {
+  personalityCode: 'Код личности',
+  personality: 'Код личности', 
+  connectorCode: 'Код коннектора',
   connector: 'Код коннектора',
+  realizationCode: 'Код реализации',
   realization: 'Код реализации',
+  generatorCode: 'Код генератора',
   generator: 'Код генератора',
+  missionCode: 'Код миссии',
   mission: 'Код миссии',
   target: 'Целевой расчет',
   all: 'Все коды'

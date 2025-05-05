@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { ArchetypeDescription } from '@/types/numerology';
-import { BasicCalculationResults } from '@/types';
+import { ArchetypeDescription, NumerologyProfile } from '@/types/numerology';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { useArchetypeImages } from './partnership-atlas/useArchetypeImages';
 import { GenderToggle } from './partnership-atlas/GenderToggle';
@@ -12,7 +11,7 @@ import { ImageModal } from './partnership-atlas/ImageModal';
 interface PartnershipAtlasProps {
   name: string;
   archetypes: ArchetypeDescription[];
-  profile: BasicCalculationResults;
+  profile?: NumerologyProfile;
 }
 
 export const PartnershipAtlas: React.FC<PartnershipAtlasProps> = ({ 
