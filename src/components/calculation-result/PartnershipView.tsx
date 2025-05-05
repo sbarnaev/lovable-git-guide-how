@@ -32,7 +32,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     partnerProfile: calculation?.results?.partnerProfile
   });
   
-  // Convert BasicCalculationResults to NumerologyProfile for compatibility with PartnershipTextbookSection
+  // Улучшенная функция преобразования результатов в NumerologyProfile
   const convertToNumerologyProfile = (result: any): NumerologyProfile => {
     if (!result) {
       console.log("No result to convert to NumerologyProfile");
@@ -46,15 +46,16 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     
     console.log("Converting to NumerologyProfile:", result);
     
+    // Создаем профиль с правильно структурированными данными
     return {
       lifePath: result.numerology?.lifePath || 0,
       destiny: result.numerology?.destiny || 0,
       personality: result.numerology?.personality || 0,
-      fullCodes: result.fullCodes
+      fullCodes: result.fullCodes || undefined
     };
   };
   
-  // Now use the converted profiles
+  // Преобразуем профили клиента и партнера
   const clientProfile = calculation.results.clientProfile ? 
     convertToNumerologyProfile(calculation.results.clientProfile) : undefined;
   
@@ -63,10 +64,10 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   
   console.log("Converted profiles:", { clientProfile, partnerProfile });
   
-  // Combine archetypes for AI analysis
+  // Объединяем архетипы для AI-анализа
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
   
-  // Check that calculation exists first
+  // Проверяем, что расчет существует
   if (!calculation) {
     return (
       <div className="space-y-6">
@@ -84,7 +85,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
     );
   }
 
-  // Ensure we have results
+  // Проверяем наличие результатов
   if (!calculation.results) {
     return (
       <div className="space-y-6">
@@ -222,7 +223,7 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         </div>
       )}
       
-      {/* Notes Section - now enabled and placed before the textbook section */}
+      {/* Notes Section - теперь включена и размещена перед разделом учебника */}
       {!NOTES_DISABLED && calculation.id && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold">Заметки</h2>

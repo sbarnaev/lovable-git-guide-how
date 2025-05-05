@@ -28,7 +28,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const [activeTab, setActiveTab] = useState<string>("client");
   const [activeCodeType, setActiveCodeType] = useState<NumerologyCodeType | null>(null);
   
-  // Добавляем эффект для отладки
+  // Отладочный эффект
   useEffect(() => {
     console.log("PartnershipTextbookSection rendered with:", {
       clientProfile,
@@ -57,52 +57,60 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const clientShortName = getShortName(clientName);
   const partnerShortName = getShortName(partnerName);
   
-  // Improved findArchetype function with detailed logging
+  // Полностью переработанная функция поиска архетипа
   const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes available for ${codeType} search`);
       return undefined;
     }
     
-    // Get the profile we're currently looking at
+    // Получаем профиль для текущей вкладки
     const profile = activeTab === 'client' ? clientProfile : partnerProfile;
     if (!profile || !profile.fullCodes) {
       console.log(`No profile or fullCodes available for ${activeTab}`);
       return undefined;
     }
     
-    // Normalize the code type (remove 'Code' suffix if present)
-    const normalizedCode = normalizeCodeType(codeType);
+    // Приводим тип кода к единому формату (убираем суффикс 'Code' если он есть)
+    const normalizedCodeType = normalizeCodeType(codeType);
     
-    // Map from normalized code to the actual property name in fullCodes
-    const codePropertyMap: Record<string, keyof typeof profile.fullCodes> = {
-      'personality': 'personalityCode',
-      'connector': 'connectorCode',
-      'realization': 'realizationCode',
-      'generator': 'generatorCode',
-      'mission': 'missionCode'
-    };
+    // Получаем значение кода из профиля
+    let codeValue: number | undefined;
     
-    const propertyName = codePropertyMap[normalizedCode];
-    if (!propertyName) {
-      console.log(`No property mapping found for normalized code: ${normalizedCode}`);
-      return undefined;
+    // Используем соответствующее свойство из fullCodes в зависимости от типа кода
+    switch(normalizedCodeType) {
+      case 'personality':
+        codeValue = profile.fullCodes.personalityCode;
+        break;
+      case 'connector':
+        codeValue = profile.fullCodes.connectorCode;
+        break;
+      case 'realization':
+        codeValue = profile.fullCodes.realizationCode;
+        break;
+      case 'generator':
+        codeValue = profile.fullCodes.generatorCode;
+        break;
+      case 'mission':
+        codeValue = profile.fullCodes.missionCode;
+        break;
+      default:
+        console.log(`Unknown code type: ${normalizedCodeType}`);
+        return undefined;
     }
-    
-    const codeValue = profile.fullCodes[propertyName];
     
     if (codeValue === undefined) {
-      console.log(`No value found for ${codeType} (property ${propertyName}) in profile`);
+      console.log(`No value found for ${codeType} in profile`);
       return undefined;
     }
     
-    console.log(`Looking for archetype with code=${codeType}, normalizedCode=${normalizedCode}, property=${propertyName}, value=${codeValue} among ${archetypes.length} archetypes`);
+    console.log(`Looking for archetype with code=${codeType}, normalized=${normalizedCodeType}, value=${codeValue} among ${archetypes.length} archetypes`);
     
-    // First try exact match on code and value
+    // Ищем архетип по коду и значению
+    // Пробуем разные варианты поиска
     let match = archetypes.find(arch => {
-      const archCodeNormalized = normalizeCodeType(arch.code);
-      return (arch.code === codeType || archCodeNormalized === normalizedCode) && 
-             arch.value === codeValue;
+      // Точное совпадение кода и значения
+      return arch.code === codeType && arch.value === codeValue;
     });
     
     if (match) {
@@ -110,14 +118,25 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
       return match;
     }
     
-    // If no exact match, try matching just on normalized code and value
+    // Если не нашли точное совпадение, ищем по нормализованному коду
     match = archetypes.find(arch => {
-      const archCodeNormalized = normalizeCodeType(arch.code);
-      return archCodeNormalized === normalizedCode && arch.value === codeValue;
+      const archCodeNorm = normalizeCodeType(arch.code);
+      return archCodeNorm === normalizedCodeType && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found normalized match: ${match.code} (${match.value})`);
+      console.log(`Found match with normalized code: ${match.code} (${match.value})`);
+      return match;
+    }
+    
+    // Упрощенный поиск - просто по типу нормализованного кода и значению
+    match = archetypes.find(arch => {
+      const archCode = String(arch.code).toLowerCase(); 
+      return archCode.includes(normalizedCodeType.toLowerCase()) && arch.value === codeValue;
+    });
+    
+    if (match) {
+      console.log(`Found match with simple inclusion: ${match.code} (${match.value})`);
       return match;
     }
     
@@ -134,7 +153,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     }
   };
 
-  // Map code names to their display names
+  // Маппинг кодов на их отображаемые имена
   const codeDisplayNames: Record<string, string> = {
     'personality': 'Личности',
     'connector': 'Коннектора',
@@ -143,10 +162,10 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     'mission': 'Миссии'
   };
   
-  // Determine which button is active for better styling
+  // Определяем, какая кнопка активна для улучшения стиля
   const isActive = (code: NumerologyCodeType) => activeCodeType === code;
 
-  // Function to render code buttons for a profile
+  // Функция для отрисовки кнопок кодов для профиля
   const renderCodeButtons = (profile: NumerologyProfile | undefined) => {
     if (!profile || !profile.fullCodes) {
       return (

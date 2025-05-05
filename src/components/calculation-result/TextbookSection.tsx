@@ -19,7 +19,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
 }) => {
   const [activeSection, setActiveSection] = useState<NumerologyCodeType | null>(null);
 
-  // Добавляем эффект для отладки
+  // Отладочный эффект
   useEffect(() => {
     console.log("TextbookSection rendered with:", {
       calculation: calculation?.id,
@@ -47,59 +47,78 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     }
   };
 
+  // Полностью переработанная функция поиска архетипа
   const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes available for ${code} search`);
       return undefined;
     }
     
-    // Normalize the code type (remove 'Code' suffix if present)
+    // Нормализуем тип кода (убираем суффикс 'Code' если он есть)
     const normalizedCode = normalizeCodeType(code);
     
-    // Map from normalized code to the actual property name in fullCodes
-    const codePropertyMap: Record<string, keyof typeof fullCodes> = {
-      'personality': 'personalityCode',
-      'connector': 'connectorCode',
-      'realization': 'realizationCode',
-      'generator': 'generatorCode',
-      'mission': 'missionCode'
-    };
+    // Получаем значение кода из fullCodes в зависимости от типа
+    let codeValue: number | undefined;
     
-    const propertyName = codePropertyMap[normalizedCode];
-    if (!propertyName) {
-      console.log(`No property mapping found for normalized code: ${normalizedCode}`);
-      return undefined;
+    switch(normalizedCode) {
+      case 'personality':
+        codeValue = fullCodes.personalityCode;
+        break;
+      case 'connector':
+        codeValue = fullCodes.connectorCode;
+        break;
+      case 'realization':
+        codeValue = fullCodes.realizationCode;
+        break;
+      case 'generator':
+        codeValue = fullCodes.generatorCode;
+        break;
+      case 'mission':
+        codeValue = fullCodes.missionCode;
+        break;
+      default:
+        console.log(`Unknown code type: ${normalizedCode}`);
+        return undefined;
     }
-    
-    const codeValue = fullCodes[propertyName];
     
     if (codeValue === undefined) {
-      console.log(`No value found for ${code} (property ${propertyName}) in fullCodes`);
+      console.log(`No value found for ${code} in fullCodes`);
       return undefined;
     }
     
-    console.log(`Looking for ${code} with value ${codeValue} among ${archetypes.length} archetypes`);
+    console.log(`Looking for archetype with code=${code}, normalizedCode=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
     
-    // Try to find an exact match first
+    // Ищем архетип по коду и значению
+    // Пробуем разные варианты поиска
     let match = archetypes.find(arch => {
-      const archCodeNormalized = normalizeCodeType(arch.code);
-      return (archCodeNormalized === normalizedCode || arch.code === code) && 
-             arch.value === codeValue;
+      // Точное совпадение кода и значения
+      return arch.code === code && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found match for ${code}: ${match.code} (${match.value})`);
+      console.log(`Found exact match: ${match.code} (${match.value})`);
       return match;
     }
     
-    // More flexible search - just match on code type and value
+    // Если не нашли точное совпадение, ищем по нормализованному коду
     match = archetypes.find(arch => {
-      const archCodeNormalized = normalizeCodeType(arch.code);
-      return archCodeNormalized === normalizedCode && arch.value === codeValue;
+      const archCodeNorm = normalizeCodeType(arch.code);
+      return archCodeNorm === normalizedCode && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found match with normalized code: ${match.code} (${match.value})`);
+      console.log(`Found normalized match: ${match.code} (${match.value})`);
+      return match;
+    }
+    
+    // Упрощенный поиск - просто по типу нормализованного кода и значению
+    match = archetypes.find(arch => {
+      const archCode = String(arch.code).toLowerCase(); 
+      return archCode.includes(normalizedCode.toLowerCase()) && arch.value === codeValue;
+    });
+    
+    if (match) {
+      console.log(`Found match with simple inclusion: ${match.code} (${match.value})`);
       return match;
     }
     
@@ -107,7 +126,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     return undefined;
   };
   
-  // Map code names to their display names
+  // Маппинг кодов на их отображаемые имена
   const codeDisplayNames: Record<string, string> = {
     'personality': 'Личности',
     'connector': 'Коннектора',
@@ -116,14 +135,14 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     'mission': 'Миссии'
   };
   
-  // Determine which button is active for better styling
+  // Определяем, какая кнопка активна для улучшения стиля
   const isActive = (code: NumerologyCodeType) => activeSection === code;
   
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Учебник</h2>
       
-      {/* Buttons in a horizontal row with proper styling */}
+      {/* Кнопки в горизонтальном ряду с правильным стилем */}
       <div className="flex flex-wrap gap-2">
         <Button 
           variant={isActive('personality') ? 'default' : 'outline'}
@@ -166,7 +185,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
         </Button>
       </div>
       
-      {/* Content panel */}
+      {/* Панель содержимого */}
       {activeSection && (
         <Card className="border rounded-lg overflow-hidden">
           <CardContent className="p-6">
