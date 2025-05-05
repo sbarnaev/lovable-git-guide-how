@@ -1,11 +1,8 @@
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from '@/components/ui/card';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { toast } from "sonner";
 import { PersonalityTabContent } from './PersonalityTabContent';
@@ -179,7 +176,7 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
   } = props;
 
   const handleSaveClick = () => {
-    if (!title || !selectedCode || !selectedValue) {
+    if (!props.title || !selectedCode || !selectedValue) {
       toast.error("Пожалуйста, заполните все обязательные поля (Название, Код, Значение)");
       return;
     }
@@ -209,10 +206,7 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
   ];
 
   // Доступные значения (числа от 1 до 9)
-  const valueOptions = Array.from({ length: 9 }, (_, i) => ({
-    value: i + 1,
-    label: `${i + 1}`
-  }));
+  const valueOptions = Array.from({ length: 9 }, (_, i) => i + 1);
   
   // Нормализуем код для корректного отображения вкладок
   const normalizedCode = normalizeCode(selectedCode);
@@ -221,25 +215,15 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="md:w-1/3">
-              <label className="text-sm font-medium">Название архетипа</label>
-              <Input 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Введите название архетипа" 
-                disabled={loading}
-              />
-            </div>
-            
-            <div className="md:w-1/3">
-              <label className="text-sm font-medium">Код</label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <div className="text-sm font-medium mb-2">Код</div>
               <Select 
                 value={normalizedCode} 
                 onValueChange={(value) => setSelectedCode(value as NumerologyCodeType)}
                 disabled={loading}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Выберите код" />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,24 +236,34 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
               </Select>
             </div>
             
-            <div className="md:w-1/3">
-              <label className="text-sm font-medium">Значение</label>
+            <div>
+              <div className="text-sm font-medium mb-2">Значение</div>
               <Select 
                 value={String(selectedValue)} 
                 onValueChange={(value) => setSelectedValue(Number(value))}
                 disabled={loading}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Выберите значение" />
                 </SelectTrigger>
                 <SelectContent>
-                  {valueOptions.map(option => (
-                    <SelectItem key={option.value} value={String(option.value)}>
-                      {option.label}
+                  {valueOptions.map(value => (
+                    <SelectItem key={value} value={String(value)}>
+                      {value}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button 
+                onClick={handleSaveClick} 
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? "Сохранение..." : "Сохранить архетип"}
+              </Button>
             </div>
           </div>
 
@@ -285,106 +279,96 @@ export const ArchetypeForm = (props: ArchetypeFormProps) => {
             
             <TabsContent value="general">
               <GeneralTabContent
-                title={title}
-                setTitle={setTitle}
-                description={description}
-                setDescription={setDescription}
-                maleImageUrl={maleImageUrl}
-                setMaleImageUrl={setMaleImageUrl}
-                femaleImageUrl={femaleImageUrl}
-                setFemaleImageUrl={setFemaleImageUrl}
+                title={props.title}
+                setTitle={props.setTitle}
+                description={props.description}
+                setDescription={props.setDescription}
+                maleImageUrl={props.maleImageUrl}
+                setMaleImageUrl={props.setMaleImageUrl}
+                femaleImageUrl={props.femaleImageUrl}
+                setFemaleImageUrl={props.setFemaleImageUrl}
               />
             </TabsContent>
             
             <TabsContent value="personality">
               <PersonalityTabContent
-                resourceManifestation={resourceManifestation}
-                setResourceManifestation={setResourceManifestation}
-                distortedManifestation={distortedManifestation}
-                setDistortedManifestation={setDistortedManifestation}
-                developmentTask={developmentTask}
-                setDevelopmentTask={setDevelopmentTask}
-                resourceQualities={resourceQualities}
-                setResourceQualities={setResourceQualities}
-                keyDistortions={keyDistortions}
-                setKeyDistortions={setKeyDistortions}
+                resourceManifestation={props.resourceManifestation}
+                setResourceManifestation={props.setResourceManifestation}
+                distortedManifestation={props.distortedManifestation}
+                setDistortedManifestation={props.setDistortedManifestation}
+                developmentTask={props.developmentTask}
+                setDevelopmentTask={props.setDevelopmentTask}
+                resourceQualities={props.resourceQualities}
+                setResourceQualities={props.setResourceQualities}
+                keyDistortions={props.keyDistortions}
+                setKeyDistortions={props.setKeyDistortions}
               />
             </TabsContent>
             
             <TabsContent value="connector">
               <ConnectorTabContent
-                keyTask={keyTask}
-                setKeyTask={setKeyTask}
-                workingAspects={workingAspects}
-                setWorkingAspects={setWorkingAspects}
-                nonWorkingAspects={nonWorkingAspects}
-                setNonWorkingAspects={setNonWorkingAspects}
-                worldContactBasis={worldContactBasis}
-                setWorldContactBasis={setWorldContactBasis}
+                keyTask={props.keyTask}
+                setKeyTask={props.setKeyTask}
+                workingAspects={props.workingAspects}
+                setWorkingAspects={props.setWorkingAspects}
+                nonWorkingAspects={props.nonWorkingAspects}
+                setNonWorkingAspects={props.setNonWorkingAspects}
+                worldContactBasis={props.worldContactBasis}
+                setWorldContactBasis={props.setWorldContactBasis}
               />
             </TabsContent>
             
             <TabsContent value="realization">
               <RealizationTabContent
-                formula={formula}
-                setFormula={setFormula}
-                potentialRealizationWays={potentialRealizationWays}
-                setPotentialRealizationWays={setPotentialRealizationWays}
-                successSources={successSources}
-                setSuccessSources={setSuccessSources}
-                realizationType={realizationType}
-                setRealizationType={setRealizationType}
-                realizationObstacles={realizationObstacles}
-                setRealizationObstacles={setRealizationObstacles}
-                recommendations={recommendations}
-                setRecommendations={setRecommendations}
+                formula={props.formula}
+                setFormula={props.setFormula}
+                potentialRealizationWays={props.potentialRealizationWays}
+                setPotentialRealizationWays={props.setPotentialRealizationWays}
+                successSources={props.successSources}
+                setSuccessSources={props.setSuccessSources}
+                realizationType={props.realizationType}
+                setRealizationType={props.setRealizationType}
+                realizationObstacles={props.realizationObstacles}
+                setRealizationObstacles={props.setRealizationObstacles}
+                recommendations={props.recommendations}
+                setRecommendations={props.setRecommendations}
               />
             </TabsContent>
             
             <TabsContent value="generator">
               <GeneratorTabContent
-                generatorFormula={generatorFormula}
-                setGeneratorFormula={setGeneratorFormula}
-                energySources={energySources}
-                setEnergySources={setEnergySources}
-                energyDrains={energyDrains}
-                setEnergyDrains={setEnergyDrains}
-                flowSigns={flowSigns}
-                setFlowSigns={setFlowSigns}
-                burnoutSigns={burnoutSigns}
-                setBurnoutSigns={setBurnoutSigns}
-                generatorRecommendation={generatorRecommendation}
-                setGeneratorRecommendation={setGeneratorRecommendation}
+                generatorFormula={props.generatorFormula}
+                setGeneratorFormula={props.setGeneratorFormula}
+                energySources={props.energySources}
+                setEnergySources={props.setEnergySources}
+                energyDrains={props.energyDrains}
+                setEnergyDrains={props.setEnergyDrains}
+                flowSigns={props.flowSigns}
+                setFlowSigns={props.setFlowSigns}
+                burnoutSigns={props.burnoutSigns}
+                setBurnoutSigns={props.setBurnoutSigns}
+                generatorRecommendation={props.generatorRecommendation}
+                setGeneratorRecommendation={props.setGeneratorRecommendation}
               />
             </TabsContent>
             
             <TabsContent value="mission">
               <MissionTabContent
-                missionEssence={missionEssence}
-                setMissionEssence={setMissionEssence}
-                missionRealizationFactors={missionRealizationFactors}
-                setMissionRealizationFactors={setMissionRealizationFactors}
-                missionChallenges={missionChallenges}
-                setMissionChallenges={setMissionChallenges}
-                missionObstacles={missionObstacles}
-                setMissionObstacles={setMissionObstacles}
-                mainTransformation={mainTransformation}
-                setMainTransformation={setMainTransformation}
+                missionEssence={props.missionEssence}
+                setMissionEssence={props.setMissionEssence}
+                missionRealizationFactors={props.missionRealizationFactors}
+                setMissionRealizationFactors={props.setMissionRealizationFactors}
+                missionChallenges={props.missionChallenges}
+                setMissionChallenges={props.setMissionChallenges}
+                missionObstacles={props.missionObstacles}
+                setMissionObstacles={props.setMissionObstacles}
+                mainTransformation={props.mainTransformation}
+                setMainTransformation={props.setMainTransformation}
               />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
-      
-      <div className="flex justify-end">
-        <Button 
-          onClick={handleSaveClick} 
-          disabled={loading}
-          className="px-8"
-        >
-          {loading ? "Сохранение..." : "Сохранить архетип"}
-        </Button>
-      </div>
     </div>
   );
 };

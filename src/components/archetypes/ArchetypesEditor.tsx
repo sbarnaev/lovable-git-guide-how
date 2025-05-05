@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArchetypeForm } from "@/components/archetypes/ArchetypeForm";
 import { NumerologyCodeType } from "@/types/numerology";
 
@@ -89,7 +89,7 @@ export const ArchetypesEditor: React.FC<ArchetypesEditorProps> = (props) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Редактор архетипов</CardTitle>
+        <CardTitle>Архетип {props.title || `${props.selectedValue}`}</CardTitle>
       </CardHeader>
       <CardContent>
         <ArchetypeForm {...props} />
