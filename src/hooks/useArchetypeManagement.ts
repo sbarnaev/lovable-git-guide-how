@@ -1,127 +1,81 @@
 
 import { useState, useEffect } from 'react';
 import { NumerologyCodeType, ArchetypeDescription } from '@/types/numerology';
-import { getArchetypeDescription, addArchetypeDescription, getAllArchetypeDescriptions, loadArchetypesFromDb } from '@/utils/archetypeDescriptions';
-import { useToast } from "@/hooks/use-toast";
+import { addArchetypeDescription, normalizeCodeType, parseTextToArray } from '@/utils/archetypeDescriptions';
 import { toast } from "sonner";
+import { useArchetypeFormState } from './archetypes/useArchetypeFormState';
+import { useArchetypesData } from './archetypes/useArchetypesData';
 
 export const useArchetypeManagement = () => {
-  const [descriptions, setDescriptions] = useState<ArchetypeDescription[]>([]);
-  const [selectedCode, setSelectedCode] = useState<NumerologyCodeType>('personalityCode');
-  const [selectedValue, setSelectedValue] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+  // Подключаем подхуки
+  const formState = useArchetypeFormState();
+  const archetypesData = useArchetypesData();
   
-  // General fields
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [maleImageUrl, setMaleImageUrl] = useState<string>("");
-  const [femaleImageUrl, setFemaleImageUrl] = useState<string>("");
+  // Получаем состояние и методы из подхуков
+  const {
+    selectedCode, setSelectedCode,
+    selectedValue, setSelectedValue,
+    loading, setLoading,
+    isSaving, setIsSaving,
+    clearAllFields,
+    ...otherFormState
+  } = formState;
   
-  // Personality Code fields
-  const [resourceManifestation, setResourceManifestation] = useState("");
-  const [distortedManifestation, setDistortedManifestation] = useState("");
-  const [developmentTask, setDevelopmentTask] = useState("");
-  const [resourceQualities, setResourceQualities] = useState("");
-  const [keyDistortions, setKeyDistortions] = useState("");
-  
-  // Connector Code fields
-  const [keyTask, setKeyTask] = useState("");
-  const [workingAspects, setWorkingAspects] = useState("");
-  const [nonWorkingAspects, setNonWorkingAspects] = useState("");
-  const [worldContactBasis, setWorldContactBasis] = useState("");
-  
-  // Realization Code fields
-  const [formula, setFormula] = useState("");
-  const [potentialRealizationWays, setPotentialRealizationWays] = useState("");
-  const [successSources, setSuccessSources] = useState("");
-  const [realizationType, setRealizationType] = useState("");
-  const [realizationObstacles, setRealizationObstacles] = useState("");
-  const [recommendations, setRecommendations] = useState("");
-  
-  // Generator Code fields
-  const [generatorFormula, setGeneratorFormula] = useState("");
-  const [energySources, setEnergySources] = useState("");
-  const [energyDrains, setEnergyDrains] = useState("");
-  const [flowSigns, setFlowSigns] = useState("");
-  const [burnoutSigns, setBurnoutSigns] = useState("");
-  const [generatorRecommendation, setGeneratorRecommendation] = useState("");
-  
-  // Mission Code fields
-  const [missionEssence, setMissionEssence] = useState("");
-  const [missionRealizationFactors, setMissionRealizationFactors] = useState("");
-  const [missionChallenges, setMissionChallenges] = useState("");
-  const [missionObstacles, setMissionObstacles] = useState("");
-  const [mainTransformation, setMainTransformation] = useState("");
-
-  // Load all descriptions
-  useEffect(() => {
-    const loadDescriptions = async () => {
-      setLoading(true);
-      try {
-        await loadArchetypesFromDb(true);
-        const allDescriptions = getAllArchetypeDescriptions();
-        setDescriptions(allDescriptions);
-      } catch (error) {
-        console.error("Error loading descriptions:", error);
-        toast.error("Не удалось загрузить архетипы");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadDescriptions();
-  }, []);
+  const {
+    descriptions,
+    loadArchetype,
+    refreshArchetypes
+  } = archetypesData;
 
   // Load specific description when code or value changes
   useEffect(() => {
-    const loadArchetype = async () => {
+    const fetchArchetype = async () => {
       setLoading(true);
       try {
-        const desc = await getArchetypeDescription(selectedCode, selectedValue);
+        const desc = await loadArchetype(selectedCode, selectedValue);
         
         if (desc) {
           // General
-          setTitle(desc.title || "");
-          setDescription(desc.description || "");
-          setMaleImageUrl(desc.maleImageUrl || "");
-          setFemaleImageUrl(desc.femaleImageUrl || "");
+          formState.setTitle(desc.title || "");
+          formState.setDescription(desc.description || "");
+          formState.setMaleImageUrl(desc.maleImageUrl || "");
+          formState.setFemaleImageUrl(desc.femaleImageUrl || "");
           
           // Personality Code
-          setResourceManifestation(desc.resourceManifestation || "");
-          setDistortedManifestation(desc.distortedManifestation || "");
-          setDevelopmentTask(desc.developmentTask || "");
-          setResourceQualities(desc.resourceQualities?.join('\n') || "");
-          setKeyDistortions(desc.keyDistortions?.join('\n') || "");
+          formState.setResourceManifestation(desc.resourceManifestation || "");
+          formState.setDistortedManifestation(desc.distortedManifestation || "");
+          formState.setDevelopmentTask(desc.developmentTask || "");
+          formState.setResourceQualities(desc.resourceQualities?.join('\n') || "");
+          formState.setKeyDistortions(desc.keyDistortions?.join('\n') || "");
           
           // Connector Code
-          setKeyTask(desc.keyTask || "");
-          setWorkingAspects(desc.workingAspects?.join('\n') || "");
-          setNonWorkingAspects(desc.nonWorkingAspects?.join('\n') || "");
-          setWorldContactBasis(desc.worldContactBasis || "");
+          formState.setKeyTask(desc.keyTask || "");
+          formState.setWorkingAspects(desc.workingAspects?.join('\n') || "");
+          formState.setNonWorkingAspects(desc.nonWorkingAspects?.join('\n') || "");
+          formState.setWorldContactBasis(desc.worldContactBasis || "");
           
           // Realization Code
-          setFormula(desc.formula || "");
-          setPotentialRealizationWays(desc.potentialRealizationWays?.join('\n') || "");
-          setSuccessSources(desc.successSources?.join('\n') || "");
-          setRealizationType(desc.realizationType || "");
-          setRealizationObstacles(desc.realizationObstacles?.join('\n') || "");
-          setRecommendations(desc.recommendations?.join('\n') || "");
+          formState.setFormula(desc.formula || "");
+          formState.setPotentialRealizationWays(desc.potentialRealizationWays?.join('\n') || "");
+          formState.setSuccessSources(desc.successSources?.join('\n') || "");
+          formState.setRealizationType(desc.realizationType || "");
+          formState.setRealizationObstacles(desc.realizationObstacles?.join('\n') || "");
+          formState.setRecommendations(desc.recommendations?.join('\n') || "");
           
           // Generator Code
-          setGeneratorFormula(desc.generatorFormula || "");
-          setEnergySources(desc.energySources?.join('\n') || "");
-          setEnergyDrains(desc.energyDrains?.join('\n') || "");
-          setFlowSigns(desc.flowSigns?.join('\n') || "");
-          setBurnoutSigns(desc.burnoutSigns?.join('\n') || "");
-          setGeneratorRecommendation(desc.generatorRecommendation || "");
+          formState.setGeneratorFormula(desc.generatorFormula || "");
+          formState.setEnergySources(desc.energySources?.join('\n') || "");
+          formState.setEnergyDrains(desc.energyDrains?.join('\n') || "");
+          formState.setFlowSigns(desc.flowSigns?.join('\n') || "");
+          formState.setBurnoutSigns(desc.burnoutSigns?.join('\n') || "");
+          formState.setGeneratorRecommendation(desc.generatorRecommendation || "");
           
           // Mission Code
-          setMissionEssence(desc.missionEssence || "");
-          setMissionRealizationFactors(desc.missionRealizationFactors?.join('\n') || "");
-          setMissionChallenges(desc.missionChallenges || "");
-          setMissionObstacles(desc.missionObstacles?.join('\n') || "");
-          setMainTransformation(desc.mainTransformation || "");
+          formState.setMissionEssence(desc.missionEssence || "");
+          formState.setMissionRealizationFactors(desc.missionRealizationFactors?.join('\n') || "");
+          formState.setMissionChallenges(desc.missionChallenges || "");
+          formState.setMissionObstacles(desc.missionObstacles?.join('\n') || "");
+          formState.setMainTransformation(desc.mainTransformation || "");
         } else {
           // Clear all fields if no description is found
           clearAllFields();
@@ -135,119 +89,67 @@ export const useArchetypeManagement = () => {
       }
     };
     
-    loadArchetype();
+    fetchArchetype();
   }, [selectedCode, selectedValue]);
-  
-  const clearAllFields = () => {
-    // General
-    setTitle("");
-    setDescription("");
-    setMaleImageUrl("");
-    setFemaleImageUrl("");
-    
-    // Personality Code
-    setResourceManifestation("");
-    setDistortedManifestation("");
-    setDevelopmentTask("");
-    setResourceQualities("");
-    setKeyDistortions("");
-    
-    // Connector Code
-    setKeyTask("");
-    setWorkingAspects("");
-    setNonWorkingAspects("");
-    setWorldContactBasis("");
-    
-    // Realization Code
-    setFormula("");
-    setPotentialRealizationWays("");
-    setSuccessSources("");
-    setRealizationType("");
-    setRealizationObstacles("");
-    setRecommendations("");
-    
-    // Generator Code
-    setGeneratorFormula("");
-    setEnergySources("");
-    setEnergyDrains("");
-    setFlowSigns("");
-    setBurnoutSigns("");
-    setGeneratorRecommendation("");
-    
-    // Mission Code
-    setMissionEssence("");
-    setMissionRealizationFactors("");
-    setMissionChallenges("");
-    setMissionObstacles("");
-    setMainTransformation("");
-  };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      
-      const parseTextToArray = (text: string): string[] => {
-        return text
-          .split('\n')
-          .map(str => str.trim())
-          .filter(str => str !== "");
-      };
 
       const archetypeDescription: ArchetypeDescription = {
         code: selectedCode,
         value: selectedValue,
-        title: title || `Архетип ${selectedValue}`,
-        description,
-        maleImageUrl,
-        femaleImageUrl,
+        title: formState.title || `Архетип ${selectedValue}`,
+        description: formState.description,
+        maleImageUrl: formState.maleImageUrl,
+        femaleImageUrl: formState.femaleImageUrl,
         
         // Personality Code
-        resourceManifestation,
-        distortedManifestation,
-        developmentTask,
-        resourceQualities: parseTextToArray(resourceQualities),
-        keyDistortions: parseTextToArray(keyDistortions),
+        resourceManifestation: formState.resourceManifestation,
+        distortedManifestation: formState.distortedManifestation,
+        developmentTask: formState.developmentTask,
+        resourceQualities: parseTextToArray(formState.resourceQualities),
+        keyDistortions: parseTextToArray(formState.keyDistortions),
         
         // Connector Code
-        keyTask,
-        workingAspects: parseTextToArray(workingAspects),
-        nonWorkingAspects: parseTextToArray(nonWorkingAspects),
-        worldContactBasis,
+        keyTask: formState.keyTask,
+        workingAspects: parseTextToArray(formState.workingAspects),
+        nonWorkingAspects: parseTextToArray(formState.nonWorkingAspects),
+        worldContactBasis: formState.worldContactBasis,
         
         // Realization Code
-        formula,
-        potentialRealizationWays: parseTextToArray(potentialRealizationWays),
-        successSources: parseTextToArray(successSources),
-        realizationType,
-        realizationObstacles: parseTextToArray(realizationObstacles),
-        recommendations: parseTextToArray(recommendations),
+        formula: formState.formula,
+        potentialRealizationWays: parseTextToArray(formState.potentialRealizationWays),
+        successSources: parseTextToArray(formState.successSources),
+        realizationType: formState.realizationType,
+        realizationObstacles: parseTextToArray(formState.realizationObstacles),
+        recommendations: parseTextToArray(formState.recommendations),
         
         // Generator Code
-        generatorFormula,
-        energySources: parseTextToArray(energySources),
-        energyDrains: parseTextToArray(energyDrains),
-        flowSigns: parseTextToArray(flowSigns),
-        burnoutSigns: parseTextToArray(burnoutSigns),
-        generatorRecommendation,
+        generatorFormula: formState.generatorFormula,
+        energySources: parseTextToArray(formState.energySources),
+        energyDrains: parseTextToArray(formState.energyDrains),
+        flowSigns: parseTextToArray(formState.flowSigns),
+        burnoutSigns: parseTextToArray(formState.burnoutSigns),
+        generatorRecommendation: formState.generatorRecommendation,
         
         // Mission Code
-        missionEssence,
-        missionRealizationFactors: parseTextToArray(missionRealizationFactors),
-        missionChallenges,
-        missionObstacles: parseTextToArray(missionObstacles),
-        mainTransformation,
+        missionEssence: formState.missionEssence,
+        missionRealizationFactors: parseTextToArray(formState.missionRealizationFactors),
+        missionChallenges: formState.missionChallenges,
+        missionObstacles: parseTextToArray(formState.missionObstacles),
+        mainTransformation: formState.mainTransformation,
         
         // Backward compatibility
-        strengths: parseTextToArray(resourceQualities),
-        challenges: parseTextToArray(keyDistortions),
+        strengths: parseTextToArray(formState.resourceQualities),
+        challenges: parseTextToArray(formState.keyDistortions),
       };
 
       const success = await addArchetypeDescription(archetypeDescription);
       
       if (success) {
         // Reload descriptions to update the UI
-        const updatedDescriptions = getAllArchetypeDescriptions();
-        setDescriptions(updatedDescriptions);
+        await refreshArchetypes();
         toast.success("Архетип успешно сохранен");
       }
     } catch (error) {
@@ -271,77 +173,8 @@ export const useArchetypeManagement = () => {
     loading,
     isSaving,
     
-    // General fields
-    title,
-    setTitle,
-    description,
-    setDescription,
-    maleImageUrl,
-    setMaleImageUrl,
-    femaleImageUrl,
-    setFemaleImageUrl,
-    
-    // Personality Code fields
-    resourceManifestation,
-    setResourceManifestation,
-    distortedManifestation,
-    setDistortedManifestation,
-    developmentTask,
-    setDevelopmentTask,
-    resourceQualities,
-    setResourceQualities,
-    keyDistortions,
-    setKeyDistortions,
-    
-    // Connector Code fields
-    keyTask,
-    setKeyTask,
-    workingAspects,
-    setWorkingAspects,
-    nonWorkingAspects,
-    setNonWorkingAspects,
-    worldContactBasis,
-    setWorldContactBasis,
-    
-    // Realization Code fields
-    formula,
-    setFormula,
-    potentialRealizationWays,
-    setPotentialRealizationWays,
-    successSources,
-    setSuccessSources,
-    realizationType,
-    setRealizationType,
-    realizationObstacles,
-    setRealizationObstacles,
-    recommendations,
-    setRecommendations,
-    
-    // Generator Code fields
-    generatorFormula,
-    setGeneratorFormula,
-    energySources,
-    setEnergySources,
-    energyDrains,
-    setEnergyDrains,
-    flowSigns,
-    setFlowSigns,
-    burnoutSigns,
-    setBurnoutSigns,
-    generatorRecommendation,
-    setGeneratorRecommendation,
-    
-    // Mission Code fields
-    missionEssence,
-    setMissionEssence,
-    missionRealizationFactors,
-    setMissionRealizationFactors,
-    missionChallenges,
-    setMissionChallenges,
-    missionObstacles,
-    setMissionObstacles,
-    mainTransformation,
-    setMainTransformation,
+    // Form fields (распаковываем все поля формы)
+    ...otherFormState,
     
     // Functions
     handleSave,
