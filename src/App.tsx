@@ -19,6 +19,7 @@ import HistoryPage from "./pages/HistoryPage";
 import ArchetypesAdminPage from "./pages/ArchetypesAdminPage";
 import ArchetypeImagesPage from "./pages/ArchetypeImagesPage";
 import NotesPage from "./pages/NotesPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
@@ -50,6 +51,7 @@ const App = () => (
                   <Route path="archetypes" element={<ArchetypesAdminPage />} />
                   <Route path="archetype-images" element={<ArchetypeImagesPage />} />
                   <Route path="notes" element={<NotesPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
                 </Route>
               </Route>
               

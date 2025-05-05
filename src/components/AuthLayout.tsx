@@ -3,6 +3,7 @@ import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import ProfileLink from "./ProfileLink";
 
 const AuthLayout: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -21,7 +22,12 @@ const AuthLayout: React.FC = () => {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <ProfileLink />
+    </>
+  );
 };
 
 export default AuthLayout;
