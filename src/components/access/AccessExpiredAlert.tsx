@@ -38,7 +38,7 @@ export const AccessExpiredAlert = () => {
           variant="outline" 
           size="sm" 
           className="mt-2 w-full sm:w-auto"
-          onClick={() => window.location.href = "mailto:support@numerica.ru"}
+          onClick={() => window.location.href = "https://t.me/ownbarnaev"}
         >
           Связаться с администратором
         </Button>

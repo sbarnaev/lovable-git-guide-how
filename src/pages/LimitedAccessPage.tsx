@@ -41,7 +41,7 @@ const LimitedAccessPage = () => {
           </div>
           <div className="flex flex-col gap-2">
             <Button asChild>
-              <a href="mailto:support@numerica.ru" className="flex items-center gap-2">
+              <a href="https://t.me/ownbarnaev" className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 Связаться с администратором
               </a>

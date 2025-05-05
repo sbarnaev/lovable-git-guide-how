@@ -33,11 +33,18 @@ export function useAccessCheck(): AccessStatus {
 
     const checkAccess = async () => {
       try {
+        console.log("Checking access for user:", user.id);
+        
         // Проверяем доступ пользователя через RPC-функцию
         const { data, error: accessError } = await supabase
           .rpc('has_active_access', { user_uuid: user.id });
 
-        if (accessError) throw accessError;
+        if (accessError) {
+          console.error("Error checking access through RPC:", accessError);
+          throw accessError;
+        }
+
+        console.log("Access check result:", data);
 
         // Получаем информацию о сроке доступа
         const { data: accessData, error: dataError } = await supabase
@@ -48,8 +55,11 @@ export function useAccessCheck(): AccessStatus {
 
         if (dataError && dataError.code !== 'PGRST116') {
           // PGRST116 - ошибка "не найдено", игнорируем её
+          console.error("Error fetching access data:", dataError);
           throw dataError;
         }
+
+        console.log("Access data:", accessData);
 
         setAccessStatus({
           hasAccess: !!data,

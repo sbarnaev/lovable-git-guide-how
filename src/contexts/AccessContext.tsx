@@ -13,11 +13,17 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
   const accessStatus = useAccessCheck();
   
+  // Проверяем логи для диагностики
+  console.log("Profile in AccessProvider:", profile);
+  console.log("Access status:", accessStatus);
+  
   // Проверяем, является ли пользователь администратором
   const isAdmin = profile?.role === 'admin';
+  console.log("Is admin:", isAdmin);
   
   // Администраторы всегда имеют доступ
   const hasAccess = isAdmin || accessStatus.hasAccess;
+  console.log("Final access decision:", hasAccess);
 
   return (
     <AccessContext.Provider value={{
