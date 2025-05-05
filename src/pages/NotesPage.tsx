@@ -12,13 +12,13 @@ const NotesPage = () => {
     <div className="container py-6 space-y-6">
       <h1 className="text-2xl font-bold">Заметки</h1>
       
-      <Card className="bg-yellow-50 border-yellow-200">
+      <Card className="bg-amber-50 border-amber-200">
         <CardContent className="pt-6 flex items-start gap-2">
-          <AlertCircle className="text-yellow-600 h-5 w-5 mt-0.5 flex-shrink-0" />
+          <AlertCircle className="text-amber-600 h-5 w-5 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-yellow-800">
+            <p className="text-amber-800">
               Для сохранения заметок нажмите кнопку "Сохранить заметку" или комбинацию клавиш Ctrl+S (Cmd+S на Mac).
-              Мы применили расширенное исправление проблемы с отображением текста. Пожалуйста, сообщите, если проблема сохраняется.
+              Мы обновили механизм обработки текста для устранения проблем с направлением письма.
             </p>
           </div>
         </CardContent>
