@@ -10,8 +10,8 @@ import { ProfileAtlas } from '@/components/calculation-result/ProfileAtlas';
 import { ConsultationSection } from '@/components/calculation-result/ConsultationSection';
 import { TextbookSection } from '@/components/calculation-result/TextbookSection';
 
-// Note: This is a temporary flag to disable notes
-const NOTES_DISABLED = true;
+// Note: We're enabling notes by setting this to false
+const NOTES_DISABLED = false;
 
 interface BasicViewProps {
   calculation: (BasicCalculation & { id: string; createdAt: string });
@@ -53,15 +53,15 @@ export const BasicView: React.FC<BasicViewProps> = ({ calculation, archetypes })
         />
       )}
       
-      {/* Textbook Section */}
-      <TextbookSection calculation={calculation} archetypes={archetypes} />
-      
-      {/* Notes Section - conditionally disabled */}
+      {/* Notes Section - now enabled and placed above the Textbook section */}
       {!NOTES_DISABLED && calculation.id && (
         <div className="space-y-4">
           <NoteEditor calculationId={calculation.id} />
         </div>
       )}
+      
+      {/* Textbook Section */}
+      <TextbookSection calculation={calculation} archetypes={archetypes} />
     </div>
   );
 };

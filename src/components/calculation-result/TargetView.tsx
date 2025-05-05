@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { AIChat } from '@/components/AIChat';
 
-// Note: This is a temporary flag to disable notes
-const NOTES_DISABLED = true;
+// Note: We're enabling notes by setting this to false
+const NOTES_DISABLED = false;
 
 interface TargetViewProps {
   calculation: (TargetCalculation & { id: string; createdAt: string });
@@ -182,9 +182,10 @@ export const TargetView: React.FC<TargetViewProps> = ({ calculation, archetypes 
         </Tabs>
       </div>
       
-      {/* Notes - conditionally disabled */}
+      {/* Notes Section - now enabled and placed before the end of the page */}
       {!NOTES_DISABLED && calculation.id && (
         <div className="space-y-4">
+          <h2 className="text-xl font-bold">Заметки</h2>
           <NoteEditor calculationId={calculation.id} />
         </div>
       )}

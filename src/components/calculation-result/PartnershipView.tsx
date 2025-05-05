@@ -6,9 +6,10 @@ import { PartnershipTextbookSection } from './PartnershipTextbookSection';
 import { PartnershipClientInfo } from './PartnershipClientInfo';
 import { PartnershipAtlas } from './PartnershipAtlas';
 import { ConsultationTabs } from './partnership/ConsultationTabs';
+import { NoteEditor } from '@/components/note-editor';
 
-// Note: This is a temporary flag to disable notes
-const NOTES_DISABLED = true;
+// Note: We're enabling notes by setting this to false
+const NOTES_DISABLED = false;
 
 interface PartnershipViewProps {
   calculation: (PartnershipCalculation & { id: string; createdAt: string });
@@ -194,6 +195,14 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
             calculationId={calculation.id}
             archetypes={combinedArchetypes}
           />
+        </div>
+      )}
+      
+      {/* Notes Section - now enabled and placed before the textbook section */}
+      {!NOTES_DISABLED && calculation.id && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Заметки</h2>
+          <NoteEditor calculationId={calculation.id} />
         </div>
       )}
       
