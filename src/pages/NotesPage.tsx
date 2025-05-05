@@ -111,7 +111,7 @@ const NotesPage = () => {
             </div>
           ) : (
             <Editor
-              apiKey="no-api-key"
+              apiKey="5sjhz2xc7wyasneumhu9g51enc8qr2hmqgn3unlvbfn11iko"
               onInit={(evt, editor) => editorRef.current = editor}
               initialValue={content}
               init={{
