@@ -23,9 +23,7 @@ export function AccessProvider({ children }: { children: ReactNode }) {
   console.log("Is admin:", isAdmin);
   
   // Define access: administrators always have access, or check by status
-  // Ensure we skip the error state and grant access if a valid record exists
-  const hasAccess = isAdmin || 
-    (accessStatus.hasAccess && !accessStatus.loading && !accessStatus.error);
+  const hasAccess = isAdmin || accessStatus.hasAccess;
   console.log("Final access decision:", hasAccess);
 
   return (

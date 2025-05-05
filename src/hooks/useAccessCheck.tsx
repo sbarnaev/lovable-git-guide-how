@@ -35,40 +35,45 @@ export function useAccessCheck(): AccessStatus {
       try {
         console.log("Checking access for user:", user.id);
         
-        // Use a direct SQL query with service role to bypass RLS
+        // Use a direct SQL query with RPC call to the security definer function
         // This avoids the infinite recursion issue with RLS policies
-        const { data: accessData, error: accessError } = await supabase
-          .from('user_access')
-          .select('access_until')
-          .eq('user_id', user.id)
-          .single();
+        const { data, error } = await supabase
+          .rpc('has_active_access', { user_uuid: user.id });
 
-        if (accessError) {
-          console.error("Error fetching access data:", accessError);
-          throw accessError;
+        if (error) {
+          console.error("Error checking access via RPC:", error);
+          throw error;
         }
 
-        console.log("Access data:", accessData);
-
-        // Check if access is valid (either no expiration date or not expired)
-        const hasValidAccess = accessData?.access_until 
-          ? new Date(accessData.access_until) > new Date() 
-          : true; // If no expiration date, access is valid
-
-        console.log("Access check result:", hasValidAccess);
+        console.log("Access check via RPC result:", data);
         
-        if (accessData) {
-          console.log("Access until date:", new Date(accessData.access_until));
-          console.log("Current date:", new Date());
-          console.log("Date comparison:", new Date(accessData.access_until) > new Date());
+        // Get the access expiration date if access is granted
+        if (data) {
+          const { data: accessData, error: accessError } = await supabase
+            .from('user_access')
+            .select('access_until')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (accessError) {
+            console.error("Error fetching access expiration:", accessError);
+            // We don't throw here since we already know access is granted
+          }
+          
+          setAccessStatus({
+            hasAccess: true,
+            accessUntil: accessData?.access_until ? new Date(accessData.access_until) : null,
+            loading: false,
+            error: null
+          });
+        } else {
+          setAccessStatus({
+            hasAccess: false,
+            accessUntil: null,
+            loading: false,
+            error: null
+          });
         }
-
-        setAccessStatus({
-          hasAccess: hasValidAccess,
-          accessUntil: accessData?.access_until ? new Date(accessData.access_until) : null,
-          loading: false,
-          error: null
-        });
       } catch (error: any) {
         console.error('Error checking access:', error);
         setAccessStatus({

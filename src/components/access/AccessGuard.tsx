@@ -15,6 +15,7 @@ export const AccessGuard: React.FC<{ requiresActiveAccess?: boolean }> = ({
 
   // Admins always have access
   if (isAdmin) {
+    console.log("User is admin, granting access");
     return <Outlet />;
   }
 
@@ -26,14 +27,14 @@ export const AccessGuard: React.FC<{ requiresActiveAccess?: boolean }> = ({
     );
   }
 
-  // If there was an error checking access but the user has been granted access previously,
-  // we'll allow them to proceed but show a warning
+  // If there was an error checking access, show a warning but still check hasAccess
   if (error) {
-    console.warn("Access check error, but proceeding:", error);
+    console.warn("Access check error:", error);
   }
 
   // If active access is required and user doesn't have it, redirect to limited access page
   if (requiresActiveAccess && !hasAccess) {
+    console.log("User lacks active access, redirecting to limited access page");
     return <Navigate to="/limited-access" replace />;
   }
 

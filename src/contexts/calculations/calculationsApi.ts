@@ -45,6 +45,7 @@ export const saveCalculation = async (calculation: Calculation, userId?: string)
   }
   
   try {
+    console.log("Saving calculation with user_id:", userId);
     const { error } = await supabase.from('calculations').insert({
       id: calculation.id,
       data: calculation as unknown as Json,
