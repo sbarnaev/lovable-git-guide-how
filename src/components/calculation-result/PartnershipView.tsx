@@ -34,16 +34,16 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   
   // Log all the full codes
   if (calculation?.results?.clientProfile?.fullCodes) {
-    console.log("Secondary archetypes codes:", calculation.results.clientProfile.fullCodes);
+    console.log("Client fullCodes:", calculation.results.clientProfile.fullCodes);
   }
   if (calculation?.results?.partnerProfile?.fullCodes) {
-    console.log("Secondary archetypes codes:", calculation.results.partnerProfile.fullCodes);
+    console.log("Partner fullCodes:", calculation.results.partnerProfile.fullCodes);
   }
   
   // Улучшенная функция преобразования результатов в NumerologyProfile
-  const convertToNumerologyProfile = (result: any): NumerologyProfile => {
-    if (!result) {
-      console.log("No result to convert to NumerologyProfile");
+  const convertToNumerologyProfile = (profile: any): NumerologyProfile => {
+    if (!profile) {
+      console.log("No profile to convert to NumerologyProfile");
       return {
         lifePath: 0,
         destiny: 0,
@@ -52,14 +52,15 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
       };
     }
     
-    console.log("Converting to NumerologyProfile:", result);
+    console.log("Converting to NumerologyProfile:", profile);
     
-    // Создаем профиль с правильно структурированными данными
+    // Return the profile with the properly formatted data
     return {
-      lifePath: result.numerology?.lifePath || 0,
-      destiny: result.numerology?.destiny || 0,
-      personality: result.numerology?.personality || 0,
-      fullCodes: result.fullCodes || undefined
+      lifePath: profile.numerology?.lifePath || 0,
+      destiny: profile.numerology?.destiny || 0,
+      personality: profile.numerology?.personality || 0,
+      // Make sure to pass the full codes directly
+      fullCodes: profile.fullCodes
     };
   };
   

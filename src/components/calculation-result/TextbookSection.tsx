@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,17 +47,18 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     }
   };
 
-  // Полностью переработанная функция поиска архетипа
+  // Improved function to find the right archetype
   const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes available for ${code} search`);
       return undefined;
     }
     
-    // Нормализуем тип кода (убираем суффикс 'Code' если он есть)
+    // Normalize the code type (remove 'Code' suffix if present)
     const normalizedCode = normalizeCodeType(code);
+    console.log(`Looking for archetype with normalized code: ${normalizedCode}`);
     
-    // Получаем значение кода из fullCodes в зависимости от типа
+    // Get the value for this code from the fullCodes object
     let codeValue: number | undefined;
     
     switch(normalizedCode) {
@@ -81,46 +83,35 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     }
     
     if (codeValue === undefined) {
-      console.log(`No value found for ${code} in fullCodes`);
+      console.log(`No value found for ${normalizedCode} in fullCodes`);
       return undefined;
     }
     
-    console.log(`Looking for archetype with code=${code}, normalized=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
+    console.log(`Searching for archetype with code=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
     
-    // Ищем архетип по коду и значению
+    // Try to find an exact match first
     let match = archetypes.find(arch => {
-      // Точное совпадение кода и значения
-      return arch.code === code && arch.value === codeValue;
-    });
-    
-    if (match) {
-      console.log(`Found exact match: ${match.code} (${match.value})`);
-      return match;
-    }
-    
-    // Если не нашли точное совпадение, ищем по нормализованному коду
-    match = archetypes.find(arch => {
       const archCodeNorm = normalizeCodeType(arch.code);
       return archCodeNorm === normalizedCode && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found normalized match: ${match.code} (${match.value})`);
+      console.log(`Found matching archetype: ${match.code} with value ${match.value}`);
       return match;
     }
     
-    // Упрощенный поиск - просто по типу нормализованного кода и значению
+    // If no exact match, try a more flexible search
     match = archetypes.find(arch => {
-      const archCode = String(arch.code).toLowerCase(); 
+      const archCode = String(arch.code).toLowerCase();
       return archCode.includes(normalizedCode.toLowerCase()) && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found match with simple inclusion: ${match.code} (${match.value})`);
+      console.log(`Found match with flexible search: ${match.code} with value ${match.value}`);
       return match;
     }
     
-    console.log(`No matching archetype found for ${code} with value ${codeValue}`);
+    console.log(`No matching archetype found for ${normalizedCode} with value ${codeValue}`);
     return undefined;
   };
   

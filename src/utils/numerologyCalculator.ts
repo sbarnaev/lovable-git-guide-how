@@ -115,23 +115,21 @@ export function calculateAllCodes(birthDateString: string) {
   console.log(`Calculating codes for birthDate: ${birthDateString}`);
   
   // Ensure proper date parsing regardless of format
-  const parts = birthDateString.split(/[-T.]/);
   let birthDate: Date;
   
-  if (parts.length >= 3) {
-    // Handle ISO format (YYYY-MM-DD) or DD.MM.YYYY format
-    if (parts[0].length === 4) {
-      // ISO format: YYYY-MM-DD
-      birthDate = new Date(birthDateString);
-    } else {
-      // DD.MM.YYYY format
-      const day = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1; // JavaScript months are 0-indexed
-      const year = parseInt(parts[2]);
-      birthDate = new Date(year, month, day);
-    }
+  if (birthDateString.includes('T')) {
+    // ISO format with time
+    birthDate = new Date(birthDateString);
+  } else if (birthDateString.includes('-')) {
+    // YYYY-MM-DD format
+    const [year, month, day] = birthDateString.split('-').map(Number);
+    birthDate = new Date(year, month - 1, day);
+  } else if (birthDateString.includes('.')) {
+    // DD.MM.YYYY format
+    const [day, month, year] = birthDateString.split('.').map(Number);
+    birthDate = new Date(year, month - 1, day);
   } else {
-    // Fallback to direct parsing
+    // Fallback
     birthDate = new Date(birthDateString);
   }
   

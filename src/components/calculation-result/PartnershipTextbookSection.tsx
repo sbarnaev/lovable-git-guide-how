@@ -28,7 +28,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const [activeTab, setActiveTab] = useState<string>("client");
   const [activeCodeType, setActiveCodeType] = useState<NumerologyCodeType | null>(null);
   
-  // Отладочный эффект
+  // Debug effects
   useEffect(() => {
     console.log("PartnershipTextbookSection rendered with:", {
       clientProfile,
@@ -57,88 +57,76 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const clientShortName = getShortName(clientName);
   const partnerShortName = getShortName(partnerName);
   
-  // Полностью переработанная функция поиска архетипа
-  const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType, profile: NumerologyProfile | undefined): ArchetypeDescription | undefined => {
+  // Improved function to find the right archetype
+  const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType, fullCodes: any): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes available for ${codeType} search`);
       return undefined;
     }
     
-    if (!profile || !profile.fullCodes) {
-      console.log(`No profile or fullCodes available for archetype search`);
+    if (!fullCodes) {
+      console.log(`No fullCodes available for archetype search`);
       return undefined;
     }
     
-    // Приводим тип кода к единому формату (убираем суффикс 'Code' если он есть)
-    const normalizedCodeType = normalizeCodeType(codeType);
+    // Normalize the code type (remove 'Code' suffix if present)
+    const normalizedCode = normalizeCodeType(codeType);
+    console.log(`Looking for archetype with normalized code: ${normalizedCode}`);
     
-    // Получаем значение кода из профиля
+    // Get the value for this code from the fullCodes object
     let codeValue: number | undefined;
     
-    // Используем соответствующее свойство из fullCodes в зависимости от типа кода
-    switch(normalizedCodeType) {
+    switch(normalizedCode) {
       case 'personality':
-        codeValue = profile.fullCodes.personalityCode;
+        codeValue = fullCodes.personalityCode;
         break;
       case 'connector':
-        codeValue = profile.fullCodes.connectorCode;
+        codeValue = fullCodes.connectorCode;
         break;
       case 'realization':
-        codeValue = profile.fullCodes.realizationCode;
+        codeValue = fullCodes.realizationCode;
         break;
       case 'generator':
-        codeValue = profile.fullCodes.generatorCode;
+        codeValue = fullCodes.generatorCode;
         break;
       case 'mission':
-        codeValue = profile.fullCodes.missionCode;
+        codeValue = fullCodes.missionCode;
         break;
       default:
-        console.log(`Unknown code type: ${normalizedCodeType}`);
+        console.log(`Unknown code type: ${normalizedCode}`);
         return undefined;
     }
     
     if (codeValue === undefined) {
-      console.log(`No value found for ${codeType} in profile`);
+      console.log(`No value found for ${normalizedCode} in fullCodes`);
       return undefined;
     }
     
-    console.log(`Looking for archetype with code=${codeType}, normalized=${normalizedCodeType}, value=${codeValue} among ${archetypes.length} archetypes`);
+    console.log(`Searching for archetype with code=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
     
-    // Ищем архетип по коду и значению
-    // Пробуем разные варианты поиска
+    // Try to find an exact match first
     let match = archetypes.find(arch => {
-      // Точное совпадение кода и значения
-      return arch.code === codeType && arch.value === codeValue;
-    });
-    
-    if (match) {
-      console.log(`Found exact match: ${match.code} (${match.value})`);
-      return match;
-    }
-    
-    // Если не нашли точное совпадение, ищем по нормализованному коду
-    match = archetypes.find(arch => {
       const archCodeNorm = normalizeCodeType(arch.code);
-      return archCodeNorm === normalizedCodeType && arch.value === codeValue;
+      return archCodeNorm === normalizedCode && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found match with normalized code: ${match.code} (${match.value})`);
+      console.log(`Found matching archetype: ${match.code} with value ${match.value}`);
       return match;
     }
     
-    // Упрощенный поиск - просто по типу нормализованного кода и значению
+    // If no exact match, try a more flexible search
     match = archetypes.find(arch => {
-      const archCode = String(arch.code).toLowerCase(); 
-      return archCode.includes(normalizedCodeType.toLowerCase()) && arch.value === codeValue;
+      const archCode = String(arch.code).toLowerCase();
+      return archCode.includes(normalizedCode.toLowerCase()) && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found match with simple inclusion: ${match.code} (${match.value})`);
+      console.log(`Found match with flexible search: ${match.code} with value ${match.value}`);
       return match;
     }
     
-    console.log(`No matching archetype found for ${codeType} with value ${codeValue}`);
+    console.log(`No matching archetype found for ${normalizedCode} with value ${codeValue}`);
     return undefined;
   };
   
@@ -246,7 +234,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
               <CardContent className="p-6">
                 <ScrollArea className="max-h-[600px] pr-4">
                   <ArchetypeDetails 
-                    archetype={findArchetype(clientArchetypes, activeCodeType, clientProfile)}
+                    archetype={findArchetype(clientArchetypes, activeCodeType, clientProfile.fullCodes)}
                   />
                 </ScrollArea>
               </CardContent>
@@ -262,7 +250,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
               <CardContent className="p-6">
                 <ScrollArea className="max-h-[600px] pr-4">
                   <ArchetypeDetails 
-                    archetype={findArchetype(partnerArchetypes, activeCodeType, partnerProfile)}
+                    archetype={findArchetype(partnerArchetypes, activeCodeType, partnerProfile.fullCodes)}
                   />
                 </ScrollArea>
               </CardContent>

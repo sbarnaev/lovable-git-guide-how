@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useCalculations } from '@/contexts/calculations';
 import { Calculation, BasicCalculation, PartnershipCalculation, TargetCalculation } from '@/types';
@@ -38,6 +39,7 @@ export const useCalculationData = (id: string | undefined) => {
             
             // Ensure that basic calculation also has fullCodes
             if (basicCalc.results && !basicCalc.results.fullCodes) {
+              console.log("Calculating fullCodes for basic calculation");
               basicCalc.results.fullCodes = calculateAllCodes(basicCalc.birthDate);
               console.log("Generated codes for basic calculation:", basicCalc.results.fullCodes);
             }
@@ -49,8 +51,12 @@ export const useCalculationData = (id: string | undefined) => {
             const targetCalc = fetchedCalculation as (TargetCalculation & { id: string; createdAt: string });
             
             // Calculate codes if not already present
-            const fullCodes = calculateAllCodes(targetCalc.birthDate);
-            console.log("Generated codes for target calculation:", fullCodes);
+            if (!targetCalc.results.fullCodes) {
+              console.log("Calculating fullCodes for target calculation");
+              const fullCodes = calculateAllCodes(targetCalc.birthDate);
+              targetCalc.results.fullCodes = fullCodes;
+              console.log("Generated codes for target calculation:", fullCodes);
+            }
             
             // Create a more detailed set of archetypes for the target calculation
             // including both the target info and the person's codes
@@ -65,31 +71,31 @@ export const useCalculationData = (id: string | undefined) => {
                 code: 'personalityCode' as NumerologyCodeType, 
                 title: "Код личности",
                 description: "Основной код личности",
-                value: fullCodes.personalityCode 
+                value: targetCalc.results.fullCodes.personalityCode 
               },
               { 
                 code: 'connectorCode' as NumerologyCodeType, 
                 title: "Код коммуникации", 
                 description: "Код взаимодействия с окружающим миром",
-                value: fullCodes.connectorCode 
+                value: targetCalc.results.fullCodes.connectorCode 
               },
               { 
                 code: 'realizationCode' as NumerologyCodeType, 
                 title: "Код реализации", 
                 description: "Код потенциала и самореализации",
-                value: fullCodes.realizationCode 
+                value: targetCalc.results.fullCodes.realizationCode 
               },
               { 
                 code: 'generatorCode' as NumerologyCodeType, 
                 title: "Код генератора", 
                 description: "Источник энергии и мотивации",
-                value: fullCodes.generatorCode 
+                value: targetCalc.results.fullCodes.generatorCode 
               },
               { 
                 code: 'missionCode' as NumerologyCodeType, 
                 title: "Код миссии", 
                 description: "Жизненное предназначение",
-                value: fullCodes.missionCode 
+                value: targetCalc.results.fullCodes.missionCode 
               }
             ];
             
@@ -124,7 +130,7 @@ export const useCalculationData = (id: string | undefined) => {
                 };
               }
               
-              // Always recalculate codes for client and partner to ensure accuracy
+              // IMPORTANT: Always recalculate codes for client and partner using the proper calculator
               console.log("Calculating client codes for", partnershipCalc.birthDate);
               const clientCodes = calculateAllCodes(partnershipCalc.birthDate);
               partnershipCalc.results.clientProfile.fullCodes = clientCodes;
@@ -134,6 +140,79 @@ export const useCalculationData = (id: string | undefined) => {
               const partnerCodes = calculateAllCodes(partnershipCalc.partnerBirthDate);
               partnershipCalc.results.partnerProfile.fullCodes = partnerCodes;
               console.log("Generated partner codes:", partnerCodes);
+              
+              // Now let's create basic archetypes for client and partner based on their codes
+              if (!partnershipCalc.results.clientArchetypes || partnershipCalc.results.clientArchetypes.length === 0) {
+                const clientArchetypesData: ArchetypeDescription[] = [
+                  { 
+                    code: 'personalityCode' as NumerologyCodeType, 
+                    title: `Код личности ${clientCodes.personalityCode}`,
+                    description: "Основной код личности",
+                    value: clientCodes.personalityCode
+                  },
+                  { 
+                    code: 'connectorCode' as NumerologyCodeType, 
+                    title: `Код коннектора ${clientCodes.connectorCode}`,
+                    description: "Код взаимодействия с окружающим миром",
+                    value: clientCodes.connectorCode
+                  },
+                  { 
+                    code: 'realizationCode' as NumerologyCodeType, 
+                    title: `Код реализации ${clientCodes.realizationCode}`,
+                    description: "Код потенциала и самореализации",
+                    value: clientCodes.realizationCode
+                  },
+                  { 
+                    code: 'generatorCode' as NumerologyCodeType, 
+                    title: `Код генератора ${clientCodes.generatorCode}`,
+                    description: "Источник энергии и мотивации",
+                    value: clientCodes.generatorCode
+                  },
+                  { 
+                    code: 'missionCode' as NumerologyCodeType, 
+                    title: `Код миссии ${clientCodes.missionCode}`,
+                    description: "Жизненное предназначение",
+                    value: clientCodes.missionCode
+                  }
+                ];
+                partnershipCalc.results.clientArchetypes = clientArchetypesData;
+              }
+              
+              if (!partnershipCalc.results.partnerArchetypes || partnershipCalc.results.partnerArchetypes.length === 0) {
+                const partnerArchetypesData: ArchetypeDescription[] = [
+                  { 
+                    code: 'personalityCode' as NumerologyCodeType, 
+                    title: `Код личности ${partnerCodes.personalityCode}`,
+                    description: "Основной код личности",
+                    value: partnerCodes.personalityCode
+                  },
+                  { 
+                    code: 'connectorCode' as NumerologyCodeType, 
+                    title: `Код коннектора ${partnerCodes.connectorCode}`,
+                    description: "Код взаимодействия с окружающим миром",
+                    value: partnerCodes.connectorCode
+                  },
+                  { 
+                    code: 'realizationCode' as NumerologyCodeType, 
+                    title: `Код реализации ${partnerCodes.realizationCode}`,
+                    description: "Код потенциала и самореализации",
+                    value: partnerCodes.realizationCode
+                  },
+                  { 
+                    code: 'generatorCode' as NumerologyCodeType, 
+                    title: `Код генератора ${partnerCodes.generatorCode}`,
+                    description: "Источник энергии и мотивации",
+                    value: partnerCodes.generatorCode
+                  },
+                  { 
+                    code: 'missionCode' as NumerologyCodeType, 
+                    title: `Код миссии ${partnerCodes.missionCode}`,
+                    description: "Жизненное предназначение",
+                    value: partnerCodes.missionCode
+                  }
+                ];
+                partnershipCalc.results.partnerArchetypes = partnerArchetypesData;
+              }
             }
             
             // Set archetypes for client and partner
