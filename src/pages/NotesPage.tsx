@@ -1,22 +1,21 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Info, Save } from 'lucide-react';
 import { useCalculations } from '@/contexts/calculations';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Save, Loader2, AlertCircle, Info } from 'lucide-react';
 
 const NotesPage = () => {
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [contentChanged, setContentChanged] = useState(false);
+  const [content, setContent] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [contentChanged, setContentChanged] = useState<boolean>(false);
   const [noteId, setNoteId] = useState<string | null>(null);
   const editorRef = useRef<any>(null);
   const { saveNote, getNote, updateNote } = useCalculations();
   
-  // We use a test calculation ID for demo purposes
+  // For demo, we use a test calculation ID
   const testCalculationId = "test-calculation-id";
   
   // Load existing note content
@@ -28,9 +27,10 @@ const NotesPage = () => {
         if (note) {
           setContent(note.content || '');
           setNoteId(note.id);
+          setContentChanged(false);
         }
       } catch (error) {
-        console.error('Error fetching note:', error);
+        console.error('Error loading note:', error);
         toast.error('Не удалось загрузить заметку');
       } finally {
         setLoading(false);
@@ -40,11 +40,11 @@ const NotesPage = () => {
     fetchNote();
   }, [getNote]);
   
-  // Save note content
+  // Handle saving note content
   const handleSave = async () => {
-    if (loading) return;
+    if (!editorRef.current || loading) return;
     
-    const editorContent = editorRef.current?.getContent();
+    const editorContent = editorRef.current.getContent();
     if (!editorContent) return;
     
     setLoading(true);
@@ -59,9 +59,9 @@ const NotesPage = () => {
       if (result) {
         setNoteId(result.id);
         setContentChanged(false);
-        toast.success('Заметка сохранена', { 
-          position: 'bottom-right', 
-          duration: 2000 
+        toast.success('Заметка сохранена', {
+          position: 'bottom-right',
+          duration: 2000
         });
       }
     } catch (error) {
@@ -70,11 +70,6 @@ const NotesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-  
-  // Handle content change
-  const handleEditorChange = () => {
-    setContentChanged(true);
   };
   
   return (
@@ -86,8 +81,8 @@ const NotesPage = () => {
           <AlertCircle className="text-amber-600 h-5 w-5 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-amber-800">
-              Для сохранения заметок нажмите кнопку "Сохранить заметку" или используйте встроенные
-              инструменты редактора. Редактор оптимизирован для работы с русским и английским языками.
+              Для сохранения заметок нажмите кнопку "Сохранить заметку". Редактор оптимизирован 
+              для работы с русским и английским языками.
             </p>
           </div>
         </CardContent>
@@ -98,8 +93,8 @@ const NotesPage = () => {
           <Info className="text-blue-600 h-5 w-5 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-blue-800">
-              Редактор поддерживает полное форматирование текста, списки, таблицы и другие элементы.
-              Используйте панель инструментов для форматирования и добавления различных элементов.
+              Редактор поддерживает форматирование текста, списки и таблицы.
+              Используйте панель инструментов для форматирования текста.
             </p>
           </div>
         </CardContent>
@@ -123,9 +118,10 @@ const NotesPage = () => {
                 height: 400,
                 menubar: false,
                 plugins: [
-                  'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                  'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                  'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                  'advlist', 'autolink', 'lists', 'link', 'image', 
+                  'charmap', 'preview', 'anchor', 'searchreplace', 
+                  'visualblocks', 'code', 'fullscreen', 'insertdatetime', 
+                  'media', 'table', 'help', 'wordcount'
                 ],
                 toolbar: 'undo redo | blocks | ' +
                   'bold italic forecolor | alignleft aligncenter ' +
@@ -137,7 +133,7 @@ const NotesPage = () => {
                 browser_spellcheck: true,
                 language_url: 'https://cdn.jsdelivr.net/npm/tinymce-lang/langs/ru.js'
               }}
-              onEditorChange={handleEditorChange}
+              onEditorChange={() => setContentChanged(true)}
             />
           )}
           
