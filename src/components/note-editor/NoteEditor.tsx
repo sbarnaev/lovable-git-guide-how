@@ -21,83 +21,21 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
   const { saveNote, getNote, updateNote } = useCalculations();
   const editorRef = useRef<HTMLDivElement>(null);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
+  const observerRef = useRef<MutationObserver | null>(null);
   
-  // Function to force correct text direction
+  // Оптимизированная функция для установки правильного направления текста
   const ensureProperTextDirection = useCallback(() => {
     if (!editorRef.current) return;
     
-    // Apply to the editor container
+    // Применяем только к родительскому элементу, а не ко всем потомкам
     editorRef.current.setAttribute('dir', 'ltr');
     editorRef.current.style.direction = 'ltr';
     editorRef.current.style.textAlign = 'left';
     editorRef.current.style.unicodeBidi = 'normal';
-    
-    // Force LTR on all elements within the editor
-    const allElements = editorRef.current.querySelectorAll('*');
-    allElements.forEach(el => {
-      if (el instanceof HTMLElement) {
-        el.setAttribute('dir', 'ltr');
-        el.style.direction = 'ltr';
-        el.style.textAlign = 'left';
-        el.style.unicodeBidi = 'normal';
-      }
-    });
   }, []);
   
-  useEffect(() => {
-    const fetchNote = async () => {
-      setLoading(true);
-      try {
-        const note = await getNote(calculationId);
-        if (note) {
-          setContent(note.content);
-          setNoteId(note.id);
-          
-          // Update editor content safely and ensure proper direction
-          setTimeout(() => {
-            if (editorRef.current) {
-              editorRef.current.innerHTML = note.content;
-              ensureProperTextDirection();
-              extractBlocksFromContent(note.content);
-            }
-          }, 0);
-        }
-      } catch (error) {
-        console.error('Error fetching note:', error);
-        toast.error('Не удалось загрузить заметку');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (calculationId) {
-      fetchNote();
-    }
-    
-    // Initialize editor with proper direction
-    setTimeout(() => {
-      ensureProperTextDirection();
-    }, 100);
-    
-    // Add MutationObserver to enforce text direction on any DOM changes
-    if (editorRef.current) {
-      const observer = new MutationObserver(() => {
-        ensureProperTextDirection();
-      });
-      
-      observer.observe(editorRef.current, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true,
-        characterData: true 
-      });
-      
-      return () => observer.disconnect();
-    }
-  }, [calculationId, getNote, ensureProperTextDirection]);
-
-  const extractBlocksFromContent = (htmlContent: string) => {
-    // Поиск всех блоков по data-block-id
+  // Извлекаем блоки из содержимого
+  const extractBlocksFromContent = useCallback((htmlContent: string) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlContent;
     
@@ -115,9 +53,81 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     if (extractedBlocks.length > 0) {
       setTextBlocks(extractedBlocks);
     }
-  };
+  }, []);
 
-  // Auto-save function (no debounce, save immediately)
+  // Загрузка заметки с дебаунсом и мемоизацией
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchNote = async () => {
+      if (!isMounted) return;
+      setLoading(true);
+      
+      try {
+        const note = await getNote(calculationId);
+        if (note && isMounted) {
+          setContent(note.content);
+          setNoteId(note.id);
+          
+          // Обновляем содержимое редактора и извлекаем блоки
+          if (editorRef.current) {
+            editorRef.current.innerHTML = note.content;
+            ensureProperTextDirection();
+            extractBlocksFromContent(note.content);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching note:', error);
+        if (isMounted) {
+          toast.error('Не удалось загрузить заметку');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    if (calculationId) {
+      fetchNote();
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [calculationId, getNote, ensureProperTextDirection, extractBlocksFromContent]);
+  
+  // Настраиваем MutationObserver только один раз
+  useEffect(() => {
+    if (!editorRef.current) return;
+    
+    // Удаляем предыдущий observer, если он существует
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    
+    // Создаем новый observer с оптимизированной конфигурацией
+    observerRef.current = new MutationObserver(() => {
+      ensureProperTextDirection();
+    });
+    
+    // Наблюдаем только за изменениями атрибутов и добавлением/удалением узлов
+    observerRef.current.observe(editorRef.current, { 
+      childList: true,
+      subtree: false,
+      attributes: true
+    });
+    
+    // Очистка при размонтировании
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+    };
+  }, [ensureProperTextDirection]);
+
+  // Оптимизированное автосохранение с дебаунсом
   const autoSaveContent = useCallback(async () => {
     if (!editorRef.current) return;
     
@@ -147,66 +157,43 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     }
   }, [calculationId, noteId, saveNote, updateNote]);
 
-  // Immediate auto-save
-  const updateContentFromEditor = () => {
-    if (editorRef.current) {
-      setContent(editorRef.current.innerHTML);
-      extractBlocksFromContent(editorRef.current.innerHTML);
-      
-      // Save immediately
-      autoSaveContent();
-      
-      // Force proper text direction
-      ensureProperTextDirection();
+  // Используем useRef и useCallback для оптимизации обработчика ввода
+  const updateContentTimerRef = useRef<number | null>(null);
+  
+  const updateContentFromEditor = useCallback(() => {
+    if (!editorRef.current) return;
+    
+    const newContent = editorRef.current.innerHTML;
+    setContent(newContent);
+    extractBlocksFromContent(newContent);
+    
+    // Отменяем предыдущий таймер, если он существует
+    if (updateContentTimerRef.current) {
+      window.clearTimeout(updateContentTimerRef.current);
     }
-  };
+    
+    // Создаем новый таймер для автосохранения через 1 секунду после последнего изменения
+    updateContentTimerRef.current = window.setTimeout(() => {
+      autoSaveContent();
+      updateContentTimerRef.current = null;
+    }, 1000);
+    
+    ensureProperTextDirection();
+  }, [extractBlocksFromContent, autoSaveContent, ensureProperTextDirection]);
 
-  // Handle specific contenteditable events for heading formatting
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    // Fix Enter key behavior for line breaks
+  // Оптимизированная обработка нажатий клавиш
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Обработка Enter только если нужно
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      
-      // Insert proper line break
       document.execCommand('insertHTML', false, '<br><br>');
-      
-      // Update content and save
       updateContentFromEditor();
       return;
     }
-    
-    // Special handling for heading elements
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // Get the current selection
-      const selection = window.getSelection();
-      if (!selection || !editorRef.current) return;
-      
-      // Check if the cursor is inside a heading element
-      const range = selection.getRangeAt(0);
-      let currentNode = range.startContainer;
-      let insideHeading = false;
-      
-      // Find if we're inside a heading tag
-      while (currentNode !== editorRef.current) {
-        if (currentNode instanceof HTMLElement && 
-            /^h[1-6]$/i.test(currentNode.tagName)) {
-          insideHeading = true;
-          break;
-        }
-        if (!currentNode.parentNode) break;
-        currentNode = currentNode.parentNode;
-      }
-      
-      // If we're inside a heading, we need to insert a paragraph after the heading
-      if (insideHeading) {
-        e.preventDefault();
-        document.execCommand('insertHTML', false, '<br><p></p>');
-        updateContentFromEditor();
-      }
-    }
-  };
+  }, [updateContentFromEditor]);
 
-  const addTextBlock = () => {
+  // Добавление текстового блока
+  const addTextBlock = useCallback(() => {
     const blockTitle = prompt('Введите название блока:');
     if (!blockTitle) return;
     
@@ -217,9 +204,8 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       content: '<p>Содержимое блока...</p>'
     };
     
-    setTextBlocks([...textBlocks, newBlock]);
+    setTextBlocks(prevBlocks => [...prevBlocks, newBlock]);
     
-    // Добавляем блок в редактор
     if (editorRef.current) {
       const blockHtml = `
         <div class="p-3 border rounded-md my-3" data-block-id="${blockId}" data-block-title="${blockTitle}">
@@ -234,15 +220,17 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
       document.execCommand('insertHTML', false, blockHtml);
       updateContentFromEditor();
     }
-  };
+  }, [updateContentFromEditor]);
   
-  const scrollToBlock = (blockId: string) => {
+  // Прокрутка к блоку
+  const scrollToBlock = useCallback((blockId: string) => {
     const element = document.getElementById(blockId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
-  };
+  }, []);
 
+  // Оптимизированный рендеринг
   return (
     <Card>
       <CardHeader>
@@ -255,7 +243,11 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
         )}
 
         {/* Панель форматирования */}
-        <FormatToolbar updateContentFromEditor={updateContentFromEditor} addTextBlock={addTextBlock} editorRef={editorRef} />
+        <FormatToolbar 
+          updateContentFromEditor={updateContentFromEditor} 
+          addTextBlock={addTextBlock} 
+          editorRef={editorRef} 
+        />
         
         {/* Редактор заметок */}
         <div 
@@ -301,3 +293,4 @@ export const NoteEditor = ({ calculationId }: NoteEditorProps) => {
     </Card>
   );
 };
+
