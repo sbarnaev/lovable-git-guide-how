@@ -6,6 +6,7 @@ import { ArchetypeDetails } from './ArchetypeDetails';
 import { ArchetypeDescription, NumerologyCodeType } from '@/types/numerology';
 import { BasicCalculation } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { normalizeCodeType } from '@/utils/archetypeDescriptions';
 
 interface TextbookSectionProps {
   calculation: (BasicCalculation & { id: string; createdAt: string }) | undefined;
@@ -33,34 +34,44 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
   };
 
   const findArchetype = (code: NumerologyCodeType): ArchetypeDescription | undefined => {
-    // Normalize the code type (remove 'Code' suffix if present)
-    const normalizedCode = code.replace(/Code$/, '');
+    if (!archetypes || archetypes.length === 0) {
+      console.log(`No archetypes available for ${code} search`);
+      return undefined;
+    }
     
-    // Get the value from fullCodes using either normalized or original key
-    const codeKey = normalizedCode as keyof typeof fullCodes;
-    const codeValue = fullCodes[codeKey];
+    // Normalize the code type (remove 'Code' suffix if present)
+    const normalizedCode = normalizeCodeType(code);
+    
+    // Get the value from fullCodes
+    const codeValue = fullCodes[normalizedCode];
+    
+    if (codeValue === undefined) {
+      console.log(`No value found for ${code} in fullCodes`);
+      return undefined;
+    }
     
     console.log(`Looking for ${code} with value ${codeValue} among ${archetypes.length} archetypes`);
     
-    // First try exact match on code and value
-    let match = archetypes.find(arch => 
-      (arch.code === code || arch.code === normalizedCode) && 
-      arch.value === codeValue
-    );
+    // Try to find an exact match first
+    let match = archetypes.find(arch => {
+      const archCodeNormalized = normalizeCodeType(arch.code);
+      return (archCodeNormalized === normalizedCode || arch.code === code) && 
+             arch.value === codeValue;
+    });
     
     if (match) {
-      console.log(`Found exact match: ${match.code} (${match.value})`);
+      console.log(`Found match for ${code}: ${match.code} (${match.value})`);
       return match;
     }
     
-    // If no exact match, try a more flexible search
+    // More flexible search - just match on code type and value
     match = archetypes.find(arch => {
-      const archCodeNormalized = arch.code.replace(/Code$/, '');
+      const archCodeNormalized = normalizeCodeType(arch.code);
       return archCodeNormalized === normalizedCode && arch.value === codeValue;
     });
     
     if (match) {
-      console.log(`Found normalized match: ${match.code} (${match.value})`);
+      console.log(`Found match with normalized code: ${match.code} (${match.value})`);
       return match;
     }
     
@@ -91,7 +102,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('personality')}
           className={`rounded-md ${isActive('personality') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['personality']} {fullCodes.personalityCode}
+          Код {codeDisplayNames['personality']} {fullCodes.personality}
         </Button>
         
         <Button 
@@ -99,7 +110,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('connector')}
           className={`rounded-md ${isActive('connector') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['connector']} {fullCodes.connectorCode}
+          Код {codeDisplayNames['connector']} {fullCodes.connector}
         </Button>
         
         <Button 
@@ -107,7 +118,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('realization')}
           className={`rounded-md ${isActive('realization') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['realization']} {fullCodes.realizationCode}
+          Код {codeDisplayNames['realization']} {fullCodes.realization}
         </Button>
         
         <Button 
@@ -115,7 +126,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('generator')}
           className={`rounded-md ${isActive('generator') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['generator']} {fullCodes.generatorCode}
+          Код {codeDisplayNames['generator']} {fullCodes.generator}
         </Button>
         
         <Button 
@@ -123,7 +134,7 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
           onClick={() => toggleSection('mission')}
           className={`rounded-md ${isActive('mission') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['mission']} {fullCodes.missionCode}
+          Код {codeDisplayNames['mission']} {fullCodes.mission}
         </Button>
       </div>
       

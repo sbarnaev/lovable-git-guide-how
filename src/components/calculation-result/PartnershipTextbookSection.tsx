@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArchetypeDetails } from './ArchetypeDetails';
 import { ArchetypeDescription, NumerologyProfile, NumerologyCodeType } from '@/types/numerology';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { normalizeCodeType } from '@/utils/archetypeDescriptions';
 
 interface PartnershipTextbookSectionProps {
   clientProfile: NumerologyProfile | undefined;
@@ -51,33 +52,33 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     }
     
     // Normalize the code type (remove 'Code' suffix if present)
-    const normalizedCode = codeType.replace(/Code$/, '');
+    const normalizedCode = normalizeCodeType(codeType);
     
-    // Get the code value
-    const codeKey = normalizedCode as keyof typeof profile.fullCodes;
-    const codeValue = profile.fullCodes[codeKey];
+    // Get the code value from the current profile
+    const codeValue = profile.fullCodes[normalizedCode];
     
-    if (!codeValue) {
+    if (codeValue === undefined) {
       console.log(`No value found for ${codeType} in profile`);
       return undefined;
     }
     
-    console.log(`Looking for archetype with code=${codeType}, value=${codeValue} among ${archetypes.length} archetypes`);
+    console.log(`Looking for archetype with code=${codeType}, normalizedCode=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
     
     // First try exact match on code and value
-    let match = archetypes.find(arch => 
-      (arch.code === codeType || arch.code === normalizedCode) && 
-      arch.value === codeValue
-    );
+    let match = archetypes.find(arch => {
+      const archCodeNormalized = normalizeCodeType(arch.code);
+      return (arch.code === codeType || archCodeNormalized === normalizedCode) && 
+             arch.value === codeValue;
+    });
     
     if (match) {
       console.log(`Found exact match: ${match.code} (${match.value})`);
       return match;
     }
     
-    // If no exact match, try a more flexible search
+    // If no exact match, try matching just on normalized code and value
     match = archetypes.find(arch => {
-      const archCodeNormalized = arch.code.replace(/Code$/, '');
+      const archCodeNormalized = normalizeCodeType(arch.code);
       return archCodeNormalized === normalizedCode && arch.value === codeValue;
     });
     
@@ -101,11 +102,11 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
 
   // Map code names to their display names
   const codeDisplayNames: Record<string, string> = {
-    'personalityCode': 'Личности',
-    'connectorCode': 'Коннектора',
-    'realizationCode': 'Реализации',
-    'generatorCode': 'Генератора',
-    'missionCode': 'Миссии'
+    'personality': 'Личности',
+    'connector': 'Коннектора',
+    'realization': 'Реализации',
+    'generator': 'Генератора',
+    'mission': 'Миссии'
   };
   
   // Determine which button is active for better styling
@@ -124,43 +125,43 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     return (
       <div className="flex flex-wrap gap-2 mt-2">
         <Button 
-          variant={isActive('personalityCode') ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('personalityCode')}
-          className={`rounded-md ${isActive('personalityCode') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
+          variant={isActive('personality') ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('personality')}
+          className={`rounded-md ${isActive('personality') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['personalityCode']} {profile.fullCodes.personalityCode}
+          Код {codeDisplayNames['personality']} {profile.fullCodes.personality}
         </Button>
         
         <Button 
-          variant={isActive('connectorCode') ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('connectorCode')}
-          className={`rounded-md ${isActive('connectorCode') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
+          variant={isActive('connector') ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('connector')}
+          className={`rounded-md ${isActive('connector') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['connectorCode']} {profile.fullCodes.connectorCode}
+          Код {codeDisplayNames['connector']} {profile.fullCodes.connector}
         </Button>
         
         <Button 
-          variant={isActive('realizationCode') ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('realizationCode')}
-          className={`rounded-md ${isActive('realizationCode') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
+          variant={isActive('realization') ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('realization')}
+          className={`rounded-md ${isActive('realization') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['realizationCode']} {profile.fullCodes.realizationCode}
+          Код {codeDisplayNames['realization']} {profile.fullCodes.realization}
         </Button>
         
         <Button 
-          variant={isActive('generatorCode') ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('generatorCode')}
-          className={`rounded-md ${isActive('generatorCode') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
+          variant={isActive('generator') ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('generator')}
+          className={`rounded-md ${isActive('generator') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['generatorCode']} {profile.fullCodes.generatorCode}
+          Код {codeDisplayNames['generator']} {profile.fullCodes.generator}
         </Button>
         
         <Button 
-          variant={isActive('missionCode') ? 'default' : 'outline'}
-          onClick={() => handleSelectCodeType('missionCode')}
-          className={`rounded-md ${isActive('missionCode') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
+          variant={isActive('mission') ? 'default' : 'outline'}
+          onClick={() => handleSelectCodeType('mission')}
+          className={`rounded-md ${isActive('mission') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : ''}`}
         >
-          Код {codeDisplayNames['missionCode']} {profile.fullCodes.missionCode}
+          Код {codeDisplayNames['mission']} {profile.fullCodes.mission}
         </Button>
       </div>
     );

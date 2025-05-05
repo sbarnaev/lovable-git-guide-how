@@ -1,42 +1,45 @@
-
-import { NumerologyCodeType } from "@/types/numerology";
-import { archetypeDescriptionsCache } from "./types";
-
 /**
- * Нормализует тип кода для обеспечения совместимости
+ * Normalize code type by removing the 'Code' suffix if present
+ * and standardizing the format.
  */
-export function normalizeCodeType(code: NumerologyCodeType | string): NumerologyCodeType {
-  // Map old format to new format
-  const codeMap: Record<string, NumerologyCodeType> = {
-    'personalityCode': 'personality',
-    'connectorCode': 'connector',
-    'realizationCode': 'realization',
-    'generatorCode': 'generator',
-    'missionCode': 'mission'
-  };
+export const normalizeCodeType = (codeType: string): string => {
+  // Remove any "Code" suffix
+  const normalized = codeType.replace(/Code$/, '');
   
-  return (codeMap[code] as NumerologyCodeType) || code as NumerologyCodeType;
-}
+  // Convert to lowercase for more flexible matching
+  return normalized.toLowerCase();
+};
 
 /**
- * Преобразует текст в массив строк (разделяя по переносу строки)
+ * Parse a text field into an array of items
  */
-export function parseTextToArray(text: string): string[] {
+export const parseTextToArray = (text: string | null | undefined): string[] => {
+  if (!text) return [];
+  
+  // Split by newlines, commas or semicolons
   return text
-    .split('\n')
-    .map(str => str.trim())
-    .filter(str => str !== "");
-}
+    .split(/[,;\n]/)
+    .map(item => item.trim())
+    .filter(item => item.length > 0);
+};
 
 /**
- * Получает все значения для конкретного типа кода
+ * Get all possible values for a specific code type
  */
-export function getValuesForCodeType(codeType: NumerologyCodeType): number[] {
-  const normalizedCode = normalizeCodeType(codeType);
-  const values = archetypeDescriptionsCache
-    .filter(desc => normalizeCodeType(desc.code) === normalizedCode)
+export const getValuesForCodeType = (
+  descriptions: any[],
+  codeType: string
+): number[] => {
+  const normalizedCodeType = normalizeCodeType(codeType);
+  
+  // Extract unique values for the specified code type
+  const values = descriptions
+    .filter(desc => {
+      const descCodeType = normalizeCodeType(desc.code);
+      return descCodeType === normalizedCodeType;
+    })
     .map(desc => desc.value);
   
-  // Возвращаем уникальные значения, отсортированные по возрастанию
+  // Remove duplicates and sort
   return Array.from(new Set(values)).sort((a, b) => a - b);
-}
+};
