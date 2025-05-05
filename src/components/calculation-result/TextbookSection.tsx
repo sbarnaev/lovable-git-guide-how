@@ -42,9 +42,8 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
     // Normalize the code type (remove 'Code' suffix if present)
     const normalizedCode = normalizeCodeType(code);
     
-    // Get the value from fullCodes using the appropriate property name
     // Map from normalized code to the actual property name in fullCodes
-    const codePropertyMap: Record<string, string> = {
+    const codePropertyMap: Record<string, keyof typeof fullCodes> = {
       'personality': 'personalityCode',
       'connector': 'connectorCode',
       'realization': 'realizationCode',
@@ -52,11 +51,16 @@ export const TextbookSection: React.FC<TextbookSectionProps> = ({
       'mission': 'missionCode'
     };
     
-    const propertyName = codePropertyMap[normalizedCode] || normalizedCode;
-    const codeValue = fullCodes[propertyName as keyof typeof fullCodes];
+    const propertyName = codePropertyMap[normalizedCode];
+    if (!propertyName) {
+      console.log(`No property mapping found for normalized code: ${normalizedCode}`);
+      return undefined;
+    }
+    
+    const codeValue = fullCodes[propertyName];
     
     if (codeValue === undefined) {
-      console.log(`No value found for ${code} in fullCodes`);
+      console.log(`No value found for ${code} (property ${propertyName}) in fullCodes`);
       return undefined;
     }
     

@@ -37,7 +37,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
   const clientShortName = getShortName(clientName);
   const partnerShortName = getShortName(partnerName);
   
-  // Improved findArchetype function
+  // Improved findArchetype function with detailed logging
   const findArchetype = (archetypes: ArchetypeDescription[], codeType: NumerologyCodeType): ArchetypeDescription | undefined => {
     if (!archetypes || archetypes.length === 0) {
       console.log(`No archetypes available for ${codeType} search`);
@@ -55,7 +55,7 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
     const normalizedCode = normalizeCodeType(codeType);
     
     // Map from normalized code to the actual property name in fullCodes
-    const codePropertyMap: Record<string, string> = {
+    const codePropertyMap: Record<string, keyof typeof profile.fullCodes> = {
       'personality': 'personalityCode',
       'connector': 'connectorCode',
       'realization': 'realizationCode',
@@ -63,15 +63,20 @@ export const PartnershipTextbookSection: React.FC<PartnershipTextbookSectionProp
       'mission': 'missionCode'
     };
     
-    const propertyName = codePropertyMap[normalizedCode] || normalizedCode;
-    const codeValue = profile.fullCodes[propertyName as keyof typeof profile.fullCodes];
-    
-    if (codeValue === undefined) {
-      console.log(`No value found for ${codeType} in profile`);
+    const propertyName = codePropertyMap[normalizedCode];
+    if (!propertyName) {
+      console.log(`No property mapping found for normalized code: ${normalizedCode}`);
       return undefined;
     }
     
-    console.log(`Looking for archetype with code=${codeType}, normalizedCode=${normalizedCode}, value=${codeValue} among ${archetypes.length} archetypes`);
+    const codeValue = profile.fullCodes[propertyName];
+    
+    if (codeValue === undefined) {
+      console.log(`No value found for ${codeType} (property ${propertyName}) in profile`);
+      return undefined;
+    }
+    
+    console.log(`Looking for archetype with code=${codeType}, normalizedCode=${normalizedCode}, property=${propertyName}, value=${codeValue} among ${archetypes.length} archetypes`);
     
     // First try exact match on code and value
     let match = archetypes.find(arch => {
