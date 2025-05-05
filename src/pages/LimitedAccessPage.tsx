@@ -7,7 +7,7 @@ import { LockKeyhole, Mail, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const LimitedAccessPage = () => {
-  const { accessUntil } = useAccess();
+  const { hasAccess } = useAccess();
   const { user } = useAuth();
   
   return (
@@ -30,12 +30,6 @@ const LimitedAccessPage = () => {
               <li>
                 <strong>Статус доступа:</strong>{" "}
                 <span className="text-destructive">Неактивен</span>
-              </li>
-              <li>
-                <strong>Срок доступа:</strong>{" "}
-                {accessUntil 
-                  ? `Истек ${accessUntil.toLocaleDateString('ru-RU')}` 
-                  : "Не установлен"}
               </li>
             </ul>
           </div>

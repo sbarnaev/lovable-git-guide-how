@@ -12,17 +12,14 @@ import {
   X,
   Calculator,
   User,
-  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
 import { AccessExpiredAlert } from "./access/AccessExpiredAlert";
 
 const MainLayout = () => {
   const { user, profile, logout } = useAuth();
-  const { hasAccess, accessUntil, isAdmin } = useAccess();
+  const { hasAccess, isAdmin } = useAccess();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -70,14 +67,6 @@ const MainLayout = () => {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center">
             <span className="text-xl font-bold text-numerica">Numerica</span>
-            
-            {/* Access status indicator */}
-            {accessUntil && hasAccess && (
-              <div className="hidden md:flex items-center ml-4 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3 mr-1" />
-                <span>Доступ до {format(accessUntil, 'd MMMM yyyy', { locale: ru })}</span>
-              </div>
-            )}
             
             {/* Admin indicator */}
             {isAdmin && (
@@ -161,12 +150,6 @@ const MainLayout = () => {
               </Avatar>
               <div>
                 <div className="font-medium">{profile?.name || user?.email}</div>
-                {accessUntil && hasAccess && (
-                  <div className="text-xs text-muted-foreground flex items-center mt-1">
-                    <Clock className="h-3 w-3 mr-1" />
-                    <span>Доступ до {format(accessUntil, 'd MMMM yyyy', { locale: ru })}</span>
-                  </div>
-                )}
               </div>
             </button>
             

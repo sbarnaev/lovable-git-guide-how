@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface AccessContextType extends AccessStatus {
   isAdmin: boolean;
+  accessUntil: null; // Keep the property but always set to null
 }
 
 const AccessContext = createContext<AccessContextType | undefined>(undefined);
@@ -29,7 +30,8 @@ export function AccessProvider({ children }: { children: ReactNode }) {
     <AccessContext.Provider value={{
       ...accessStatus,
       hasAccess,
-      isAdmin
+      isAdmin,
+      accessUntil: null // Always set to null as we removed this functionality
     }}>
       {children}
     </AccessContext.Provider>
