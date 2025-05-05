@@ -1,4 +1,4 @@
-
+// Keeping basic types for compatibility
 export interface TextBlock {
   id: string;
   title: string;
