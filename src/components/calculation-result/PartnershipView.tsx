@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { PartnershipCalculation } from '@/types';
 import { ArchetypeDescription, NumerologyProfile } from '@/types/numerology';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { AIContentSection } from '@/components/AIContentSection';
 import { PartnershipTextbookSection } from './PartnershipTextbookSection';
 import { PartnershipClientInfo } from './PartnershipClientInfo';
 import { PartnershipAtlas } from './PartnershipAtlas';
+import { ConsultationTabs } from './partnership/ConsultationTabs';
 
 // Note: This is a temporary flag to disable notes
 const NOTES_DISABLED = true;
@@ -22,8 +21,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   clientArchetypes,
   partnerArchetypes
 }) => {
-  const [activeTab, setActiveTab] = useState<string>("compatibility");
-  
   // Convert BasicCalculationResults to NumerologyProfile for compatibility with PartnershipTextbookSection
   const convertToNumerologyProfile = (result: any): NumerologyProfile => {
     return {
@@ -43,27 +40,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
   
   // Combine archetypes for AI analysis
   const combinedArchetypes = [...clientArchetypes, ...partnerArchetypes];
-  
-  // Log calculation data for debugging
-  useEffect(() => {
-    console.log("Partnership calculation data:", calculation);
-    if (calculation.results) {
-      console.log("Client profile:", calculation.results.clientProfile);
-      console.log("Partner profile:", calculation.results.partnerProfile);
-      
-      if (calculation.results.clientProfile && calculation.results.clientProfile.fullCodes) {
-        console.log("Client codes:", calculation.results.clientProfile.fullCodes);
-      } else {
-        console.log("Client codes missing");
-      }
-      
-      if (calculation.results.partnerProfile && calculation.results.partnerProfile.fullCodes) {
-        console.log("Partner codes:", calculation.results.partnerProfile.fullCodes);
-      } else {
-        console.log("Partner codes missing");
-      }
-    }
-  }, [calculation]);
   
   // Check that calculation exists first
   if (!calculation) {
@@ -210,6 +186,17 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         />
       </div>
       
+      {/* New Consultation section */}
+      {calculation.id && combinedArchetypes.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">Консультация</h2>
+          <ConsultationTabs 
+            calculationId={calculation.id}
+            archetypes={combinedArchetypes}
+          />
+        </div>
+      )}
+      
       {/* Textbook Section */}
       <PartnershipTextbookSection 
         clientProfile={clientProfile}
@@ -219,46 +206,6 @@ export const PartnershipView: React.FC<PartnershipViewProps> = ({
         clientName={calculation.clientName}
         partnerName={calculation.partnerName}
       />
-      
-      {/* AI Sections - kept */}
-      {calculation.id && combinedArchetypes.length > 0 && (
-        <>
-          <AIContentSection 
-            title="Анализ совместимости" 
-            type="summary"
-            archetypes={combinedArchetypes}
-            calculationId={calculation.id}
-          />
-          
-          <AIContentSection 
-            title="Сильные и слабые стороны" 
-            type="strengths-weaknesses"
-            archetypes={combinedArchetypes}
-            calculationId={calculation.id}
-          />
-          
-          <AIContentSection 
-            title="Потенциальные конфликты" 
-            type="code-conflicts"
-            archetypes={combinedArchetypes}
-            calculationId={calculation.id}
-          />
-          
-          <AIContentSection 
-            title="Рекомендации для развития отношений" 
-            type="practices"
-            archetypes={combinedArchetypes}
-            calculationId={calculation.id}
-          />
-          
-          <AIContentSection 
-            title="Консультация" 
-            type="chat"
-            archetypes={combinedArchetypes}
-            calculationId={calculation.id}
-          />
-        </>
-      )}
     </div>
   );
 };
